@@ -2,14 +2,16 @@
 
 Guardrails only remove actions. They never add cost and never pick the answer.
 PREPAID_ONLY and MANUAL_REVIEW are never removed.
+
+Pure: every time comparison uses the context's own decided_at, never a global clock.
 """
+import math
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 
 from sentinel.api.schemas import Action, EvidenceSignal, GuardrailResult
 from sentinel.money import format_inr
 from sentinel.policy.config import PolicyConfig
-from sentinel.settings import DEMO_CLOCK
 
 # §9.2 thresholds. They define the signals themselves, so they are not policy config keys.
 CONFIRMED_ABUSE_WEIGHT_MIN = 0.3
@@ -21,11 +23,13 @@ ACCOUNT_CLAIMS_MIN = 1
 # G4
 WEAK_SIGNAL_WEIGHT = 0.3
 GRAPH_STATE_MAX_AGE = timedelta(hours=24)
-# ACCOUNT_CLAIMS is evidence on the account itself, not a decayed link: full weight.
+# ACCOUNT_CLAIMS is evidence on the account itself, not a decayed link, so it carries full weight.
+# Recency is controlled by the feature's 180-day window (prior_suspicious_claims_180d), and G2
+# still needs a second signal, so a claim alone can never enable BLOCK.
 ACCOUNT_CLAIMS_WEIGHT = 1.0
 
 SIGNAL_ORDER = ("DEVICE", "PAYMENT_TOKEN", "ADDRESS", "TEMPORAL_BURST", "ACCOUNT_CLAIMS")
-# G2: at least one present signal must come from this set; ADDRESS can never be the anchor.
+# G2: at least one counted signal must come from this set; ADDRESS can never be the anchor.
 ANCHOR_SIGNALS = frozenset({"DEVICE", "PAYMENT_TOKEN", "ACCOUNT_CLAIMS"})
 BURST_LINK_KINDS = frozenset({"DEVICE", "PAYMENT_TOKEN"})
 
@@ -34,6 +38,11 @@ _WORDS = ("none", "one", "two", "three", "four", "five", "six", "seven", "eight"
 
 def _count_word(n: int) -> str:
     return _WORDS[n] if 0 <= n < len(_WORDS) else str(n)
+
+
+def _truncate_3dp(p: float) -> float:
+    """Display value that can never round up to a threshold it has not reached."""
+    return math.floor(p * 1000) / 1000
 
 
 @dataclass(frozen=True)
@@ -58,68 +67,94 @@ class SignalInputs:
 
 
 def corroborating_signals(inputs: SignalInputs) -> list[EvidenceSignal]:
-    """The five §9.2 signals, always in SIGNAL_ORDER."""
+    """The five §9.2 signals, always in SIGNAL_ORDER.
+
+    present = the evidence was observed; counts_for_corroboration = it also meets the §9.2 qualifiers.
+    Observed-but-discounted evidence stays visible (with its weight) so reviewers can see what was
+    deliberately not counted.
+    """
     s = inputs
 
     device = (s.device_confirmed_abuse_weight >= CONFIRMED_ABUSE_WEIGHT_MIN
               or s.device_other_accounts_30d >= DEVICE_OTHER_ACCOUNTS_MIN)
     token = s.token_other_accounts_30d >= TOKEN_OTHER_ACCOUNTS_MIN
-    address = (not s.address_is_multi_tenant
-               and s.address_confirmed_abuse_weight >= CONFIRMED_ABUSE_WEIGHT_MIN)
-    burst_observed = (s.linked_orders_24h >= LINKED_ORDERS_24H_MIN
-                      or s.linked_same_sku_7d >= LINKED_SAME_SKU_7D_MIN)
-    burst_via_device_or_token = bool(s.burst_link_kinds & BURST_LINK_KINDS)
-    burst = burst_observed and burst_via_device_or_token
+    address = s.address_confirmed_abuse_weight >= CONFIRMED_ABUSE_WEIGHT_MIN
+    address_counts = address and not s.address_is_multi_tenant
+    burst = (s.linked_orders_24h >= LINKED_ORDERS_24H_MIN
+             or s.linked_same_sku_7d >= LINKED_SAME_SKU_7D_MIN)
+    burst_counts = burst and bool(s.burst_link_kinds & BURST_LINK_KINDS)
     claims = s.prior_suspicious_claims_180d >= ACCOUNT_CLAIMS_MIN
 
-    if s.address_is_multi_tenant and s.address_confirmed_abuse_weight >= CONFIRMED_ABUSE_WEIGHT_MIN:
-        address_detail = "Multi-tenant address; confirmed-abuse links there are not evidence."
+    if address and not address_counts:
+        address_detail = "Multi-tenant address; not counted."
+    elif address:
+        address_detail = (f"Confirmed-abuse weight {s.address_confirmed_abuse_weight:.2f} on this address; "
+                          "cannot be the only independent signal.")
     else:
         address_detail = (f"Confirmed-abuse weight {s.address_confirmed_abuse_weight:.2f} on this address "
-                          f"(needs {CONFIRMED_ABUSE_WEIGHT_MIN:.2f}); cannot be the only independent signal.")
-    if burst_observed and not burst_via_device_or_token:
-        burst_detail = "Linked-order burst reached only through address links; does not count."
+                          f"(needs {CONFIRMED_ABUSE_WEIGHT_MIN:.2f}).")
+    if burst and not burst_counts:
+        burst_detail = "Observed through address links only; not counted."
     else:
         burst_detail = (f"{s.linked_orders_24h} linked orders in 24 h, {s.linked_same_sku_7d} same-SKU "
                         f"linked orders in 7 d, via device or token links.")
 
     rows = [
-        ("DEVICE", device, s.device_weight,
+        ("DEVICE", device, device, s.device_weight,
          f"Device: confirmed-abuse weight {s.device_confirmed_abuse_weight:.2f}, "
          f"{s.device_other_accounts_30d} other concurrent accounts in 30 d."),
-        ("PAYMENT_TOKEN", token, s.token_weight,
+        ("PAYMENT_TOKEN", token, token, s.token_weight,
          f"Payment token used by {s.token_other_accounts_30d} other accounts in 30 d."),
-        ("ADDRESS", address, s.address_weight, address_detail),
-        ("TEMPORAL_BURST", burst, s.burst_weight, burst_detail),
-        ("ACCOUNT_CLAIMS", claims, ACCOUNT_CLAIMS_WEIGHT,
+        ("ADDRESS", address, address_counts, s.address_weight, address_detail),
+        ("TEMPORAL_BURST", burst, burst_counts, s.burst_weight, burst_detail),
+        ("ACCOUNT_CLAIMS", claims, claims, ACCOUNT_CLAIMS_WEIGHT,
          f"{s.prior_suspicious_claims_180d} suspicious claim(s) on this account in 180 d."),
     ]
     return [
         EvidenceSignal(signal=name, present=present, weight=weight if present else 0.0,
-                       counts_for_corroboration=present, detail=detail)
-        for name, present, weight, detail in rows
+                       counts_for_corroboration=counts, detail=detail)
+        for name, present, counts, weight, detail in rows
     ]
 
 
 @dataclass(frozen=True)
 class DecisionContext:
-    """Everything the policy may read. p_return is carried for the record only (G1): nothing reads it."""
-    p_abuse: float
-    p_return: float
+    """Everything the policy may read.
+
+    p_return is carried for the record only (G1): nothing reads it. Degraded contexts have no scores
+    at all (p_abuse and p_return are None) and may have no graph state.
+    """
+    p_abuse: float | None
+    p_return: float | None
     order_value_inr: float
     clv_inr: float
     signals: tuple[EvidenceSignal, ...]
-    graph_state_as_of: datetime
+    decided_at: datetime                     # DEMO_CLOCK when serving; placed_at in the backtest
+    graph_state_as_of: datetime | None
     degraded: bool = False
     degraded_reason: str | None = None
 
     def __post_init__(self) -> None:
-        if not 0.0 <= self.p_abuse <= 1.0 or not 0.0 <= self.p_return <= 1.0:
-            raise ValueError("probabilities must be in [0, 1]")
+        if self.decided_at.tzinfo is None:
+            raise ValueError("decided_at must be timezone-aware")
+        scores = (self.p_abuse, self.p_return)
+        if self.degraded:
+            if any(p is not None for p in scores):
+                raise ValueError("degraded contexts carry no scores: p_abuse and p_return must be None")
+        else:
+            if any(p is None for p in scores):
+                raise ValueError("p_abuse and p_return are required unless degraded")
+            if not all(0.0 <= p <= 1.0 for p in scores):
+                raise ValueError("probabilities must be in [0, 1]")
+            if self.graph_state_as_of is None:
+                raise ValueError("graph_state_as_of is required unless degraded")
         if self.order_value_inr <= 0:
             raise ValueError("order_value_inr must be > 0")
-        if self.graph_state_as_of.tzinfo is None:
-            raise ValueError("graph_state_as_of must be timezone-aware")
+        if self.graph_state_as_of is not None:
+            if self.graph_state_as_of.tzinfo is None:
+                raise ValueError("graph_state_as_of must be timezone-aware")
+            if self.graph_state_as_of > self.decided_at:
+                raise ValueError("graph_state_as_of cannot be later than decided_at")
         object.__setattr__(self, "signals", tuple(self.signals))
 
     @property
@@ -144,9 +179,11 @@ def g2_block_needs_corroboration(ctx: DecisionContext, cfg: PolicyConfig) -> Gua
     need = cfg.guardrails.block_min_corroborating_signals
     if len(counted) < need:
         verb = "was" if len(counted) <= 1 else "were"
-        return _result("G2", "BLOCK needs corroboration", [Action.BLOCK],
-                       f"G2 requires {_count_word(need)} corroborating signals; "
-                       f"{_count_word(len(counted))} {verb} found.")
+        detail = (f"G2 requires {_count_word(need)} corroborating signals; "
+                  f"{_count_word(len(counted))} {verb} found.")
+        if names:
+            detail += f" Counted: {', '.join(names)}."
+        return _result("G2", "BLOCK needs corroboration", [Action.BLOCK], detail)
     if not ANCHOR_SIGNALS & set(names):
         return _result("G2", "BLOCK needs corroboration", [Action.BLOCK],
                        "G2 requires at least one DEVICE, PAYMENT_TOKEN or ACCOUNT_CLAIMS signal; "
@@ -157,26 +194,25 @@ def g2_block_needs_corroboration(ctx: DecisionContext, cfg: PolicyConfig) -> Gua
 
 def g3_block_needs_confidence(ctx: DecisionContext, cfg: PolicyConfig) -> GuardrailResult:
     need = cfg.guardrails.block_min_p_abuse
+    shown = _truncate_3dp(ctx.p_abuse)
     if ctx.p_abuse < need:
         return _result("G3", "BLOCK needs confidence", [Action.BLOCK],
-                       f"G3 requires p_abuse of at least {need:.2f}; this order scored {ctx.p_abuse:.2f}.")
+                       f"G3 requires p_abuse of at least {need:.2f}; this order scored {shown:.3f}.")
     return _result("G3", "BLOCK needs confidence", [],
-                   f"p_abuse {ctx.p_abuse:.2f} meets the {need:.2f} minimum for BLOCK.")
+                   f"p_abuse {shown:.3f} meets the {need:.2f} minimum for BLOCK.")
 
 
 def g4_no_block_on_weak_or_stale_evidence(ctx: DecisionContext, cfg: PolicyConfig) -> GuardrailResult:
     name = "No BLOCK on weak or stale evidence"
-    present = [s for s in ctx.signals if s.present]
-    # With no present signal at all, G2 already removes BLOCK; G4 is about weak or stale evidence.
-    if present and all(s.weight < WEAK_SIGNAL_WEIGHT for s in present):
+    counted = ctx.counted_signals
+    # With no counted signal at all, G2 already removes BLOCK; G4 is about weak or stale evidence.
+    if counted and all(s.weight < WEAK_SIGNAL_WEIGHT for s in counted):
         return _result("G4", name, [Action.BLOCK],
-                       f"G4 removes BLOCK because every present signal has weight below {WEAK_SIGNAL_WEIGHT:.2f}.")
-    cutoff = DEMO_CLOCK - GRAPH_STATE_MAX_AGE
-    if ctx.graph_state_as_of < cutoff:
+                       f"G4 removes BLOCK because every counted signal has weight below {WEAK_SIGNAL_WEIGHT:.2f}.")
+    if ctx.graph_state_as_of < ctx.decided_at - GRAPH_STATE_MAX_AGE:
         return _result("G4", name, [Action.BLOCK],
-                       f"G4 removes BLOCK because graph state ({ctx.graph_state_as_of.isoformat()}) "
-                       "is more than 24 hours old.")
-    return _result("G4", name, [], "Evidence is recent and at least one signal is strong.")
+                       "G4 removes BLOCK because graph state is more than 24 hours older than the decision time.")
+    return _result("G4", name, [], "Evidence is recent and at least one counted signal is strong.")
 
 
 def g5_no_silent_allow_at_high_exposure(ctx: DecisionContext, cfg: PolicyConfig) -> GuardrailResult:
@@ -199,8 +235,8 @@ def g6_degraded_mode(ctx: DecisionContext, cfg: PolicyConfig) -> tuple[Guardrail
     result = GuardrailResult(
         guardrail_id="G6", name="Degraded mode", triggered=True, effect="FALLBACK",
         removed_actions=[Action.BLOCK],
-        detail=(f"Degraded mode ({reason}): {action.value} because the order value is {comparison} "
-                f"{format_inr(floor)}. BLOCK is never selected in degraded mode."))
+        detail=(f"Degraded mode ({reason}): no model score is available. {action.value} because the "
+                f"order value is {comparison} {format_inr(floor)}. BLOCK is never selected in degraded mode."))
     return result, action
 
 

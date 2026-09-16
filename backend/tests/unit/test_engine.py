@@ -89,22 +89,26 @@ def test_ten_thousand_random_contexts():
     selected_seen = set()
     for i in range(10_000):
         cfg = CFG if i % 2 == 0 else _random_config(rng)
+        degraded = rng.random() < 0.05
         c = ctx(
-            p_abuse=rng.random(),
+            p_abuse=None if degraded else rng.random(),
             order_value_inr=rng.uniform(1, 500_000),
             clv_inr=rng.uniform(0, 300_000),
             signals=_random_signals(rng),
-            p_return=rng.random(),
+            p_return=None if degraded else rng.random(),
             graph_state_as_of=DEMO_CLOCK - timedelta(hours=rng.uniform(0, 48)),
-            degraded=rng.random() < 0.05,
+            degraded=degraded,
         )
         d = decide(c, cfg)   # PolicyDecision's model validator runs here
+        selected_seen.add(d.selected_action)
+        if degraded:
+            assert d.costs == [] and d.cost_optimal_action is None and d.selected_action is not Action.BLOCK
+            continue
         costs = by_action(d)
         assert costs[Action.PREPAID_ONLY].feasible and costs[Action.MANUAL_REVIEW].feasible
         assert len(d.costs) == 4 and sorted(x.rank_by_cost for x in d.costs) == [1, 2, 3, 4]
         if costs[Action.BLOCK].feasible:
-            assert d.selected_rule != "DEGRADED_MODE_FALLBACK" and c.p_abuse >= 0.70
-        selected_seen.add(d.selected_action)
+            assert c.p_abuse >= 0.70
     assert selected_seen == set(Action)
 
 

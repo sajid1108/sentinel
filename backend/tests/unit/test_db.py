@@ -121,6 +121,32 @@ def test_selected_rule_check(tmp_path):
         delete_database(path)
 
 
+DEGRADED_ORDER_SQL = f"""
+INSERT INTO orders VALUES ('ORD-T-2', 'ACC-T-1', '2026-09-01T04:56:00Z', 6000, 0, 1, 1,
+    'HOME', 'STANDARD', 'COD', '{ID_A}', '{ID_B}', NULL, 'DEMO', NULL);
+"""
+
+
+def _decision_row(degraded_mode: int) -> str:
+    return f"""INSERT INTO decisions VALUES ('DEC-2', 'ORD-T-2', '2026-09-01T05:00:00Z', '2026-09-01T04:56:00Z',
+        'fs-1.0', '{{}}', NULL, NULL, NULL, 'ret-1', 'abu-1', 'v1.0', NULL, 'MANUAL_REVIEW', 'MANUAL_REVIEW',
+        'PENDING_REVIEW', 'DEGRADED_MODE_FALLBACK', '[]', '[]', '[]', '{{}}', {degraded_mode}, 'DEMO', 'EVT-2')"""
+
+
+def test_non_degraded_decision_without_scores_rejected(db):
+    db.executescript(DEGRADED_ORDER_SQL)
+    with pytest.raises(sqlite3.IntegrityError, match="CHECK"):
+        db.execute(_decision_row(degraded_mode=0))
+
+
+def test_degraded_decision_without_scores_accepted(db):
+    db.executescript(DEGRADED_ORDER_SQL)
+    db.execute(_decision_row(degraded_mode=1))
+    db.commit()
+    row = db.execute("SELECT p_return, p_abuse, cost_optimal_action FROM decisions WHERE decision_id='DEC-2'").fetchone()
+    assert row == (None, None, None)
+
+
 def test_engine_enables_foreign_keys(tmp_path):
     path = tmp_path / "fk.db"
     create_database(path)

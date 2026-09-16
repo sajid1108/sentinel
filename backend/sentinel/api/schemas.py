@@ -63,8 +63,8 @@ class ScoreOrderRequest(Contract):
 
 
 class Scores(Contract):
-    p_return: Probability
-    p_abuse: Probability
+    p_return: Probability | None                           # None only in degraded mode (no model score)
+    p_abuse: Probability | None
     p_abuse_without_graph_evidence: Probability | None
     return_model_version: str
     abuse_model_version: str
@@ -132,7 +132,7 @@ class GuardrailResult(Contract):
 class PolicyDecision(Contract):
     policy_version: str
     policy_config_sha256: str
-    cost_optimal_action: Action
+    cost_optimal_action: Action | None                     # None only in degraded mode
     selected_action: Action
     selected_rule: Literal["MIN_EXPECTED_COST", "MIN_EXPECTED_COST_WITHIN_GUARDRAILS",
                            "DEGRADED_MODE_FALLBACK"]
@@ -143,23 +143,31 @@ class PolicyDecision(Contract):
 
     @model_validator(mode="after")
     def _decision_invariants(self) -> "PolicyDecision":
+        if self.selected_rule == "DEGRADED_MODE_FALLBACK":
+            # No model score exists, so no cost may be shown as if it had been calculated.
+            if self.costs:
+                raise ValueError("degraded decisions carry no costs")
+            if self.cost_optimal_action is not None:
+                raise ValueError("degraded decisions have no cost_optimal_action")
+            return self
+        if self.cost_optimal_action is None:
+            raise ValueError("cost_optimal_action is required unless degraded")
         by_action = {c.action: c for c in self.costs}
-        if set(by_action) != set(Action):
+        if len(self.costs) != len(Action) or set(by_action) != set(Action):
             raise ValueError("costs must contain all four actions exactly once")
         if not by_action[Action.PREPAID_ONLY].feasible or not by_action[Action.MANUAL_REVIEW].feasible:
             raise ValueError("PREPAID_ONLY and MANUAL_REVIEW must always be feasible")
-        if self.selected_rule != "DEGRADED_MODE_FALLBACK":
-            sel = by_action[self.selected_action]
-            if not sel.feasible:
-                raise ValueError("selected action is infeasible")
-            best_feasible = min(c.expected_cost.inr for c in self.costs if c.feasible)
-            best_overall = min(c.expected_cost.inr for c in self.costs)
-            if sel.expected_cost.inr - best_feasible > 1.0:
-                raise ValueError("selected action is not the minimum feasible expected cost")
-            if by_action[self.cost_optimal_action].expected_cost.inr - best_overall > 1.0:
-                raise ValueError("cost_optimal_action is not the minimum expected cost")
-            if (self.selected_action == self.cost_optimal_action) != (self.selected_rule == "MIN_EXPECTED_COST"):
-                raise ValueError("selected_rule inconsistent with selected vs cost-optimal action")
+        sel = by_action[self.selected_action]
+        if not sel.feasible:
+            raise ValueError("selected action is infeasible")
+        best_feasible = min(c.expected_cost.inr for c in self.costs if c.feasible)
+        best_overall = min(c.expected_cost.inr for c in self.costs)
+        if sel.expected_cost.inr - best_feasible > 1.0:
+            raise ValueError("selected action is not the minimum feasible expected cost")
+        if by_action[self.cost_optimal_action].expected_cost.inr - best_overall > 1.0:
+            raise ValueError("cost_optimal_action is not the minimum expected cost")
+        if (self.selected_action == self.cost_optimal_action) != (self.selected_rule == "MIN_EXPECTED_COST"):
+            raise ValueError("selected_rule inconsistent with selected vs cost-optimal action")
         return self
 
 
@@ -197,8 +205,8 @@ class QueueItem(Contract):
     decision_id: str
     scored_at: AwareDatetime
     order_value: Money
-    p_return: Probability
-    p_abuse: Probability
+    p_return: Probability | None                           # None only for degraded decisions
+    p_abuse: Probability | None
     recommended_action: Action
     current_action: Action
     status: Literal["AUTO_APPLIED", "PENDING_REVIEW", "OVERRIDDEN", "APPEAL_OPEN"]

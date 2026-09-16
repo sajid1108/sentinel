@@ -114,13 +114,13 @@ CREATE TABLE decisions (
   features_as_of          TEXT NOT NULL,
   feature_set_version     TEXT NOT NULL,
   features_json           TEXT NOT NULL,
-  p_return                REAL NOT NULL CHECK (p_return BETWEEN 0 AND 1),
-  p_abuse                 REAL NOT NULL CHECK (p_abuse BETWEEN 0 AND 1),
+  p_return                REAL CHECK (p_return IS NULL OR p_return BETWEEN 0 AND 1),
+  p_abuse                 REAL CHECK (p_abuse IS NULL OR p_abuse BETWEEN 0 AND 1),
   p_abuse_without_graph   REAL,
   return_model_version    TEXT NOT NULL REFERENCES model_registry(model_version),
   abuse_model_version     TEXT NOT NULL REFERENCES model_registry(model_version),
   policy_version          TEXT NOT NULL REFERENCES policy_versions(policy_version),
-  cost_optimal_action     TEXT NOT NULL CHECK (cost_optimal_action IN ('ALLOW','PREPAID_ONLY','MANUAL_REVIEW','BLOCK')),
+  cost_optimal_action     TEXT CHECK (cost_optimal_action IS NULL OR cost_optimal_action IN ('ALLOW','PREPAID_ONLY','MANUAL_REVIEW','BLOCK')),
   recommended_action      TEXT NOT NULL CHECK (recommended_action IN ('ALLOW','PREPAID_ONLY','MANUAL_REVIEW','BLOCK')),
   current_action          TEXT NOT NULL CHECK (current_action IN ('ALLOW','PREPAID_ONLY','MANUAL_REVIEW','BLOCK')),
   status                  TEXT NOT NULL CHECK (status IN
@@ -132,7 +132,9 @@ CREATE TABLE decisions (
   graph_summary_json      TEXT NOT NULL,
   degraded_mode           INTEGER NOT NULL DEFAULT 0,
   source                  TEXT NOT NULL CHECK (source IN ('DEMO','BACKTEST_REPLAY','LIVE')),
-  latest_audit_event_id   TEXT NOT NULL
+  latest_audit_event_id   TEXT NOT NULL,
+  -- Only degraded decisions may lack scores (no model output means nothing to record).
+  CHECK ((degraded_mode = 1) OR (p_return IS NOT NULL AND p_abuse IS NOT NULL AND cost_optimal_action IS NOT NULL))
 );
 CREATE INDEX ix_decisions_queue ON decisions(status, current_action, scored_at);
 

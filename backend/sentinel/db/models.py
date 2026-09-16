@@ -200,13 +200,13 @@ class Decision(Base):
     features_as_of: Mapped[str] = mapped_column(String, nullable=False)
     feature_set_version: Mapped[str] = mapped_column(String, nullable=False)
     features_json: Mapped[str] = mapped_column(Text, nullable=False)
-    p_return: Mapped[float] = mapped_column(Float, nullable=False)
-    p_abuse: Mapped[float] = mapped_column(Float, nullable=False)
+    p_return: Mapped[Optional[float]] = mapped_column(Float)          # NULL only when degraded
+    p_abuse: Mapped[Optional[float]] = mapped_column(Float)
     p_abuse_without_graph: Mapped[Optional[float]] = mapped_column(Float)
     return_model_version: Mapped[str] = mapped_column(ForeignKey("model_registry.model_version"), nullable=False)
     abuse_model_version: Mapped[str] = mapped_column(ForeignKey("model_registry.model_version"), nullable=False)
     policy_version: Mapped[str] = mapped_column(ForeignKey("policy_versions.policy_version"), nullable=False)
-    cost_optimal_action: Mapped[str] = mapped_column(String, nullable=False)
+    cost_optimal_action: Mapped[Optional[str]] = mapped_column(String)  # NULL only when degraded
     recommended_action: Mapped[str] = mapped_column(String, nullable=False)
     current_action: Mapped[str] = mapped_column(String, nullable=False)
     status: Mapped[str] = mapped_column(String, nullable=False)
@@ -220,11 +220,13 @@ class Decision(Base):
     latest_audit_event_id: Mapped[str] = mapped_column(String, nullable=False)
 
     __table_args__ = (
-        CheckConstraint("p_return BETWEEN 0 AND 1"),
-        CheckConstraint("p_abuse BETWEEN 0 AND 1"),
+        CheckConstraint("p_return IS NULL OR p_return BETWEEN 0 AND 1"),
+        CheckConstraint("p_abuse IS NULL OR p_abuse BETWEEN 0 AND 1"),
+        CheckConstraint("(degraded_mode = 1) OR "
+                        "(p_return IS NOT NULL AND p_abuse IS NOT NULL AND cost_optimal_action IS NOT NULL)"),
         CheckConstraint("status IN ('AUTO_APPLIED','PENDING_REVIEW','OVERRIDDEN','APPEAL_OPEN')"),
         CheckConstraint("source IN ('DEMO','BACKTEST_REPLAY','LIVE')"),
-        CheckConstraint(f"cost_optimal_action IN {ACTIONS_SQL}"),
+        CheckConstraint(f"cost_optimal_action IS NULL OR cost_optimal_action IN {ACTIONS_SQL}"),
         CheckConstraint(f"recommended_action IN {ACTIONS_SQL}"),
         CheckConstraint(f"current_action IN {ACTIONS_SQL}"),
         CheckConstraint(f"selected_rule IN {SELECTED_RULES_SQL}"),

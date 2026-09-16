@@ -9,7 +9,7 @@ from sentinel.policy.engine import decide
 from sentinel.policy.guardrails import SignalInputs, corroborating_signals
 from sentinel.settings import DEMO_CLOCK
 
-from .policy_helpers import DEMO_2, DEMO_3, DEVICE, VIA_DEVICE_AND_TOKEN, by_action, ctx
+from .policy_helpers import DEMO_2, DEMO_3, DEVICE, VIA_DEVICE_AND_TOKEN, by_action, ctx, degraded_ctx
 
 CFG = load_policy_config()
 
@@ -18,26 +18,37 @@ def _present(inputs: SignalInputs) -> set[str]:
     return {s.signal for s in corroborating_signals(inputs) if s.present}
 
 
+def _counted(inputs: SignalInputs) -> set[str]:
+    return {s.signal for s in corroborating_signals(inputs) if s.counts_for_corroboration}
+
+
 def _block_feasible(decision) -> bool:
     return by_action(decision)[Action.BLOCK].feasible
 
 
 # ── §9.2 signal derivation ──────────────────────────────────────────────────
-@pytest.mark.parametrize("inputs, expected", [
-    (SignalInputs(), set()),
-    (SignalInputs(device_confirmed_abuse_weight=0.3), {"DEVICE"}),
-    (SignalInputs(device_confirmed_abuse_weight=0.29, device_other_accounts_30d=2), set()),
-    (SignalInputs(device_other_accounts_30d=3), {"DEVICE"}),
-    (SignalInputs(token_other_accounts_30d=2), {"PAYMENT_TOKEN"}),
-    (SignalInputs(address_confirmed_abuse_weight=0.3), {"ADDRESS"}),
-    (SignalInputs(address_confirmed_abuse_weight=0.9, address_is_multi_tenant=True), set()),
-    (SignalInputs(linked_orders_24h=3, burst_link_kinds=frozenset({"DEVICE"})), {"TEMPORAL_BURST"}),
-    (SignalInputs(linked_same_sku_7d=2, burst_link_kinds=frozenset({"PAYMENT_TOKEN"})), {"TEMPORAL_BURST"}),
-    (SignalInputs(linked_orders_24h=9, burst_link_kinds=frozenset({"ADDRESS"})), set()),
-    (SignalInputs(prior_suspicious_claims_180d=1), {"ACCOUNT_CLAIMS"}),
+@pytest.mark.parametrize("inputs, present, counted", [
+    (SignalInputs(), set(), set()),
+    (SignalInputs(device_confirmed_abuse_weight=0.3), {"DEVICE"}, {"DEVICE"}),
+    (SignalInputs(device_confirmed_abuse_weight=0.29, device_other_accounts_30d=2), set(), set()),
+    (SignalInputs(device_other_accounts_30d=3), {"DEVICE"}, {"DEVICE"}),
+    (SignalInputs(token_other_accounts_30d=2), {"PAYMENT_TOKEN"}, {"PAYMENT_TOKEN"}),
+    (SignalInputs(address_confirmed_abuse_weight=0.3), {"ADDRESS"}, {"ADDRESS"}),
+    (SignalInputs(address_confirmed_abuse_weight=0.9, address_is_multi_tenant=True), {"ADDRESS"}, set()),
+    (SignalInputs(linked_orders_24h=3, burst_link_kinds=frozenset({"DEVICE"})), {"TEMPORAL_BURST"}, {"TEMPORAL_BURST"}),
+    (SignalInputs(linked_same_sku_7d=2, burst_link_kinds=frozenset({"PAYMENT_TOKEN"})),
+     {"TEMPORAL_BURST"}, {"TEMPORAL_BURST"}),
+    (SignalInputs(linked_orders_24h=9, burst_link_kinds=frozenset({"ADDRESS"})), {"TEMPORAL_BURST"}, set()),
+    (SignalInputs(prior_suspicious_claims_180d=1), {"ACCOUNT_CLAIMS"}, {"ACCOUNT_CLAIMS"}),
 ])
-def test_signal_presence(inputs, expected):
-    assert _present(inputs) == expected
+def test_signal_presence_and_counting(inputs, present, counted):
+    assert _present(inputs) == present
+    assert _counted(inputs) == counted
+
+
+def test_non_present_signals_have_zero_weight_and_do_not_count():
+    for s in corroborating_signals(SignalInputs(device_weight=0.9, address_weight=0.9)):
+        assert (s.present, s.counts_for_corroboration, s.weight) == (False, False, 0.0)
 
 
 def test_signals_always_listed_in_order():
@@ -130,16 +141,14 @@ def test_g5_not_triggered_below_thresholds(p, v):
 
 
 # ── G6 ──────────────────────────────────────────────────────────────────────
-@pytest.mark.parametrize("p", [0.0, 0.5, 0.91, 1.0])
 @pytest.mark.parametrize("v", [100, 4999, 5000, 24000, 400000])
-def test_g6_degraded_never_blocks(p, v):
-    d = decide(ctx(p, order_value_inr=v, clv_inr=2000, signals=DEVICE, degraded=True), CFG)
+def test_g6_degraded_never_blocks(v):
+    d = decide(degraded_ctx(v), CFG)
     assert d.selected_action is not Action.BLOCK
-    assert d.selected_rule == "DEGRADED_MODE_FALLBACK"
-    assert not by_action(d)[Action.BLOCK].feasible
     assert d.selected_action is (Action.MANUAL_REVIEW if v >= 5000 else Action.ALLOW)
+    assert d.selected_rule == "DEGRADED_MODE_FALLBACK"
     assert [g.guardrail_id for g in d.guardrails] == ["G1", "G6"]
-    assert d.guardrails[1].effect == "FALLBACK"
+    assert d.guardrails[1].effect == "FALLBACK" and d.guardrails[1].removed_actions == [Action.BLOCK]
 
 
 def test_prepaid_and_review_never_removed_by_any_guardrail():

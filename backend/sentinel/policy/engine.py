@@ -80,7 +80,7 @@ def render_policy_explanation(totals: dict[Action, float], selected: Action, cos
     return text
 
 
-def _decision(cfg: PolicyConfig, cost_optimal: Action, selected: Action, rule: str,
+def _decision(cfg: PolicyConfig, cost_optimal: Action | None, selected: Action, rule: str,
               rows: list[ActionCost], results: list[GuardrailResult], explanation: str) -> PolicyDecision:
     return PolicyDecision(
         policy_version=cfg.policy.version,
@@ -96,14 +96,10 @@ def _decision(cfg: PolicyConfig, cost_optimal: Action, selected: Action, rule: s
 
 
 def degraded_fallback(ctx: DecisionContext, cfg: PolicyConfig) -> PolicyDecision:
-    """G6. Costs are still computed and shown, but the fallback rule chooses the action."""
-    costs = action_costs(ctx.p_abuse, ctx.order_value_inr, ctx.clv_inr, cfg)
-    totals = {a: make_money(c.total).inr for a, c in costs.items()}
-    cost_optimal = argmin_with_tiebreak(totals, set(Action), cfg)
+    """G6. No model score exists, so no expected cost is computed or shown."""
     g6, selected = g6_degraded_mode(ctx, cfg)
     results = [g1_return_probability_excluded(ctx, cfg), g6]
-    rows = _cost_rows(costs, totals, results)
-    return _decision(cfg, cost_optimal, selected, "DEGRADED_MODE_FALLBACK", rows, results, g6.detail)
+    return _decision(cfg, None, selected, "DEGRADED_MODE_FALLBACK", [], results, g6.detail)
 
 
 def decide(ctx: DecisionContext, cfg: PolicyConfig) -> PolicyDecision:
@@ -117,7 +113,8 @@ def decide(ctx: DecisionContext, cfg: PolicyConfig) -> PolicyDecision:
     results = [g(ctx, cfg) for g in GUARDRAILS]
     removed = {a for r in results for a in r.removed_actions}
     feasible = set(Action) - removed
-    assert {Action.PREPAID_ONLY, Action.MANUAL_REVIEW} <= feasible   # invariant: never empty
+    if not {Action.PREPAID_ONLY, Action.MANUAL_REVIEW} <= feasible:   # invariant: never empty; survives -O
+        raise RuntimeError("invariant violated: PREPAID_ONLY and MANUAL_REVIEW must remain feasible")
 
     selected = argmin_with_tiebreak(totals, feasible, cfg)
     rule = "MIN_EXPECTED_COST" if selected == cost_optimal else "MIN_EXPECTED_COST_WITHIN_GUARDRAILS"

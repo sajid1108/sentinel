@@ -1,6 +1,6 @@
 # SENTINEL — Return Abuse Detection with Cost-Weighted Decisioning
 
-**Build status:** Phase 1 (policy engine: costs, guardrails G1–G6, engine, baselines, slope validator) complete. Phase 2 (synthetic generator) not started. Models, data and API routes are not built yet.
+**Build status:** Phase 1 (policy engine) complete, including the Phase 1 review fixes (decision-time G4, degraded mode without scores, Python 3.12, exact frontend pins). Phase 2 (synthetic generator) not started. Models, data and API routes are not built yet.
 
 > **A prediction is not a decision.**
 
@@ -29,7 +29,7 @@ Models predict. Policy decides. The system separates ML predictions from busines
 
 ### Prerequisites
 
-- Python 3.13 (see docs/DEVIATIONS.md; the contract specifies 3.12)
+- Python 3.12
 - Node.js 20+
 - pip (exact versions in `backend/requirements.lock`)
 
@@ -39,7 +39,7 @@ Models predict. Policy decides. The system separates ML predictions from busines
 cd backend
 
 # Install dependencies (Windows: .venv\Scripts\python.exe)
-python -m venv .venv
+py -3.12 -m venv .venv
 python -m pip install -r requirements.lock
 python -m pip install --no-deps -e .
 
@@ -67,7 +67,7 @@ python -m sentinel.cli serve
 ```bash
 cd frontend
 
-npm install
+npm ci
 npm run dev
 ```
 

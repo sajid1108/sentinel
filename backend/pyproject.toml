@@ -2,7 +2,7 @@
 name = "sentinel"
 version = "0.1.0"
 description = "Sentinel: Return Abuse Detection with Cost-Weighted Decisioning"
-requires-python = "==3.13.*"
+requires-python = "==3.12.*"
 dependencies = [
     "fastapi==0.141.1",
     "uvicorn[standard]==0.53.0",

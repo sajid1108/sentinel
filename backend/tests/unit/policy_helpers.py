@@ -1,11 +1,10 @@
 """Builders shared by the policy tests. Time is anchored to DEMO_CLOCK, never the wall clock."""
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from sentinel.policy.engine import DecisionContext
 from sentinel.policy.guardrails import SignalInputs, corroborating_signals
 from sentinel.settings import DEMO_CLOCK
 
-FRESH_GRAPH = DEMO_CLOCK - timedelta(minutes=5)
 VIA_DEVICE_AND_TOKEN = frozenset({"DEVICE", "PAYMENT_TOKEN"})
 
 DEMO_1 = dict(order_value_inr=4500, clv_inr=30000)
@@ -20,13 +19,25 @@ DEMO_2_SIGNALS = SignalInputs(
 )
 DEMO_3_SIGNALS = SignalInputs(prior_suspicious_claims_180d=1)
 
+_FRESH = object()
 
-def ctx(p_abuse: float, order_value_inr: float, clv_inr: float, signals: SignalInputs = SignalInputs(),
-        p_return: float = 0.3, graph_state_as_of=FRESH_GRAPH, degraded: bool = False) -> DecisionContext:
+
+def ctx(p_abuse: float | None, order_value_inr: float, clv_inr: float, signals: SignalInputs = SignalInputs(),
+        p_return: float | None = 0.3, decided_at: datetime = DEMO_CLOCK, graph_state_as_of=_FRESH,
+        degraded: bool = False) -> DecisionContext:
+    """graph_state_as_of defaults to 5 minutes before decided_at (fresh)."""
+    if graph_state_as_of is _FRESH:
+        graph_state_as_of = decided_at - timedelta(minutes=5)
     return DecisionContext(
         p_abuse=p_abuse, p_return=p_return, order_value_inr=order_value_inr, clv_inr=clv_inr,
-        signals=tuple(corroborating_signals(signals)), graph_state_as_of=graph_state_as_of, degraded=degraded,
+        signals=tuple(corroborating_signals(signals)), decided_at=decided_at,
+        graph_state_as_of=graph_state_as_of, degraded=degraded,
     )
+
+
+def degraded_ctx(order_value_inr: float, graph_state_as_of=None) -> DecisionContext:
+    return ctx(None, order_value_inr=order_value_inr, clv_inr=2000, p_return=None,
+               graph_state_as_of=graph_state_as_of, degraded=True)
 
 
 def by_action(decision):
