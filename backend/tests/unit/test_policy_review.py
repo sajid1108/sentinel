@@ -220,7 +220,10 @@ def test_c7_demo_2_explanation_mentions_allow_removed_by_g5():
 
 
 def test_c7_demo_1_explanation():
+    """§6.5 style: removed actions are always reported, even when they were not contenders."""
     d = decide(ctx(0.03, **DEMO_1, p_return=0.75), CFG)
-    assert d.policy_explanation.startswith(
+    assert d.policy_explanation == (
         "ALLOW was selected because its expected cost (₹119) is lower than PREPAID_ONLY (₹766), "
-        "MANUAL_REVIEW (₹905) and BLOCK (₹18,867) under policy v1.0.")
+        "MANUAL_REVIEW (₹905) and BLOCK (₹18,867) under policy v1.0. "
+        "BLOCK was also not permitted: G2 requires two corroborating signals; none was found. "
+        "G3 requires p_abuse of at least 0.70; this order scored 0.030.")

@@ -21,3 +21,11 @@ Numbers are stable identifiers; a resolved deviation keeps its number and is mar
 | 14 | §3, §4, §9.1 G6, §10 | Degraded mode means no model score exists, and none is invented. `DecisionContext.p_abuse/p_return` are None when degraded (and required otherwise); `graph_state_as_of` may be None when degraded. `Scores.p_return/p_abuse`, `QueueItem.p_return/p_abuse` and `PolicyDecision.cost_optimal_action` are nullable; a degraded `PolicyDecision` must have `costs == []` and `cost_optimal_action is None`. `decisions.p_return`, `p_abuse`, `cost_optimal_action` are nullable with `CHECK ((degraded_mode = 1) OR (all three NOT NULL))`. For Phase 6: `AuditEventPayload.p_return`, `p_abuse`, `cost_optimal_action` must be optional. UI (Phase 8): show "No model score, degraded mode" and hide the cost chart. | Phase 1 review B4: costs "calculated" from a placeholder probability would be a deceptive record. `QueueItem` is included so degraded decisions can be listed. |
 | 15 | §9.5 | `allow_all()` returns an `Action`, not a `BaselineOutcome` (§4 `BaselineOutcome.strategy` allows only FIXED_THRESHOLD and RULE_BASED). RULE_BASED thresholds are module constants, not config keys. FIXED_THRESHOLD takes τ as arguments; tuning on CALIBRATION is Phase 4. | Keeps §4 and the config key set unchanged. |
 | 16 | §1 (frontend) | `react-router-dom` (7.18.4) is a dependency. All frontend dependencies are pinned to exact versions, `frontend/.npmrc` sets `save-exact=true`, and installs use `npm ci`. | Three routes need a router; §1 omitted it. Exact pins stop `npm install` pulling newer React Flow, Recharts or Tailwind before the demo. |
+
+## Withdrawn review requests
+
+Requests from a review that were considered and then withdrawn. They are not deviations; they are recorded so the decision is not revisited.
+
+| Review | Request | Decision |
+|--------|---------|----------|
+| Phase 1 review, C7 | Demo 1's policy explanation should contain no "not permitted" text. | **Withdrawn.** It conflicts with the §6.5 explanation style, whose Demo 3 example reports "BLOCK was also not permitted" although BLOCK was not a contender, and with C7's own Demo 2 expectation ("ALLOW was also not permitted"). Demo 1 has BLOCK removed by G2 and G3 in the same way, so the explanation keeps the §6.5 style and reports it. `test_c7_demo_1_explanation` asserts the full sentence. |
