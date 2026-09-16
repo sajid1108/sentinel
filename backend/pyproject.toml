@@ -1,0 +1,35 @@
+[project]
+name = "sentinel"
+version = "0.1.0"
+description = "Sentinel: Return Abuse Detection with Cost-Weighted Decisioning"
+requires-python = "==3.13.*"
+dependencies = [
+    "fastapi==0.141.1",
+    "uvicorn[standard]==0.53.0",
+    "pydantic==2.13.5",
+    "sqlalchemy==2.0.53",
+    "pandas==3.0.5",
+    "scikit-learn==1.9.1",
+    "networkx==3.6.1",
+    "joblib==1.6.0",
+    "numpy==2.5.3",
+    "pyarrow==25.0.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "httpx==0.28.1",
+    "pytest==9.1.1",
+]
+
+[project.scripts]
+sentinel = "sentinel.cli:main"
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore:Using `httpx` with `starlette.testclient` is deprecated",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

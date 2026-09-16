@@ -1,0 +1,40 @@
+[policy]
+version = "v1.0"
+currency = "INR"
+notice = "Monetary values are demonstration assumptions (policy v1.0)."
+tie_tolerance_inr = 1.0
+
+[economics]
+gross_margin_rate = 0.30
+reverse_logistics_cost_inr = 150
+
+[clv]
+new_customer_floor_inr = 2000
+cap_inr = 100000
+
+[allow]
+abuse_recovery_rate = 0.15
+
+[prepaid_only]
+abuser_deterrence_rate = 0.30
+abuse_recovery_rate = 0.50
+genuine_abandonment_rate = 0.08
+genuine_clv_churn_rate = 0.02
+genuine_friction_cost_inr = 30
+
+[manual_review]
+review_cost_inr = 250
+reviewer_detection_rate = 0.80
+genuine_delay_abandonment_rate = 0.05
+genuine_false_cancel_rate = 0.03
+
+[block]
+genuine_clv_churn_rate = 0.60
+genuine_support_cost_inr = 100
+
+[guardrails]
+block_min_p_abuse = 0.70
+block_min_corroborating_signals = 2
+high_exposure_value_inr = 10000
+high_exposure_min_p_abuse = 0.40
+degraded_review_min_value_inr = 5000

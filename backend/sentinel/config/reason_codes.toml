@@ -1,0 +1,90 @@
+[meta]
+version = "rc-1.0"
+
+[codes.GRAPH_DEVICE_CONFIRMED_LINK]
+model = "ABUSE"
+direction = "INCREASES"
+predicate = "device_confirmed_abuse_weight >= 0.3"
+template = "This device was used by {n} accounts later confirmed for return abuse, most recently {days} days ago."
+min_attribution_pp = 2.0
+evidence_strength = "STRONG"
+
+[codes.GRAPH_TOKEN_REUSE]
+model = "ABUSE"
+direction = "INCREASES"
+predicate = "token_other_accounts_30d >= 2"
+template = "The payment method was used by {n} other accounts in the last 30 days."
+min_attribution_pp = 2.0
+evidence_strength = "STRONG"
+
+[codes.GRAPH_COMMUNITY_RISK]
+model = "ABUSE"
+direction = "INCREASES"
+predicate = "component_abuse_ratio_smoothed >= 0.25 and component_size_reliable_90d >= 4"
+template = "This account belongs to a group of {size} linked accounts, {k} of them confirmed abusive."
+min_attribution_pp = 2.0
+evidence_strength = "STRONG"
+
+[codes.TEMPORAL_BURST]
+model = "ABUSE"
+direction = "INCREASES"
+predicate = "linked_orders_24h >= 3"
+template = "{n} linked accounts placed orders in the last 24 hours."
+min_attribution_pp = 2.0
+evidence_strength = "MODERATE"
+
+[codes.SAME_SKU_COORDINATION]
+model = "ABUSE"
+direction = "INCREASES"
+predicate = "linked_same_sku_7d >= 2"
+template = "Linked accounts ordered the same item {n} times this week."
+min_attribution_pp = 2.0
+evidence_strength = "MODERATE"
+
+[codes.ACCOUNT_PRIOR_SUSPICIOUS_CLAIM]
+model = "ABUSE"
+direction = "INCREASES"
+predicate = "prior_suspicious_claims_180d >= 1"
+template = "The account had {n} return or delivery claim(s) flagged in the last 6 months."
+min_attribution_pp = 2.0
+evidence_strength = "MODERATE"
+
+[codes.NEW_ACCOUNT_HIGH_VALUE]
+model = "ABUSE"
+direction = "INCREASES"
+predicate = "account_age_days < 30 and order_value_inr >= 10000"
+template = "New account placing a high-value order."
+min_attribution_pp = 2.0
+evidence_strength = "WEAK"
+
+[codes.MITIGATING_ESTABLISHED_ACCOUNT]
+model = "ABUSE"
+direction = "DECREASES"
+predicate = "account_age_days >= 365 and prior_orders >= 10 and prior_suspicious_claims_180d == 0"
+template = "Long-standing account with no flagged claims."
+min_attribution_pp = 2.0
+evidence_strength = "MODERATE"
+
+[codes.MITIGATING_DISCOUNTED_LINKS]
+model = "ABUSE"
+direction = "DECREASES"
+predicate = "has_discounted_links"
+template = "Shared {kind} discounted: {reason}."
+min_attribution_pp = 2.0
+evidence_strength = "WEAK"
+
+[codes.RETURN_SIZE_BRACKETING]
+model = "RETURN"
+direction = "INCREASES"
+predicate = "n_variants_same_product >= 2"
+template = "Multiple sizes of the same item in the cart."
+min_attribution_pp = 2.0
+evidence_strength = "MODERATE"
+
+[codes.RETURN_HIGH_HISTORY]
+model = "RETURN"
+direction = "INCREASES"
+predicate = "matured_return_rate_smoothed >= 0.4"
+template = "The customer returns often ({rate}%). This affects return likelihood, not abuse risk."
+min_attribution_pp = 2.0
+evidence_strength = "MODERATE"
