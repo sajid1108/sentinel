@@ -178,4 +178,74 @@ def validate_policy_config(cfg: PolicyConfig) -> list[str]:
     if not (0 < cfg.guardrails.high_exposure_min_p_abuse < cfg.guardrails.block_min_p_abuse):
         errors.append("guardrails.high_exposure_min_p_abuse must be in (0, block_min_p_abuse)")
 
+    if not errors:
+        errors.extend(check_slope_order(cfg).errors)
     return errors
+
+
+# ── §8.4 slope-order check ────────────────────────────────────────────────────
+# EC(a) is linear in p with slope A(a) - G(a). Severity is monotone in p only if
+# slope(ALLOW) >= slope(PREPAID_ONLY) >= slope(MANUAL_REVIEW) >= slope(BLOCK).
+SLOPE_GRID_MIN_VALUE_INR = 500
+SLOPE_GRID_MAX_VALUE_INR = 200_000
+SLOPE_GRID_POINTS = 61
+SLOPE_ORDER = ("ALLOW", "PREPAID_ONLY", "MANUAL_REVIEW", "BLOCK")
+# Accepted and documented: both actions are non-blocking (§8.4).
+ACCEPTED_SLOPE_SWAPS = frozenset({("PREPAID_ONLY", "MANUAL_REVIEW")})
+
+
+@dataclass(frozen=True)
+class SlopeViolation:
+    higher: str                 # action whose slope should be >= ...
+    lower: str                  # ... this action's slope
+    order_value_inr: float
+    clv_inr: float
+    slope_gap_inr: float        # slope(higher) - slope(lower); negative
+
+
+@dataclass(frozen=True)
+class SlopeOrderReport:
+    violations: tuple[SlopeViolation, ...]
+    info: tuple[str, ...]       # accepted swap regions
+    errors: tuple[str, ...]     # any other ordering violation
+
+
+def _slope_grid(cfg: PolicyConfig) -> tuple[list[float], list[float]]:
+    ratio = SLOPE_GRID_MAX_VALUE_INR / SLOPE_GRID_MIN_VALUE_INR
+    values = [SLOPE_GRID_MIN_VALUE_INR * ratio ** (i / (SLOPE_GRID_POINTS - 1)) for i in range(SLOPE_GRID_POINTS)]
+    values[-1] = float(SLOPE_GRID_MAX_VALUE_INR)
+    lo, hi = cfg.clv.new_customer_floor_inr, cfg.clv.cap_inr
+    clvs = [lo + (hi - lo) * i / (SLOPE_GRID_POINTS - 1) for i in range(SLOPE_GRID_POINTS)]
+    clvs[-1] = float(hi)
+    return values, clvs
+
+
+def check_slope_order(cfg: PolicyConfig) -> SlopeOrderReport:
+    from sentinel.money import format_inr
+    from sentinel.policy.costs import action_costs
+
+    values, clvs = _slope_grid(cfg)
+    violations = []
+    for v in values:
+        for clv in clvs:
+            at_0 = action_costs(0.0, v, clv, cfg)
+            at_1 = action_costs(1.0, v, clv, cfg)
+            slope = {a.value: at_1[a].total - at_0[a].total for a in at_0}
+            for higher, lower in zip(SLOPE_ORDER, SLOPE_ORDER[1:]):
+                gap = slope[higher] - slope[lower]
+                if gap < 0:
+                    violations.append(SlopeViolation(higher, lower, v, clv, gap))
+
+    info, errors = [], []
+    for pair in sorted({(x.higher, x.lower) for x in violations}):
+        region = [x for x in violations if (x.higher, x.lower) == pair]
+        message = (f"slope({pair[0]}) < slope({pair[1]}) at {len(region)} grid points: "
+                   f"V {format_inr(min(x.order_value_inr for x in region))}-"
+                   f"{format_inr(max(x.order_value_inr for x in region))}, "
+                   f"CLV {format_inr(min(x.clv_inr for x in region))}-"
+                   f"{format_inr(max(x.clv_inr for x in region))}")
+        if pair in ACCEPTED_SLOPE_SWAPS:
+            info.append(message + "; both actions are non-blocking, accepted (§8.4)")
+        else:
+            errors.append(message)
+    return SlopeOrderReport(tuple(violations), tuple(info), tuple(errors))

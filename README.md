@@ -1,6 +1,6 @@
 # SENTINEL — Return Abuse Detection with Cost-Weighted Decisioning
 
-**Build status:** Phase 0 (skeleton and pins) complete. Phase 1 (policy engine) in progress. Models, data and API routes are not built yet.
+**Build status:** Phase 1 (policy engine: costs, guardrails G1–G6, engine, baselines, slope validator) complete. Phase 2 (synthetic generator) not started. Models, data and API routes are not built yet.
 
 > **A prediction is not a decision.**
 
