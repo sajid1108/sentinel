@@ -7,6 +7,7 @@ from sentinel.evaluation.demos import score_demos
 from sentinel.features.builder import WORLD_TABLES
 from sentinel.models import registry
 from sentinel.policy.config import load_policy_config
+from sentinel.policy.costs import action_costs
 
 pytestmark = pytest.mark.slow
 
@@ -33,11 +34,19 @@ def test_demo_2_ring_member_block(scored):
 # §11 Demo 3 as amended by the architect (deviation #26): the device is shared concurrently with 3 other
 # accounts in the last 30 days, none confirmed. All four required outcomes are asserted here.
 DEMO_3_COST_MARGIN = 0.15
+# The band is a guard on the measured score, not the property under test: what matters is that
+# MANUAL_REVIEW is the right action and that cost - not a guardrail - selects it. Widened from 0.70 to
+# 0.85 so the demo is not one retrain away from a red suite (#26).
+DEMO_3_BAND = (0.20, 0.85)
+# Cost-optimality grid for Demo 3's own order value and CLV, guardrails not applied. MANUAL_REVIEW is
+# cost-optimal on every point below and not at 0.90; the measured crossover is recorded in #26.
+DEMO_3_REVIEW_OPTIMAL_AT = (0.20, 0.40, 0.60, 0.6913, 0.75, 0.83)
+DEMO_3_REVIEW_NOT_OPTIMAL_AT = 0.90
 
 
 def test_demo_3_uncertain_middle_manual_review(scored):
     d = scored["ORD-DEMO-003"]
-    assert 0.20 <= d.p_abuse <= 0.70                                              # 1 band
+    assert DEMO_3_BAND[0] <= d.p_abuse <= DEMO_3_BAND[1]                          # 1 band
     assert d.decision.selected_action is Action.MANUAL_REVIEW                     # 2 action
 
 
@@ -57,3 +66,22 @@ def test_demo_3_allow_review_cost_margin(scored):
     costs = {c.action: c.expected_cost.inr for c in d.decision.costs}
     allow, review = costs[Action.ALLOW], costs[Action.MANUAL_REVIEW]
     assert allow - review >= DEMO_3_COST_MARGIN * review                          # 4 margin
+
+
+def _cheapest(p: float, order_value_inr: float, clv_inr: float) -> Action:
+    """Cost-optimal action with no guardrails applied: cost alone, over all four actions."""
+    costs = action_costs(p, order_value_inr, clv_inr, load_policy_config())
+    return min(costs, key=lambda a: costs[a].total)
+
+
+def test_demo_3_manual_review_is_cost_optimal_not_guardrail_driven(scored):
+    """Demo 3 gets MANUAL_REVIEW because it is the cheapest action, not because G3 removed BLOCK.
+    At the live score BLOCK costs roughly twice MANUAL_REVIEW, so removing every guardrail changes
+    nothing. Above the crossover (#26) BLOCK does become cheapest, which 0.90 pins down."""
+    d = scored["ORD-DEMO-003"]
+    v, clv = d.features["order_value_inr"], d.clv_inr
+    for p in (*DEMO_3_REVIEW_OPTIMAL_AT, d.p_abuse):
+        assert _cheapest(p, v, clv) is Action.MANUAL_REVIEW, f"p={p}"
+    assert _cheapest(DEMO_3_REVIEW_NOT_OPTIMAL_AT, v, clv) is Action.BLOCK
+    # the engine's own cost-optimal action agrees at the live score
+    assert d.decision.cost_optimal_action is Action.MANUAL_REVIEW
