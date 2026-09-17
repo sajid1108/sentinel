@@ -241,6 +241,7 @@ def generate(seed: int = SEED, secret: str = HMAC_SECRET) -> World:
     multi_tenant: dict[str, datetime] = {}
     key_to_id: dict[str, str] = {}
     acc_archetype: dict[str, str] = {}
+    acc_source: dict[str, str] = {}
 
     def register(kind: str, value: str) -> str:
         ident = identifier_id(kind, value, secret)
@@ -260,6 +261,7 @@ def generate(seed: int = SEED, secret: str = HMAC_SECRET) -> World:
                 raise ValueError(f"duplicate account key {acc.key}")
             key_to_id[acc.key] = account_id
             acc_archetype[acc.key] = acc.archetype
+            acc_source[acc.key] = acc.source
             account_rows.append((account_id, acc.created_at, acc.source))
             truth_rows.append((account_id, acc.archetype, acc.ring_id))
         for address, set_at in pop.multi_tenant_addresses.items():
@@ -278,7 +280,9 @@ def generate(seed: int = SEED, secret: str = HMAC_SECRET) -> World:
                 plan.delivery_speed, plan.payment_method, register("DEVICE", plan.device),
                 register("ADDRESS", plan.address),
                 register("PAYMENT_TOKEN", plan.token) if plan.token is not None else None,
-                "HISTORY", "RECENT" if acc_archetype[plan.account_key] == "DEMO"
+                # every hand-authored demo account (the demo accounts and their supporting peers) stays
+                # in the world and graph but never in a model split (deviation #22)
+                "HISTORY", "RECENT" if acc_source[plan.account_key] == "DEMO"
                 else A.split_for_day(day),
             ))
             for i, ln in enumerate(plan.lines, start=1):

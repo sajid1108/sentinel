@@ -86,11 +86,12 @@ def test_demo_3(demos):
     assert f["account_age_days"] == pytest.approx(240, abs=0.01)
     assert f["prior_orders"] == 7
     assert f["prior_suspicious_claims_180d"] == 1
-    assert f["device_other_accounts_30d"] == 1 and f["device_confirmed_abuse_weight"] == 0
+    # 3 concurrent device peers, none confirmed (§11 as amended, deviation #26)
+    assert f["device_other_accounts_30d"] == 3 and f["device_confirmed_abuse_weight"] == 0
     assert d["inputs"].address_confirmed_abuse_weight == pytest.approx(0.04, abs=0.005)
     assert [(link.kind, link.reason) for link in d["links"]] == [("ADDRESS", "STALE_RELATIONSHIP")]
     assert d["clv"] == pytest.approx(15_000, rel=0.20)
-    assert d["counted"] == ["ACCOUNT_CLAIMS"]
+    assert d["counted"] == ["DEVICE", "ACCOUNT_CLAIMS"]
 
 
 @pytest.mark.parametrize("order_id,p_abuse,p_return,expected", [

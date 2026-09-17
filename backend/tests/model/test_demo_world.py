@@ -152,9 +152,19 @@ def test_demo_3_history(world, requests):
     assert not ev[ev["order_id"].isin(mine["order_id"])]["event_type"].isin(
         ["ABUSE_CONFIRMED", "ABUSE_CLEARED", "QC_FLAGGED"]).any()
 
+    # §11 as amended by the architect (deviation #26): shared concurrently with 3 other accounts in
+    # the last 30 days, none of them confirmed abusive.
     confirmed = set(_confirmed_accounts(world)["account_id"])
     device_peers = _others_on(world, "device_id", r["device_id"], D.DEMO_3, T0 - pd.Timedelta(days=30))
-    assert device_peers == {D.DEMO_3_DEVICE_PEER} and not device_peers & confirmed
+    assert device_peers == set(D.DEMO_3_DEVICE_PEERS) and not device_peers & confirmed
+    accounts = world["accounts"].set_index("account_id")
+    for peer in D.DEMO_3_DEVICE_PEERS:
+        assert (T0 - accounts.loc[peer, "created_at"]) / pd.Timedelta(days=1) <= 60
+        peer_orders = o[o["account_id"] == peer]
+        assert 1 <= len(peer_orders) <= 3
+        assert (T0 - peer_orders["placed_at"].min()) / pd.Timedelta(days=1) <= 30
+        assert not (peer_orders["address_id"] == r["address_id"]).any()
+        assert not peer_orders["payment_token_id"].eq(r.get("payment_token_id")).any()
 
     address_peers = _others_on(world, "address_id", r["address_id"], D.DEMO_3, T0 - pd.Timedelta(days=3650))
     assert address_peers == {D.DEMO_3_ADDRESS_PEER} and address_peers <= confirmed

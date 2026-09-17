@@ -10,14 +10,17 @@ RULE_NEW_ACCOUNT_VALUE_INR = 15_000
 RULE_COD_VALUE_INR = 5_000
 
 
+NEVER = 1.0      # a threshold of 1.0 never fires (never review / never block)
+
+
 def fixed_threshold(p_abuse: float, tau_block: float, tau_review: float) -> BaselineOutcome:
     """Same abuse model, no value or CLV awareness. Thresholds are tuned on CALIBRATION only (P13)."""
     if not 0.0 <= tau_review <= tau_block <= 1.0:
         raise ValueError("thresholds must satisfy 0 <= tau_review <= tau_block <= 1")
-    if p_abuse >= tau_block:
+    if tau_block < NEVER and p_abuse >= tau_block:
         return BaselineOutcome(strategy="FIXED_THRESHOLD", action=Action.BLOCK,
                                rule_fired=f"p_abuse >= {tau_block:.2f}")
-    if p_abuse >= tau_review:
+    if tau_review < NEVER and p_abuse >= tau_review:
         return BaselineOutcome(strategy="FIXED_THRESHOLD", action=Action.MANUAL_REVIEW,
                                rule_fired=f"p_abuse >= {tau_review:.2f}")
     return BaselineOutcome(strategy="FIXED_THRESHOLD", action=Action.ALLOW,

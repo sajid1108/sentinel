@@ -77,8 +77,8 @@ def account_age_days(state: GraphState, account_id: str, t0: int) -> float:
     return 0.0 if created is None else (t0 - created) / MICROS_PER_DAY
 
 
-def matured_return_rate_smoothed(state: GraphState, account_id: str, t0: int) -> float:
-    """(returns + 2) / (matured orders + 10); matured = delivered_at + 30 d < t0 (P5)."""
+def matured_return_counts(state: GraphState, account_id: str, t0: int) -> tuple[int, int]:
+    """(returns, matured orders); matured = delivered_at + 30 d < t0 (P5)."""
     acc = state.accounts.get(account_id)
     matured = returns = 0
     for o in acc.orders if acc else ():
@@ -87,7 +87,19 @@ def matured_return_rate_smoothed(state: GraphState, account_id: str, t0: int) ->
         matured += 1
         if visible(o.returned_at, t0) and o.returned_at <= o.delivered_at + RETURN_WINDOW_DAYS * MICROS_PER_DAY:
             returns += 1
+    return returns, matured
+
+
+def matured_return_rate_smoothed(state: GraphState, account_id: str, t0: int) -> float:
+    """(returns + 2) / (matured orders + 10)."""
+    returns, matured = matured_return_counts(state, account_id, t0)
     return (returns + RETURN_RATE_PRIOR_RETURNS) / (matured + RETURN_RATE_PRIOR_ORDERS)
+
+
+def matured_return_rate(state: GraphState, account_id: str, t0: int) -> float | None:
+    """Unsmoothed returns / matured orders, None with no matured order. RULE_BASED baseline input only."""
+    returns, matured = matured_return_counts(state, account_id, t0)
+    return returns / matured if matured else None
 
 
 def tabular_features(state: GraphState, q: OrderQuery, t0: int) -> dict[str, float | int | str]:

@@ -1,0 +1,1799 @@
+{
+  "data_notice": "Synthetic data is used to validate the architecture, policy behaviour, auditability, and coordinated-pattern detection. Real deployment would require merchant-specific historical data and prospective validation.",
+  "as_of": "2026-09-01T10:30:00+05:30",
+  "versions": {
+    "feature_set_version": "fs-1.0-0ad43d7f",
+    "policy_version": "v1.0",
+    "policy_config_sha256": "e1744f126c99d32123f31768538768841b188f7ed7ac7509c406760f313915f0",
+    "return_model_version": "return-hgb-fs1.0-e3c877bc",
+    "abuse_model_version": "abuse-hgb-fs1.0-446c817f"
+  },
+  "excluded_label_rows": {
+    "TRAIN": {
+      "rows": 5180,
+      "return_label_null": 73,
+      "abuse_label_null": 112,
+      "abuse_label_null_by_status": {
+        "NOT_MATURED": 73,
+        "UNRESOLVED": 39
+      }
+    },
+    "CALIBRATION": {
+      "rows": 1267,
+      "return_label_null": 16,
+      "abuse_label_null": 26,
+      "abuse_label_null_by_status": {
+        "NOT_MATURED": 16,
+        "UNRESOLVED": 10
+      }
+    },
+    "TEST": {
+      "rows": 1878,
+      "return_label_null": 29,
+      "abuse_label_null": 45,
+      "abuse_label_null_by_status": {
+        "NOT_MATURED": 29,
+        "UNRESOLVED": 16
+      }
+    }
+  },
+  "models": [
+    {
+      "model": "RETURN",
+      "model_version": "return-hgb-fs1.0-e3c877bc",
+      "pr_auc": 0.38648592356168104,
+      "pr_auc_ci95": [
+        0.34360692991450725,
+        0.4329458680799505
+      ],
+      "brier": 0.1548429011083062,
+      "ece_10bin_quantile": 0.0321114704223476,
+      "calibration_curve": [
+        {
+          "bin_mean_predicted": 0.07652211812304655,
+          "observed_rate": 0.14054054054054055,
+          "count": 185
+        },
+        {
+          "bin_mean_predicted": 0.1322751322751323,
+          "observed_rate": 0.13513513513513514,
+          "count": 185
+        },
+        {
+          "bin_mean_predicted": 0.14902820585477414,
+          "observed_rate": 0.14594594594594595,
+          "count": 185
+        },
+        {
+          "bin_mean_predicted": 0.16605166051660517,
+          "observed_rate": 0.1783783783783784,
+          "count": 185
+        },
+        {
+          "bin_mean_predicted": 0.17147254629631062,
+          "observed_rate": 0.10270270270270271,
+          "count": 185
+        },
+        {
+          "bin_mean_predicted": 0.1952301558122501,
+          "observed_rate": 0.1837837837837838,
+          "count": 185
+        },
+        {
+          "bin_mean_predicted": 0.2011494252873563,
+          "observed_rate": 0.15675675675675677,
+          "count": 185
+        },
+        {
+          "bin_mean_predicted": 0.22661811674284146,
+          "observed_rate": 0.2810810810810811,
+          "count": 185
+        },
+        {
+          "bin_mean_predicted": 0.26228916593929474,
+          "observed_rate": 0.31891891891891894,
+          "count": 185
+        },
+        {
+          "bin_mean_predicted": 0.5084029509509407,
+          "observed_rate": 0.5054347826086957,
+          "count": 184
+        }
+      ],
+      "by_value_band": {
+        "<₹2k": {
+          "n": 808.0,
+          "positives": 159.0,
+          "prevalence": 0.1967821782178218,
+          "pr_auc": 0.3889640120838653,
+          "pr_auc_ci95_low": 0.31960617436906463,
+          "pr_auc_ci95_high": 0.4601963988943951,
+          "brier": 0.14390134537222532,
+          "ece_10bin_quantile": 0.04457639188919675
+        },
+        ">₹10k": {
+          "n": 331.0,
+          "positives": 86.0,
+          "prevalence": 0.2598187311178248,
+          "pr_auc": 0.46207138824462124,
+          "pr_auc_ci95_low": 0.3671448066144875,
+          "pr_auc_ci95_high": 0.5549570064470568,
+          "brier": 0.17379572563973314,
+          "ece_10bin_quantile": 0.060846106887746054
+        },
+        "₹2–10k": {
+          "n": 710.0,
+          "positives": 152.0,
+          "prevalence": 0.2140845070422535,
+          "pr_auc": 0.35346940295621426,
+          "pr_auc_ci95_low": 0.2880606439322174,
+          "pr_auc_ci95_high": 0.42755092721120025,
+          "brier": 0.1584589463404908,
+          "ece_10bin_quantile": 0.04724921744939485
+        }
+      },
+      "by_cohort": {
+        "account_age=30–365 d": {
+          "n": 552.0,
+          "positives": 93.0,
+          "prevalence": 0.16847826086956522,
+          "pr_auc": 0.20758946401663736,
+          "pr_auc_ci95_low": 0.15545887700726088,
+          "pr_auc_ci95_high": 0.28789209124649345,
+          "brier": 0.1411177970758193,
+          "ece_10bin_quantile": 0.05884010096597205
+        },
+        "account_age=<30 d": {
+          "n": 185.0,
+          "positives": 45.0,
+          "prevalence": 0.24324324324324326,
+          "pr_auc": 0.33565594402869026,
+          "pr_auc_ci95_low": 0.2435274196914021,
+          "pr_auc_ci95_high": 0.46698315192101547,
+          "brier": 0.17909803330891957,
+          "ece_10bin_quantile": 0.09556585197319134
+        },
+        "account_age=>365 d": {
+          "n": 1112.0,
+          "positives": 259.0,
+          "prevalence": 0.2329136690647482,
+          "pr_auc": 0.4471440151290033,
+          "pr_auc_ci95_low": 0.3859266756511738,
+          "pr_auc_ci95_high": 0.5075429765228014,
+          "brier": 0.1576208309363811,
+          "ece_10bin_quantile": 0.0305651563180882
+        },
+        "multi_tenant_address=no": {
+          "n": 1792.0,
+          "positives": 390.0,
+          "prevalence": 0.21763392857142858,
+          "pr_auc": 0.39059565230779425,
+          "pr_auc_ci95_low": 0.3472279841423749,
+          "pr_auc_ci95_high": 0.4375139138101529,
+          "brier": 0.15622215819030552,
+          "ece_10bin_quantile": 0.02747203770628507
+        },
+        "multi_tenant_address=yes": {
+          "n": 57.0,
+          "positives": 7.0,
+          "prevalence": 0.12280701754385964,
+          "pr_auc": 0.1592074592074592,
+          "pr_auc_ci95_low": 0.05465765090415862,
+          "pr_auc_ci95_high": 0.46995442362218676,
+          "brier": 0.11148099424966122,
+          "ece_10bin_quantile": 0.10791078428319269
+        },
+        "payment=COD": {
+          "n": 484.0,
+          "positives": 80.0,
+          "prevalence": 0.1652892561983471,
+          "pr_auc": 0.2797480069256677,
+          "pr_auc_ci95_low": 0.20141522229419528,
+          "pr_auc_ci95_high": 0.37424302020095723,
+          "brier": 0.1328934680015892,
+          "ece_10bin_quantile": 0.06021323262672742
+        },
+        "payment=PREPAID": {
+          "n": 1365.0,
+          "positives": 317.0,
+          "prevalence": 0.23223443223443224,
+          "pr_auc": 0.4112106968649095,
+          "pr_auc_ci95_low": 0.3632731115203651,
+          "pr_auc_ci95_high": 0.4666192987957689,
+          "brier": 0.1626257037629956,
+          "ece_10bin_quantile": 0.03277382325700807
+        },
+        "primary_category=ACCESSORIES": {
+          "n": 186.0,
+          "positives": 33.0,
+          "prevalence": 0.1774193548387097,
+          "pr_auc": 0.21111639665367501,
+          "pr_auc_ci95_low": 0.1450904604143356,
+          "pr_auc_ci95_high": 0.3344370422200895,
+          "brier": 0.15047218571164145,
+          "ece_10bin_quantile": 0.0846498518518748
+        },
+        "primary_category=APPAREL": {
+          "n": 477.0,
+          "positives": 127.0,
+          "prevalence": 0.2662473794549266,
+          "pr_auc": 0.49307353871505233,
+          "pr_auc_ci95_low": 0.407249316259648,
+          "pr_auc_ci95_high": 0.5823811747361237,
+          "brier": 0.16887926255620045,
+          "ece_10bin_quantile": 0.037037819097841276
+        },
+        "primary_category=BEAUTY": {
+          "n": 203.0,
+          "positives": 21.0,
+          "prevalence": 0.10344827586206896,
+          "pr_auc": 0.12327797234425561,
+          "pr_auc_ci95_low": 0.06456667878413563,
+          "pr_auc_ci95_high": 0.26338967279891795,
+          "brier": 0.09800173162878884,
+          "ece_10bin_quantile": 0.09139103522142818
+        },
+        "primary_category=ELECTRONICS": {
+          "n": 452.0,
+          "positives": 91.0,
+          "prevalence": 0.2013274336283186,
+          "pr_auc": 0.29601592074526506,
+          "pr_auc_ci95_low": 0.22696278061680256,
+          "pr_auc_ci95_high": 0.38240738484233433,
+          "brier": 0.15505635271866566,
+          "ece_10bin_quantile": 0.05692718864995566
+        },
+        "primary_category=FOOTWEAR": {
+          "n": 305.0,
+          "positives": 89.0,
+          "prevalence": 0.29180327868852457,
+          "pr_auc": 0.4934821023904721,
+          "pr_auc_ci95_low": 0.40139253853945467,
+          "pr_auc_ci95_high": 0.5901551042562443,
+          "brier": 0.18941980603537828,
+          "ece_10bin_quantile": 0.0979167338681457
+        },
+        "primary_category=HOME": {
+          "n": 226.0,
+          "positives": 36.0,
+          "prevalence": 0.1592920353982301,
+          "pr_auc": 0.21723308374650913,
+          "pr_auc_ci95_low": 0.1429449499644434,
+          "pr_auc_ci95_high": 0.3487229264831396,
+          "brier": 0.13278064414740642,
+          "ece_10bin_quantile": 0.056229556350543906
+        },
+        "archetype=FREQUENT_RETURNER": {
+          "n": 247.0,
+          "positives": 131.0,
+          "prevalence": 0.5303643724696356,
+          "pr_auc": 0.6676416063473386,
+          "pr_auc_ci95_low": 0.5894982365410008,
+          "pr_auc_ci95_high": 0.7477020512937399,
+          "brier": 0.26046753406751727,
+          "ece_10bin_quantile": 0.1619878504251453
+        },
+        "archetype=HOUSEHOLD": {
+          "n": 88.0,
+          "positives": 15.0,
+          "prevalence": 0.17045454545454544,
+          "pr_auc": 0.24390225034155125,
+          "pr_auc_ci95_low": 0.12855097550425645,
+          "pr_auc_ci95_high": 0.4537357763520061,
+          "brier": 0.14553765439953678,
+          "ece_10bin_quantile": 0.10752641327411018
+        },
+        "archetype=NORMAL": {
+          "n": 1201.0,
+          "positives": 160.0,
+          "prevalence": 0.13322231473771856,
+          "pr_auc": 0.1641802715132482,
+          "pr_auc_ci95_low": 0.1299440707358289,
+          "pr_auc_ci95_high": 0.20932787183933493,
+          "brier": 0.11967150844888613,
+          "ece_10bin_quantile": 0.061366577891122806
+        },
+        "archetype=OFFICE_HOSTEL_PG": {
+          "n": 74.0,
+          "positives": 12.0,
+          "prevalence": 0.16216216216216217,
+          "pr_auc": 0.17725562245550647,
+          "pr_auc_ci95_low": 0.09259472518104231,
+          "pr_auc_ci95_high": 0.3269178933358192,
+          "brier": 0.14249184683218083,
+          "ece_10bin_quantile": 0.11529138917234329
+        },
+        "archetype=OPPORTUNISTIC": {
+          "n": 21.0,
+          "positives": 11.0,
+          "prevalence": 0.5238095238095238,
+          "pr_auc": 0.4488844488844489,
+          "pr_auc_ci95_low": 0.2684417104162239,
+          "pr_auc_ci95_high": 0.7427287982500693,
+          "brier": 0.3590129179346973,
+          "ece_10bin_quantile": 0.42042281568125317
+        },
+        "archetype=REFURB_DEVICE": {
+          "n": 55.0,
+          "positives": 7.0,
+          "prevalence": 0.12727272727272726,
+          "pr_auc": 0.10878988121513039,
+          "pr_auc_ci95_low": 0.047136809269162215,
+          "pr_auc_ci95_high": 0.21470033121924434,
+          "brier": 0.12196976219187393,
+          "ece_10bin_quantile": 0.11593256089509513
+        },
+        "archetype=RING": {
+          "n": 150.0,
+          "positives": 50.0,
+          "prevalence": 0.3333333333333333,
+          "pr_auc": 0.43008928006046304,
+          "pr_auc_ci95_low": 0.3328706606877208,
+          "pr_auc_ci95_high": 0.5615777899031993,
+          "brier": 0.2272714194392078,
+          "ece_10bin_quantile": 0.14350297881315316
+        },
+        "archetype=UNCONFIRMED_ABUSER": {
+          "n": 13.0,
+          "positives": 11.0,
+          "prevalence": 0.8461538461538461,
+          "pr_auc": 0.9583333333333333,
+          "pr_auc_ci95_low": 0.8472195512820512,
+          "pr_auc_ci95_high": 1.0,
+          "brier": 0.5041177093588961,
+          "ece_10bin_quantile": 0.6177131273443022
+        }
+      }
+    },
+    {
+      "model": "ABUSE",
+      "model_version": "abuse-hgb-fs1.0-446c817f",
+      "pr_auc": 0.8143109485111188,
+      "pr_auc_ci95": [
+        0.7345974309302301,
+        0.8871238792218589
+      ],
+      "brier": 0.019417668588235053,
+      "ece_10bin_quantile": 0.010046908133942196,
+      "calibration_curve": [
+        {
+          "bin_mean_predicted": 1.6595595151041618e-05,
+          "observed_rate": 0.0,
+          "count": 184
+        },
+        {
+          "bin_mean_predicted": 2.7604591242582994e-05,
+          "observed_rate": 0.0,
+          "count": 184
+        },
+        {
+          "bin_mean_predicted": 3.3598372850917464e-05,
+          "observed_rate": 0.0,
+          "count": 184
+        },
+        {
+          "bin_mean_predicted": 4.724663421685778e-05,
+          "observed_rate": 0.0,
+          "count": 183
+        },
+        {
+          "bin_mean_predicted": 8.987178439909442e-05,
+          "observed_rate": 0.0,
+          "count": 183
+        },
+        {
+          "bin_mean_predicted": 0.00018113889821030934,
+          "observed_rate": 0.0,
+          "count": 183
+        },
+        {
+          "bin_mean_predicted": 0.0003784176590508075,
+          "observed_rate": 0.0,
+          "count": 183
+        },
+        {
+          "bin_mean_predicted": 0.0013652711939195596,
+          "observed_rate": 0.00546448087431694,
+          "count": 183
+        },
+        {
+          "bin_mean_predicted": 0.012850655857371105,
+          "observed_rate": 0.03278688524590164,
+          "count": 183
+        },
+        {
+          "bin_mean_predicted": 0.41597983166985936,
+          "observed_rate": 0.4918032786885246,
+          "count": 183
+        }
+      ],
+      "by_value_band": {
+        "<₹2k": {
+          "n": 806.0,
+          "positives": 0.0,
+          "prevalence": 0.0,
+          "brier": 1.3984711504175795e-07,
+          "ece_10bin_quantile": 0.0001255623941504931
+        },
+        ">₹10k": {
+          "n": 324.0,
+          "positives": 49.0,
+          "prevalence": 0.15123456790123457,
+          "pr_auc": 0.8900044493057152,
+          "pr_auc_ci95_low": 0.8073852788884344,
+          "pr_auc_ci95_high": 0.9574543619055285,
+          "brier": 0.04174998368958225,
+          "ece_10bin_quantile": 0.02258251926566448
+        },
+        "₹2–10k": {
+          "n": 703.0,
+          "positives": 48.0,
+          "prevalence": 0.06827880512091039,
+          "pr_auc": 0.7501632060352798,
+          "pr_auc_ci95_low": 0.6236345532769564,
+          "pr_auc_ci95_high": 0.8738020817857852,
+          "brier": 0.03138759472266781,
+          "ece_10bin_quantile": 0.017946265528597696
+        }
+      },
+      "by_cohort": {
+        "account_age=30–365 d": {
+          "n": 546.0,
+          "positives": 27.0,
+          "prevalence": 0.04945054945054945,
+          "pr_auc": 0.8941672839257165,
+          "pr_auc_ci95_low": 0.7777698863558941,
+          "pr_auc_ci95_high": 0.9689829067445325,
+          "brier": 0.02064919176914747,
+          "ece_10bin_quantile": 0.02240976180816171
+        },
+        "account_age=<30 d": {
+          "n": 180.0,
+          "positives": 44.0,
+          "prevalence": 0.24444444444444444,
+          "pr_auc": 0.8406550713813782,
+          "pr_auc_ci95_low": 0.7205068755450209,
+          "pr_auc_ci95_high": 0.9372989295229645,
+          "brier": 0.08122929242247179,
+          "ece_10bin_quantile": 0.04015596173018658
+        },
+        "account_age=>365 d": {
+          "n": 1107.0,
+          "positives": 26.0,
+          "prevalence": 0.023486901535682024,
+          "pr_auc": 0.7859727229451182,
+          "pr_auc_ci95_low": 0.6206089743516024,
+          "pr_auc_ci95_high": 0.9228899787539431,
+          "brier": 0.008759580108613744,
+          "ece_10bin_quantile": 0.0016270062445932964
+        },
+        "multi_tenant_address=no": {
+          "n": 1776.0,
+          "positives": 97.0,
+          "prevalence": 0.054617117117117114,
+          "pr_auc": 0.8148301388856942,
+          "pr_auc_ci95_low": 0.7326928935223515,
+          "pr_auc_ci95_high": 0.8858468875414521,
+          "brier": 0.020037524641865284,
+          "ece_10bin_quantile": 0.010468568200768443
+        },
+        "multi_tenant_address=yes": {
+          "n": 57.0,
+          "positives": 0.0,
+          "prevalence": 0.0,
+          "brier": 0.00010425891722999258,
+          "ece_10bin_quantile": 0.0031558053031548695
+        },
+        "payment=COD": {
+          "n": 481.0,
+          "positives": 20.0,
+          "prevalence": 0.04158004158004158,
+          "pr_auc": 0.809143583066733,
+          "pr_auc_ci95_low": 0.6296650369467707,
+          "pr_auc_ci95_high": 0.9494587607770382,
+          "brier": 0.01455403294558635,
+          "ece_10bin_quantile": 0.007253514718485895
+        },
+        "payment=PREPAID": {
+          "n": 1352.0,
+          "positives": 77.0,
+          "prevalence": 0.05695266272189349,
+          "pr_auc": 0.8179533967930466,
+          "pr_auc_ci95_low": 0.7225430754083295,
+          "pr_auc_ci95_high": 0.9022817210436943,
+          "brier": 0.021148000499561996,
+          "ece_10bin_quantile": 0.011140011721631213
+        },
+        "primary_category=ACCESSORIES": {
+          "n": 184.0,
+          "positives": 4.0,
+          "prevalence": 0.021739130434782608,
+          "pr_auc": 0.95,
+          "pr_auc_ci95_low": 0.7333333333333334,
+          "pr_auc_ci95_high": 1.0,
+          "brier": 0.007114595202825027,
+          "ece_10bin_quantile": 0.004820541265945709
+        },
+        "primary_category=APPAREL": {
+          "n": 477.0,
+          "positives": 0.0,
+          "prevalence": 0.0,
+          "brier": 5.193575969602099e-08,
+          "ece_10bin_quantile": 8.236664514843431e-05
+        },
+        "primary_category=BEAUTY": {
+          "n": 201.0,
+          "positives": 0.0,
+          "prevalence": 0.0,
+          "brier": 1.5362583450624585e-08,
+          "ece_10bin_quantile": 6.246201255625222e-05
+        },
+        "primary_category=ELECTRONICS": {
+          "n": 444.0,
+          "positives": 62.0,
+          "prevalence": 0.13963963963963963,
+          "pr_auc": 0.8614755186342842,
+          "pr_auc_ci95_low": 0.774565451464349,
+          "pr_auc_ci95_high": 0.9249811234460262,
+          "brier": 0.048857162277664734,
+          "ece_10bin_quantile": 0.03541087063785888
+        },
+        "primary_category=FOOTWEAR": {
+          "n": 302.0,
+          "positives": 31.0,
+          "prevalence": 0.10264900662251655,
+          "pr_auc": 0.7776995334619321,
+          "pr_auc_ci95_low": 0.6176586246143916,
+          "pr_auc_ci95_high": 0.9208828764765722,
+          "brier": 0.04168363665764748,
+          "ece_10bin_quantile": 0.021800519661550607
+        },
+        "primary_category=HOME": {
+          "n": 225.0,
+          "positives": 0.0,
+          "prevalence": 0.0,
+          "brier": 1.0821430158748203e-05,
+          "ece_10bin_quantile": 0.0005545819801928791
+        },
+        "archetype=FREQUENT_RETURNER": {
+          "n": 247.0,
+          "positives": 0.0,
+          "prevalence": 0.0,
+          "brier": 7.233267109713462e-05,
+          "ece_10bin_quantile": 0.0016023462563539994
+        },
+        "archetype=HOUSEHOLD": {
+          "n": 88.0,
+          "positives": 0.0,
+          "prevalence": 0.0,
+          "brier": 0.005611625756327882,
+          "ece_10bin_quantile": 0.01999082002483043
+        },
+        "archetype=NORMAL": {
+          "n": 1196.0,
+          "positives": 0.0,
+          "prevalence": 0.0,
+          "brier": 0.000510673994865729,
+          "ece_10bin_quantile": 0.005116127723951559
+        },
+        "archetype=OFFICE_HOSTEL_PG": {
+          "n": 74.0,
+          "positives": 0.0,
+          "prevalence": 0.0,
+          "brier": 9.289273339151663e-05,
+          "ece_10bin_quantile": 0.002915735531885224
+        },
+        "archetype=OPPORTUNISTIC": {
+          "n": 18.0,
+          "positives": 6.0,
+          "prevalence": 0.3333333333333333,
+          "pr_auc": 0.8541666666666667,
+          "pr_auc_ci95_low": 0.5495604395604397,
+          "pr_auc_ci95_high": 1.0,
+          "brier": 0.16036448595593283,
+          "ece_10bin_quantile": 0.24111426103166644
+        },
+        "archetype=REFURB_DEVICE": {
+          "n": 55.0,
+          "positives": 0.0,
+          "prevalence": 0.0,
+          "brier": 0.0019291306970614457,
+          "ece_10bin_quantile": 0.01113713430094984
+        },
+        "archetype=RING": {
+          "n": 142.0,
+          "positives": 91.0,
+          "prevalence": 0.6408450704225352,
+          "pr_auc": 0.8762976292231612,
+          "pr_auc_ci95_low": 0.7961777717953504,
+          "pr_auc_ci95_high": 0.9434708028286447,
+          "brier": 0.22043192243715956,
+          "ece_10bin_quantile": 0.20142754398928203
+        },
+        "archetype=UNCONFIRMED_ABUSER": {
+          "n": 13.0,
+          "positives": 0.0,
+          "prevalence": 0.0,
+          "brier": 0.013020092628060725,
+          "ece_10bin_quantile": 0.066085504144452
+        }
+      }
+    }
+  ],
+  "model_details": {
+    "RETURN": {
+      "model_version": "return-hgb-fs1.0-e3c877bc",
+      "calibration_method": "isotonic",
+      "test": {
+        "rows": 1849,
+        "positives": 397,
+        "prevalence": 0.214710654407788
+      },
+      "calibration_slice_ece_10bin_quantile": 0.019118210590689678,
+      "test_rows": {
+        "rows": 1849,
+        "order_ids_sha256": "37c8b684093eb4cad7b9dfa9d371faa546d56b1211185eff0bd04be9ca077800"
+      }
+    },
+    "ABUSE": {
+      "model_version": "abuse-hgb-fs1.0-446c817f",
+      "calibration_method": "sigmoid",
+      "test": {
+        "rows": 1833,
+        "positives": 97,
+        "prevalence": 0.05291871249318058
+      },
+      "calibration_slice_ece_10bin_quantile": 0.0017926193129196822,
+      "test_rows": {
+        "rows": 1833,
+        "order_ids_sha256": "3da4826a3c13aeffc95bfdbbfbebc4fe7286254f6284a6980ee1259e1a84cb4d"
+      },
+      "ece_warning": false
+    }
+  },
+  "graph_uplift": {
+    "test_pr_auc_full": 0.8143109485111188,
+    "test_pr_auc_no_graph": 0.5273626277003611,
+    "uplift": 0.2869483208107577,
+    "no_graph_features": [
+      "order_value_inr",
+      "primary_category",
+      "account_age_days",
+      "prior_orders",
+      "prior_suspicious_claims_180d",
+      "new_device_for_account"
+    ],
+    "note": "Evaluation-only model: same parameters and sigmoid calibration, never saved."
+  },
+  "cold_start_ring_recall": 0.7272727272727273,
+  "cold_start_ring_recall_detail": {
+    "ring": "R3",
+    "min_p_abuse": 0.5,
+    "full": {
+      "abusive_orders": 77,
+      "at_or_above_0_5": 56,
+      "recall": 0.7272727272727273
+    },
+    "no_graph": {
+      "abusive_orders": 77,
+      "at_or_above_0_5": 11,
+      "recall": 0.14285714285714285
+    }
+  },
+  "separation": {
+    "archetype": "FREQUENT_RETURNER",
+    "test_orders": 250,
+    "pearson_p_return_p_abuse": -0.13577057645325907
+  },
+  "backtest": [
+    {
+      "strategy": "SENTINEL",
+      "realized_cost_per_1000": {
+        "inr": 195312.54,
+        "display": "₹1,95,313"
+      },
+      "abuse_loss_prevented": {
+        "inr": 850799.93,
+        "display": "₹8,50,800"
+      },
+      "genuine_block_rate": 0.001152073732718894,
+      "customer_friction_rate": 0.03513824884792627,
+      "manual_reviews_per_1000": 64.92089470812876,
+      "cost_per_detected_abuse": {
+        "inr": 1196.91,
+        "display": "₹1,197"
+      },
+      "revenue_preserved": {
+        "inr": 3128892.04,
+        "display": "₹31,28,892"
+      },
+      "precision_block": 0.875,
+      "recall_intercepted": 0.7154639175257731
+    },
+    {
+      "strategy": "FIXED_THRESHOLD",
+      "realized_cost_per_1000": {
+        "inr": 160112.09,
+        "display": "₹1,60,112"
+      },
+      "abuse_loss_prevented": {
+        "inr": 937968.57,
+        "display": "₹9,37,969"
+      },
+      "genuine_block_rate": 0.004032258064516129,
+      "customer_friction_rate": 0.03398617511520737,
+      "manual_reviews_per_1000": 56.737588652482266,
+      "cost_per_detected_abuse": {
+        "inr": 1252.65,
+        "display": "₹1,253"
+      },
+      "revenue_preserved": {
+        "inr": 3114814.49,
+        "display": "₹31,14,814"
+      },
+      "precision_block": 0.8627450980392157,
+      "recall_intercepted": 0.8247422680412371
+    },
+    {
+      "strategy": "RULE_BASED",
+      "realized_cost_per_1000": {
+        "inr": 742313.29,
+        "display": "₹7,42,313"
+      },
+      "abuse_loss_prevented": {
+        "inr": 268729.86,
+        "display": "₹2,68,730"
+      },
+      "genuine_block_rate": 0.024193548387096774,
+      "customer_friction_rate": 0.0748847926267281,
+      "manual_reviews_per_1000": 8.72885979268958,
+      "cost_per_detected_abuse": {
+        "inr": 45668.02,
+        "display": "₹45,668"
+      },
+      "revenue_preserved": {
+        "inr": 3029945.52,
+        "display": "₹30,29,946"
+      },
+      "precision_block": 0.0,
+      "recall_intercepted": 0.11030927835051546
+    },
+    {
+      "strategy": "ALLOW_ALL",
+      "realized_cost_per_1000": {
+        "inr": 623290.95,
+        "display": "₹6,23,291"
+      },
+      "abuse_loss_prevented": {
+        "inr": 0.0,
+        "display": "₹0"
+      },
+      "genuine_block_rate": 0.0,
+      "customer_friction_rate": 0.0,
+      "manual_reviews_per_1000": 0.0,
+      "cost_per_detected_abuse": {
+        "inr": 0.0,
+        "display": "₹0"
+      },
+      "revenue_preserved": {
+        "inr": 3173690.95,
+        "display": "₹31,73,691"
+      },
+      "precision_block": 0.0,
+      "recall_intercepted": 0.0
+    }
+  ],
+  "backtest_details": {
+    "rows": {
+      "test": {
+        "rows": 1833,
+        "order_ids_sha256": "3da4826a3c13aeffc95bfdbbfbebc4fe7286254f6284a6980ee1259e1a84cb4d"
+      },
+      "fixed_threshold_tuning_calibration": {
+        "rows": 1241,
+        "order_ids_sha256": "95e1f4b71a6ea5870da02a58ccbcfe1946d3f30549c35197726016589ca17790"
+      }
+    },
+    "cost_basis": "Realized cost at the true abuse label; abusive loss scaled by returned_value_fraction when the order was returned. Expected cost is never used to score a strategy.",
+    "fixed_threshold": {
+      "tau_review": 0.05,
+      "tau_block": 0.75,
+      "calibration_realized_cost_per_1000": {
+        "inr": 132099.68,
+        "display": "₹1,32,100"
+      }
+    },
+    "per_strategy": {
+      "SENTINEL": {
+        "orders": 1833,
+        "abusive": 97,
+        "genuine": 1736,
+        "expected_intercepted_abusive": 69.39999999999999,
+        "realized_cost_total": {
+          "inr": 358007.88,
+          "display": "₹3,58,008"
+        },
+        "notes": []
+      },
+      "FIXED_THRESHOLD": {
+        "orders": 1833,
+        "abusive": 97,
+        "genuine": 1736,
+        "expected_intercepted_abusive": 80.0,
+        "realized_cost_total": {
+          "inr": 293485.47,
+          "display": "₹2,93,485"
+        },
+        "notes": []
+      },
+      "RULE_BASED": {
+        "orders": 1833,
+        "abusive": 97,
+        "genuine": 1736,
+        "expected_intercepted_abusive": 10.7,
+        "realized_cost_total": {
+          "inr": 1360660.27,
+          "display": "₹13,60,660"
+        },
+        "notes": []
+      },
+      "ALLOW_ALL": {
+        "orders": 1833,
+        "abusive": 97,
+        "genuine": 1736,
+        "expected_intercepted_abusive": 0.0,
+        "realized_cost_total": {
+          "inr": 1142492.31,
+          "display": "₹11,42,492"
+        },
+        "notes": [
+          "cost_per_detected_abuse undefined (no abusive order intercepted); reported as 0",
+          "precision_block undefined (no BLOCK); reported as 0"
+        ]
+      }
+    },
+    "action_distribution": {
+      "SENTINEL": {
+        "overall": {
+          "ALLOW": 1683,
+          "PREPAID_ONLY": 15,
+          "MANUAL_REVIEW": 119,
+          "BLOCK": 16
+        },
+        "rings": {
+          "R3": {
+            "ALLOW": 35,
+            "PREPAID_ONLY": 1,
+            "MANUAL_REVIEW": 70,
+            "BLOCK": 14
+          },
+          "R4": {
+            "ALLOW": 11,
+            "PREPAID_ONLY": 5,
+            "MANUAL_REVIEW": 4,
+            "BLOCK": 2
+          }
+        }
+      },
+      "FIXED_THRESHOLD": {
+        "overall": {
+          "ALLOW": 1678,
+          "PREPAID_ONLY": 0,
+          "MANUAL_REVIEW": 104,
+          "BLOCK": 51
+        },
+        "rings": {
+          "R3": {
+            "ALLOW": 35,
+            "PREPAID_ONLY": 0,
+            "MANUAL_REVIEW": 37,
+            "BLOCK": 48
+          },
+          "R4": {
+            "ALLOW": 9,
+            "PREPAID_ONLY": 0,
+            "MANUAL_REVIEW": 10,
+            "BLOCK": 3
+          }
+        }
+      },
+      "RULE_BASED": {
+        "overall": {
+          "ALLOW": 1637,
+          "PREPAID_ONLY": 138,
+          "MANUAL_REVIEW": 16,
+          "BLOCK": 42
+        },
+        "rings": {
+          "R3": {
+            "ALLOW": 98,
+            "PREPAID_ONLY": 16,
+            "MANUAL_REVIEW": 6,
+            "BLOCK": 0
+          },
+          "R4": {
+            "ALLOW": 21,
+            "PREPAID_ONLY": 0,
+            "MANUAL_REVIEW": 1,
+            "BLOCK": 0
+          }
+        }
+      },
+      "ALLOW_ALL": {
+        "overall": {
+          "ALLOW": 1833,
+          "PREPAID_ONLY": 0,
+          "MANUAL_REVIEW": 0,
+          "BLOCK": 0
+        },
+        "rings": {
+          "R3": {
+            "ALLOW": 120,
+            "PREPAID_ONLY": 0,
+            "MANUAL_REVIEW": 0,
+            "BLOCK": 0
+          },
+          "R4": {
+            "ALLOW": 22,
+            "PREPAID_ONLY": 0,
+            "MANUAL_REVIEW": 0,
+            "BLOCK": 0
+          }
+        }
+      }
+    },
+    "by_archetype": {
+      "NORMAL": {
+        "SENTINEL": {
+          "genuine_block_rate": 0.0,
+          "customer_friction_rate": 0.021739130434782608,
+          "manual_reviews_per_1000": 15.88628762541806
+        },
+        "FIXED_THRESHOLD": {
+          "genuine_block_rate": 0.0,
+          "customer_friction_rate": 0.023411371237458192,
+          "manual_reviews_per_1000": 23.411371237458194
+        },
+        "RULE_BASED": {
+          "genuine_block_rate": 0.0,
+          "customer_friction_rate": 0.0802675585284281,
+          "manual_reviews_per_1000": 4.1806020066889635
+        },
+        "ALLOW_ALL": {
+          "genuine_block_rate": 0.0,
+          "customer_friction_rate": 0.0,
+          "manual_reviews_per_1000": 0.0
+        },
+        "orders": 1196,
+        "genuine": 1196
+      },
+      "HOUSEHOLD": {
+        "SENTINEL": {
+          "genuine_block_rate": 0.0,
+          "customer_friction_rate": 0.07954545454545454,
+          "manual_reviews_per_1000": 79.54545454545455
+        },
+        "FIXED_THRESHOLD": {
+          "genuine_block_rate": 0.0,
+          "customer_friction_rate": 0.09090909090909091,
+          "manual_reviews_per_1000": 90.9090909090909
+        },
+        "RULE_BASED": {
+          "genuine_block_rate": 0.0,
+          "customer_friction_rate": 0.03409090909090909,
+          "manual_reviews_per_1000": 0.0
+        },
+        "ALLOW_ALL": {
+          "genuine_block_rate": 0.0,
+          "customer_friction_rate": 0.0,
+          "manual_reviews_per_1000": 0.0
+        },
+        "orders": 88,
+        "genuine": 88
+      },
+      "OFFICE_HOSTEL_PG": {
+        "SENTINEL": {
+          "genuine_block_rate": 0.0,
+          "customer_friction_rate": 0.013513513513513514,
+          "manual_reviews_per_1000": 13.513513513513514
+        },
+        "FIXED_THRESHOLD": {
+          "genuine_block_rate": 0.0,
+          "customer_friction_rate": 0.013513513513513514,
+          "manual_reviews_per_1000": 13.513513513513514
+        },
+        "RULE_BASED": {
+          "genuine_block_rate": 0.0,
+          "customer_friction_rate": 0.06756756756756757,
+          "manual_reviews_per_1000": 0.0
+        },
+        "ALLOW_ALL": {
+          "genuine_block_rate": 0.0,
+          "customer_friction_rate": 0.0,
+          "manual_reviews_per_1000": 0.0
+        },
+        "orders": 74,
+        "genuine": 74
+      },
+      "REFURB_DEVICE": {
+        "SENTINEL": {
+          "genuine_block_rate": 0.0,
+          "customer_friction_rate": 0.05454545454545454,
+          "manual_reviews_per_1000": 36.36363636363637
+        },
+        "FIXED_THRESHOLD": {
+          "genuine_block_rate": 0.0,
+          "customer_friction_rate": 0.05454545454545454,
+          "manual_reviews_per_1000": 54.54545454545455
+        },
+        "RULE_BASED": {
+          "genuine_block_rate": 0.0,
+          "customer_friction_rate": 0.05454545454545454,
+          "manual_reviews_per_1000": 18.181818181818183
+        },
+        "ALLOW_ALL": {
+          "genuine_block_rate": 0.0,
+          "customer_friction_rate": 0.0,
+          "manual_reviews_per_1000": 0.0
+        },
+        "orders": 55,
+        "genuine": 55
+      }
+    }
+  },
+  "guardrail_cost": {
+    "note": "Evaluation-only diagnostic, not a StrategyBacktest strategy. SENTINEL_UNCONSTRAINED takes the lowest expected cost over all four actions with no guardrails. Realized cost at the true label.",
+    "rows": 1833,
+    "strategies": {
+      "SENTINEL": {
+        "realized_cost_per_1000": {
+          "inr": 195312.54,
+          "display": "₹1,95,313"
+        },
+        "block": 16,
+        "genuine_block": 2,
+        "manual_review": 119,
+        "prepaid_only": 15,
+        "abusive_allowed": 10
+      },
+      "SENTINEL_UNCONSTRAINED": {
+        "realized_cost_per_1000": {
+          "inr": 155109.74,
+          "display": "₹1,55,110"
+        },
+        "block": 65,
+        "genuine_block": 10,
+        "manual_review": 70,
+        "prepaid_only": 15,
+        "abusive_allowed": 10
+      },
+      "FIXED_THRESHOLD": {
+        "realized_cost_per_1000": {
+          "inr": 160112.09,
+          "display": "₹1,60,112"
+        },
+        "block": 51,
+        "genuine_block": 7,
+        "manual_review": 104,
+        "prepaid_only": 0,
+        "abusive_allowed": 8
+      }
+    },
+    "guardrail_effect": {
+      "decisions_changed": 49,
+      "extra_realized_cost_per_1000": {
+        "inr": 40202.8,
+        "display": "₹40,203"
+      },
+      "extra_realized_cost_total": {
+        "inr": 73691.73,
+        "display": "₹73,692"
+      },
+      "genuine_blocks_avoided": 8,
+      "extra_realized_cost_per_genuine_block_avoided": {
+        "inr": 9211.47,
+        "display": "₹9,211"
+      }
+    },
+    "per_guardrail": {
+      "G2": {
+        "orders": 49,
+        "realized_cost_difference": {
+          "inr": 73691.73,
+          "display": "₹73,692"
+        }
+      },
+      "G3": {
+        "orders": 8,
+        "realized_cost_difference": {
+          "inr": 9522.72,
+          "display": "₹9,523"
+        }
+      }
+    },
+    "orders_with_multiple_guardrails": 8
+  },
+  "calibration_bands": {
+    "RETURN": {
+      "TEST": {
+        "bands": [
+          {
+            "band": "[0.00, 0.05)",
+            "n": 67,
+            "positives": 8,
+            "mean_predicted": 0.027718550106609806,
+            "observed_rate": 0.11940298507462686,
+            "observed_ci95_wilson": [
+              0.061762325335044804,
+              0.2183202583807222
+            ]
+          },
+          {
+            "band": "[0.05, 0.20)",
+            "n": 987,
+            "positives": 145,
+            "mean_predicted": 0.15363298461926764,
+            "observed_rate": 0.1469098277608916,
+            "observed_ci95_wilson": [
+              0.1261933721024655,
+              0.17036412072835133
+            ]
+          },
+          {
+            "band": "[0.20, 0.50)",
+            "n": 692,
+            "positives": 183,
+            "mean_predicted": 0.2454509333946035,
+            "observed_rate": 0.26445086705202314,
+            "observed_ci95_wilson": [
+              0.23295583701561262,
+              0.2985466397806077
+            ]
+          },
+          {
+            "band": "[0.50, 0.70)",
+            "n": 76,
+            "positives": 38,
+            "mean_predicted": 0.5546558704453443,
+            "observed_rate": 0.5,
+            "observed_ci95_wilson": [
+              0.39032595445464624,
+              0.6096740455453538
+            ]
+          },
+          {
+            "band": "[0.70, 0.90)",
+            "n": 25,
+            "positives": 21,
+            "mean_predicted": 0.7415789473684211,
+            "observed_rate": 0.84,
+            "observed_ci95_wilson": [
+              0.6534637839282114,
+              0.9359654854332355
+            ]
+          },
+          {
+            "band": "[0.90, 1.00]",
+            "n": 2,
+            "positives": 2,
+            "mean_predicted": 0.9628180091494166,
+            "observed_rate": 1.0,
+            "observed_ci95_wilson": [
+              0.34238022750665303,
+              1.0
+            ]
+          }
+        ],
+        "ece_10bin_equal_width_p_ge_0_05": 0.017056903974692374,
+        "rows_p_ge_0_05": 1782
+      },
+      "CALIBRATION": {
+        "bands": [
+          {
+            "band": "[0.00, 0.05)",
+            "n": 32,
+            "positives": 1,
+            "mean_predicted": 0.03125,
+            "observed_rate": 0.03125,
+            "observed_ci95_wilson": [
+              0.005537860164003122,
+              0.15744263820012558
+            ]
+          },
+          {
+            "band": "[0.05, 0.20)",
+            "n": 616,
+            "positives": 95,
+            "mean_predicted": 0.15422077922077923,
+            "observed_rate": 0.15422077922077923,
+            "observed_ci95_wilson": [
+              0.12785107537059542,
+              0.18487640689478174
+            ]
+          },
+          {
+            "band": "[0.20, 0.50)",
+            "n": 514,
+            "positives": 130,
+            "mean_predicted": 0.2529182879377432,
+            "observed_rate": 0.2529182879377432,
+            "observed_ci95_wilson": [
+              0.2172673864268184,
+              0.29223499953809295
+            ]
+          },
+          {
+            "band": "[0.50, 0.70)",
+            "n": 61,
+            "positives": 34,
+            "mean_predicted": 0.5573770491803279,
+            "observed_rate": 0.5573770491803278,
+            "observed_ci95_wilson": [
+              0.4330336769314388,
+              0.6749219447851712
+            ]
+          },
+          {
+            "band": "[0.70, 0.90)",
+            "n": 27,
+            "positives": 20,
+            "mean_predicted": 0.7407407407407407,
+            "observed_rate": 0.7407407407407407,
+            "observed_ci95_wilson": [
+              0.5532142868544692,
+              0.8682962543809281
+            ]
+          },
+          {
+            "band": "[0.90, 1.00]",
+            "n": 1,
+            "positives": 1,
+            "mean_predicted": 1.0,
+            "observed_rate": 1.0,
+            "observed_ci95_wilson": [
+              0.20654931437723745,
+              1.0
+            ]
+          }
+        ],
+        "ece_10bin_equal_width_p_ge_0_05": 1.8306384573392656e-17,
+        "rows_p_ge_0_05": 1219
+      }
+    },
+    "ABUSE": {
+      "TEST": {
+        "bands": [
+          {
+            "band": "[0.00, 0.05)",
+            "n": 1678,
+            "positives": 8,
+            "mean_predicted": 0.0022762378761957327,
+            "observed_rate": 0.004767580452920143,
+            "observed_ci95_wilson": [
+              0.0024177658973171382,
+              0.009379694984998688
+            ]
+          },
+          {
+            "band": "[0.05, 0.20)",
+            "n": 51,
+            "positives": 10,
+            "mean_predicted": 0.1002241977133761,
+            "observed_rate": 0.19607843137254902,
+            "observed_ci95_wilson": [
+              0.11015342512466689,
+              0.3245807948136561
+            ]
+          },
+          {
+            "band": "[0.20, 0.50)",
+            "n": 28,
+            "positives": 16,
+            "mean_predicted": 0.3146372232752201,
+            "observed_rate": 0.5714285714285714,
+            "observed_ci95_wilson": [
+              0.3907078562746876,
+              0.734914528758763
+            ]
+          },
+          {
+            "band": "[0.50, 0.70)",
+            "n": 19,
+            "positives": 14,
+            "mean_predicted": 0.6327964897763655,
+            "observed_rate": 0.7368421052631579,
+            "observed_ci95_wilson": [
+              0.5120844910218489,
+              0.8819358765321748
+            ]
+          },
+          {
+            "band": "[0.70, 0.90)",
+            "n": 36,
+            "positives": 29,
+            "mean_predicted": 0.8198859390671023,
+            "observed_rate": 0.8055555555555556,
+            "observed_ci95_wilson": [
+              0.6497195700482261,
+              0.9024690458107127
+            ]
+          },
+          {
+            "band": "[0.90, 1.00]",
+            "n": 21,
+            "positives": 20,
+            "mean_predicted": 0.932752366568835,
+            "observed_rate": 0.9523809523809523,
+            "observed_ci95_wilson": [
+              0.7733063992587743,
+              0.9915440121901737
+            ]
+          }
+        ],
+        "ece_10bin_equal_width_p_ge_0_05": 0.12380775928761491,
+        "rows_p_ge_0_05": 155
+      },
+      "CALIBRATION": {
+        "bands": [
+          {
+            "band": "[0.00, 0.05)",
+            "n": 1137,
+            "positives": 2,
+            "mean_predicted": 0.0025292112760771446,
+            "observed_rate": 0.001759014951627089,
+            "observed_ci95_wilson": [
+              0.0004825179576691762,
+              0.0063908812864290915
+            ]
+          },
+          {
+            "band": "[0.05, 0.20)",
+            "n": 52,
+            "positives": 6,
+            "mean_predicted": 0.0912058411210859,
+            "observed_rate": 0.11538461538461539,
+            "observed_ci95_wilson": [
+              0.05396969203087296,
+              0.22971664344902112
+            ]
+          },
+          {
+            "band": "[0.20, 0.50)",
+            "n": 24,
+            "positives": 10,
+            "mean_predicted": 0.32704080515067385,
+            "observed_rate": 0.4166666666666667,
+            "observed_ci95_wilson": [
+              0.24467602609811764,
+              0.6116533413477124
+            ]
+          },
+          {
+            "band": "[0.50, 0.70)",
+            "n": 10,
+            "positives": 3,
+            "mean_predicted": 0.6030101824101712,
+            "observed_rate": 0.3,
+            "observed_ci95_wilson": [
+              0.10779126740630099,
+              0.6032218525388546
+            ]
+          },
+          {
+            "band": "[0.70, 0.90)",
+            "n": 10,
+            "positives": 9,
+            "mean_predicted": 0.7989214697049685,
+            "observed_rate": 0.9,
+            "observed_ci95_wilson": [
+              0.5958499732047615,
+              0.9821237869049271
+            ]
+          },
+          {
+            "band": "[0.90, 1.00]",
+            "n": 8,
+            "positives": 7,
+            "mean_predicted": 0.9388663375231087,
+            "observed_rate": 0.875,
+            "observed_ci95_wilson": [
+              0.5291118177871464,
+              0.9775825085499433
+            ]
+          }
+        ],
+        "ece_10bin_equal_width_p_ge_0_05": 0.08598328214278757,
+        "rows_p_ge_0_05": 104
+      }
+    }
+  },
+  "sensitivity": [
+    {
+      "group": "economics",
+      "factor": 0.5,
+      "fixed_threshold_tau_review": 0.05,
+      "fixed_threshold_tau_block": 0.65,
+      "SENTINEL_realized_cost_per_1000_inr": 183292.14,
+      "FIXED_THRESHOLD_realized_cost_per_1000_inr": 131651.75,
+      "RULE_BASED_realized_cost_per_1000_inr": 699571.77,
+      "ALLOW_ALL_realized_cost_per_1000_inr": 619322.04
+    },
+    {
+      "group": "economics",
+      "factor": 1.5,
+      "fixed_threshold_tau_review": 0.15,
+      "fixed_threshold_tau_block": 0.75,
+      "SENTINEL_realized_cost_per_1000_inr": 200439.6,
+      "FIXED_THRESHOLD_realized_cost_per_1000_inr": 188667.71,
+      "RULE_BASED_realized_cost_per_1000_inr": 785054.82,
+      "ALLOW_ALL_realized_cost_per_1000_inr": 627259.85
+    },
+    {
+      "group": "clv",
+      "factor": 0.5,
+      "fixed_threshold_tau_review": 0.05,
+      "fixed_threshold_tau_block": 0.75,
+      "SENTINEL_realized_cost_per_1000_inr": 195255.13,
+      "FIXED_THRESHOLD_realized_cost_per_1000_inr": 160054.69,
+      "RULE_BASED_realized_cost_per_1000_inr": 739842.3,
+      "ALLOW_ALL_realized_cost_per_1000_inr": 623290.95
+    },
+    {
+      "group": "clv",
+      "factor": 1.5,
+      "fixed_threshold_tau_review": 0.05,
+      "fixed_threshold_tau_block": 0.75,
+      "SENTINEL_realized_cost_per_1000_inr": 199554.53,
+      "FIXED_THRESHOLD_realized_cost_per_1000_inr": 162852.3,
+      "RULE_BASED_realized_cost_per_1000_inr": 745493.25,
+      "ALLOW_ALL_realized_cost_per_1000_inr": 623290.95
+    },
+    {
+      "group": "allow",
+      "factor": 0.5,
+      "fixed_threshold_tau_review": 0.05,
+      "fixed_threshold_tau_block": 0.75,
+      "SENTINEL_realized_cost_per_1000_inr": 207143.63,
+      "FIXED_THRESHOLD_realized_cost_per_1000_inr": 169292.98,
+      "RULE_BASED_realized_cost_per_1000_inr": 779908.09,
+      "ALLOW_ALL_realized_cost_per_1000_inr": 677586.81
+    },
+    {
+      "group": "allow",
+      "factor": 1.5,
+      "fixed_threshold_tau_review": 0.15,
+      "fixed_threshold_tau_block": 0.75,
+      "SENTINEL_realized_cost_per_1000_inr": 184275.98,
+      "FIXED_THRESHOLD_realized_cost_per_1000_inr": 164923.14,
+      "RULE_BASED_realized_cost_per_1000_inr": 704718.49,
+      "ALLOW_ALL_realized_cost_per_1000_inr": 568995.08
+    },
+    {
+      "group": "prepaid_only",
+      "factor": 0.5,
+      "fixed_threshold_tau_review": 0.05,
+      "fixed_threshold_tau_block": 0.75,
+      "SENTINEL_realized_cost_per_1000_inr": 198995.53,
+      "FIXED_THRESHOLD_realized_cost_per_1000_inr": 160112.09,
+      "RULE_BASED_realized_cost_per_1000_inr": 750198.52,
+      "ALLOW_ALL_realized_cost_per_1000_inr": 623290.95
+    },
+    {
+      "group": "prepaid_only",
+      "factor": 1.5,
+      "fixed_threshold_tau_review": 0.05,
+      "fixed_threshold_tau_block": 0.75,
+      "SENTINEL_realized_cost_per_1000_inr": 171994.34,
+      "FIXED_THRESHOLD_realized_cost_per_1000_inr": 160112.09,
+      "RULE_BASED_realized_cost_per_1000_inr": 743555.15,
+      "ALLOW_ALL_realized_cost_per_1000_inr": 623290.95
+    },
+    {
+      "group": "manual_review",
+      "factor": 0.5,
+      "fixed_threshold_tau_review": 0.05,
+      "fixed_threshold_tau_block": 0.65,
+      "SENTINEL_realized_cost_per_1000_inr": 276206.07,
+      "FIXED_THRESHOLD_realized_cost_per_1000_inr": 225631.95,
+      "RULE_BASED_realized_cost_per_1000_inr": 782371.93,
+      "ALLOW_ALL_realized_cost_per_1000_inr": 623290.95
+    },
+    {
+      "group": "manual_review",
+      "factor": 1.5,
+      "fixed_threshold_tau_review": 0.15,
+      "fixed_threshold_tau_block": 0.75,
+      "SENTINEL_realized_cost_per_1000_inr": 115094.4,
+      "FIXED_THRESHOLD_realized_cost_per_1000_inr": 135031.32,
+      "RULE_BASED_realized_cost_per_1000_inr": 723828.84,
+      "ALLOW_ALL_realized_cost_per_1000_inr": 623290.95
+    },
+    {
+      "group": "block",
+      "factor": 0.5,
+      "fixed_threshold_tau_review": 0.05,
+      "fixed_threshold_tau_block": 0.75,
+      "SENTINEL_realized_cost_per_1000_inr": 193600.68,
+      "FIXED_THRESHOLD_realized_cost_per_1000_inr": 155928.99,
+      "RULE_BASED_realized_cost_per_1000_inr": 660873.91,
+      "ALLOW_ALL_realized_cost_per_1000_inr": 623290.95
+    },
+    {
+      "group": "block",
+      "factor": 1.5,
+      "fixed_threshold_tau_review": 0.15,
+      "fixed_threshold_tau_block": 0.75,
+      "SENTINEL_realized_cost_per_1000_inr": 196181.9,
+      "FIXED_THRESHOLD_realized_cost_per_1000_inr": 180405.59,
+      "RULE_BASED_realized_cost_per_1000_inr": 823752.67,
+      "ALLOW_ALL_realized_cost_per_1000_inr": 623290.95
+    }
+  ],
+  "label_sensitivity": {
+    "UNRESOLVED_AS_0": {
+      "abuse_model_test": {
+        "n": 1849,
+        "positives": 97,
+        "prevalence": 0.052460789616008655,
+        "pr_auc": 0.7174324333699399,
+        "pr_auc_ci95_low": 0.6206113625329726,
+        "pr_auc_ci95_high": 0.821848514830346,
+        "brier": 0.02233701357055605,
+        "ece_10bin_quantile": 0.006233046962608453
+      },
+      "no_graph_test_pr_auc": 0.47068889323827695,
+      "graph_uplift_pr_auc": 0.24674354013166294,
+      "cold_start_ring_recall": {
+        "full": {
+          "abusive_orders": 77,
+          "at_or_above_0_5": 56,
+          "recall": 0.7272727272727273
+        },
+        "no_graph": {
+          "abusive_orders": 77,
+          "at_or_above_0_5": 11,
+          "recall": 0.14285714285714285
+        }
+      },
+      "fixed_threshold": {
+        "tau_review": 0.05,
+        "tau_block": 0.75
+      },
+      "backtest": [
+        {
+          "strategy": "SENTINEL",
+          "realized_cost_per_1000": {
+            "inr": 205015.76,
+            "display": "₹2,05,016"
+          },
+          "abuse_loss_prevented": {
+            "inr": 850799.93,
+            "display": "₹8,50,800"
+          },
+          "genuine_block_rate": 0.0028538812785388126,
+          "customer_friction_rate": 0.03824200913242009,
+          "manual_reviews_per_1000": 67.60411032990805,
+          "cost_per_detected_abuse": {
+            "inr": 1500.46,
+            "display": "₹1,500"
+          },
+          "revenue_preserved": {
+            "inr": 3176704.59,
+            "display": "₹31,76,705"
+          },
+          "precision_block": 0.7368421052631579,
+          "recall_intercepted": 0.7154639175257731
+        },
+        {
+          "strategy": "FIXED_THRESHOLD",
+          "realized_cost_per_1000": {
+            "inr": 181452.16,
+            "display": "₹1,81,452"
+          },
+          "abuse_loss_prevented": {
+            "inr": 937968.57,
+            "display": "₹9,37,969"
+          },
+          "genuine_block_rate": 0.007990867579908675,
+          "customer_friction_rate": 0.03538812785388128,
+          "manual_reviews_per_1000": 57.869118442401295,
+          "cost_per_detected_abuse": {
+            "inr": 1777.89,
+            "display": "₹1,778"
+          },
+          "revenue_preserved": {
+            "inr": 3146006.71,
+            "display": "₹31,46,007"
+          },
+          "precision_block": 0.7586206896551724,
+          "recall_intercepted": 0.8247422680412371
+        },
+        {
+          "strategy": "RULE_BASED",
+          "realized_cost_per_1000": {
+            "inr": 736603.55,
+            "display": "₹7,36,604"
+          },
+          "abuse_loss_prevented": {
+            "inr": 268729.86,
+            "display": "₹2,68,730"
+          },
+          "genuine_block_rate": 0.023972602739726026,
+          "customer_friction_rate": 0.07591324200913242,
+          "manual_reviews_per_1000": 8.653326122228231,
+          "cost_per_detected_abuse": {
+            "inr": 45791.36,
+            "display": "₹45,791"
+          },
+          "revenue_preserved": {
+            "inr": 3091877.35,
+            "display": "₹30,91,877"
+          },
+          "precision_block": 0.0,
+          "recall_intercepted": 0.11030927835051546
+        },
+        {
+          "strategy": "ALLOW_ALL",
+          "realized_cost_per_1000": {
+            "inr": 617897.41,
+            "display": "₹6,17,897"
+          },
+          "abuse_loss_prevented": {
+            "inr": 0.0,
+            "display": "₹0"
+          },
+          "genuine_block_rate": 0.0,
+          "customer_friction_rate": 0.0,
+          "manual_reviews_per_1000": 0.0,
+          "cost_per_detected_abuse": {
+            "inr": 0.0,
+            "display": "₹0"
+          },
+          "revenue_preserved": {
+            "inr": 3236732.46,
+            "display": "₹32,36,732"
+          },
+          "precision_block": 0.0,
+          "recall_intercepted": 0.0
+        }
+      ],
+      "test_rows": {
+        "rows": 1849,
+        "order_ids_sha256": "37c8b684093eb4cad7b9dfa9d371faa546d56b1211185eff0bd04be9ca077800"
+      }
+    },
+    "UNRESOLVED_AS_1": {
+      "abuse_model_test": {
+        "n": 1849,
+        "positives": 113,
+        "prevalence": 0.061114115738236885,
+        "pr_auc": 0.8018941340137589,
+        "pr_auc_ci95_low": 0.7223644859800975,
+        "pr_auc_ci95_high": 0.8757939330033117,
+        "brier": 0.0235256148359516,
+        "ece_10bin_quantile": 0.01479773599813936
+      },
+      "no_graph_test_pr_auc": 0.5457447074441176,
+      "graph_uplift_pr_auc": 0.25614942656964124,
+      "cold_start_ring_recall": {
+        "full": {
+          "abusive_orders": 84,
+          "at_or_above_0_5": 62,
+          "recall": 0.7380952380952381
+        },
+        "no_graph": {
+          "abusive_orders": 84,
+          "at_or_above_0_5": 13,
+          "recall": 0.15476190476190477
+        }
+      },
+      "fixed_threshold": {
+        "tau_review": 0.05,
+        "tau_block": 0.75
+      },
+      "backtest": [
+        {
+          "strategy": "SENTINEL",
+          "realized_cost_per_1000": {
+            "inr": 237644.06,
+            "display": "₹2,37,644"
+          },
+          "abuse_loss_prevented": {
+            "inr": 950421.56,
+            "display": "₹9,50,422"
+          },
+          "genuine_block_rate": 0.001152073732718894,
+          "customer_friction_rate": 0.03513824884792627,
+          "manual_reviews_per_1000": 67.60411032990805,
+          "cost_per_detected_abuse": {
+            "inr": 1095.41,
+            "display": "₹1,095"
+          },
+          "revenue_preserved": {
+            "inr": 3128892.04,
+            "display": "₹31,28,892"
+          },
+          "precision_block": 0.8947368421052632,
+          "recall_intercepted": 0.6831858407079646
+        },
+        {
+          "strategy": "FIXED_THRESHOLD",
+          "realized_cost_per_1000": {
+            "inr": 193438.62,
+            "display": "₹1,93,439"
+          },
+          "abuse_loss_prevented": {
+            "inr": 1054803.65,
+            "display": "₹10,54,804"
+          },
+          "genuine_block_rate": 0.004032258064516129,
+          "customer_friction_rate": 0.03398617511520737,
+          "manual_reviews_per_1000": 57.869118442401295,
+          "cost_per_detected_abuse": {
+            "inr": 1129.33,
+            "display": "₹1,129"
+          },
+          "revenue_preserved": {
+            "inr": 3114814.49,
+            "display": "₹31,14,814"
+          },
+          "precision_block": 0.8793103448275862,
+          "recall_intercepted": 0.791150442477876
+        },
+        {
+          "strategy": "RULE_BASED",
+          "realized_cost_per_1000": {
+            "inr": 821213.82,
+            "display": "₹8,21,214"
+          },
+          "abuse_loss_prevented": {
+            "inr": 291983.38,
+            "display": "₹2,91,983"
+          },
+          "genuine_block_rate": 0.024193548387096774,
+          "customer_friction_rate": 0.0748847926267281,
+          "manual_reviews_per_1000": 8.653326122228231,
+          "cost_per_detected_abuse": {
+            "inr": 42124.81,
+            "display": "₹42,125"
+          },
+          "revenue_preserved": {
+            "inr": 3029945.52,
+            "display": "₹30,29,946"
+          },
+          "precision_block": 0.0,
+          "recall_intercepted": 0.10265486725663717
+        },
+        {
+          "strategy": "ALLOW_ALL",
+          "realized_cost_per_1000": {
+            "inr": 715797.69,
+            "display": "₹7,15,798"
+          },
+          "abuse_loss_prevented": {
+            "inr": 0.0,
+            "display": "₹0"
+          },
+          "genuine_block_rate": 0.0,
+          "customer_friction_rate": 0.0,
+          "manual_reviews_per_1000": 0.0,
+          "cost_per_detected_abuse": {
+            "inr": 0.0,
+            "display": "₹0"
+          },
+          "revenue_preserved": {
+            "inr": 3173690.95,
+            "display": "₹31,73,691"
+          },
+          "precision_block": 0.0,
+          "recall_intercepted": 0.0
+        }
+      ],
+      "test_rows": {
+        "rows": 1849,
+        "order_ids_sha256": "37c8b684093eb4cad7b9dfa9d371faa546d56b1211185eff0bd04be9ca077800"
+      }
+    }
+  },
+  "drift_monitoring": "PLACEHOLDER_NOT_COMPUTED"
+}

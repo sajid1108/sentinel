@@ -3,6 +3,9 @@
 Serving:  builder = FeatureBuilder.replay(world, as_of); builder.features_for_request(request, t0)
 Offline:  for row in FeatureBuilder(world).iter_order_features(): ...
 
+Policy inputs (SignalInputs, CLV, raw return history, payment method) come from the same replay. They feed
+the policy and the baselines in the backtest and are never model features.
+
 Both drive the same chronological replay. Orders and outcome events are merged by timestamp; at
 one timestamp the features of every order placed then are computed first, and only afterwards are
 that timestamp's order edges and events applied. So an order never sees its own edges, and state
@@ -13,7 +16,7 @@ Labels and ground truth are never read here (P11).
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass, fields
 from datetime import datetime
 from typing import Iterator
 
@@ -24,12 +27,18 @@ from sentinel.features import definitions
 from sentinel.features.graph_features import GraphAnalysis, analyse
 from sentinel.features.graph_state import (GraphState, IdentifierMeta, from_micros, series_to_micros,
                                            to_micros, visible)
-from sentinel.features.tabular_features import OrderQuery, QueryLine, clv_inr, order_value_inr, tabular_features
+from sentinel.features.tabular_features import (OrderQuery, QueryLine, clv_inr, matured_return_counts,
+                                                order_value_inr, tabular_features)
 from sentinel.policy.config import PolicyConfig, load_policy_config
 from sentinel.policy.guardrails import SignalInputs
 
 WORLD_TABLES = ("accounts", "identifiers", "orders", "order_lines", "order_events")
 _END = float("inf")
+
+# One row per order in policy_inputs.parquet: policy and baseline inputs, never model features.
+SIGNAL_INPUT_COLUMNS: tuple[str, ...] = tuple(f.name for f in fields(SignalInputs))
+POLICY_INPUT_COLUMNS: tuple[str, ...] = (*SIGNAL_INPUT_COLUMNS, "clv_inr", "graph_state_as_of", "matured_return_rate",
+                                         "matured_returns", "payment_method", "order_value_inr")
 
 
 @dataclass(frozen=True)
@@ -38,6 +47,7 @@ class OrderFeatures:
     split: str | None
     t0: datetime
     features: dict[str, float | int | str]
+    policy_inputs: dict | None = None
 
 
 def query_from_request(request: ScoreOrderRequest) -> OrderQuery:
@@ -97,10 +107,12 @@ class FeatureBuilder:
             pass
         return builder
 
-    def iter_order_features(self) -> Iterator[OrderFeatures]:
-        """Offline entry point: every historical order's features as of its own placed_at."""
+    def iter_order_features(self, policy_inputs: bool = False) -> Iterator[OrderFeatures]:
+        """Offline entry point: every historical order's features (and optionally its policy inputs)
+        as of its own placed_at."""
         for t, q, split, features in self._run(until=None, compute=True):
-            yield OrderFeatures(q.order_id, split, from_micros(t), features)
+            inputs = self._policy_inputs(q, t) if policy_inputs else None
+            yield OrderFeatures(q.order_id, split, from_micros(t), features, inputs)
 
     def _run(self, until: int | None, compute: bool):
         orders, events = self._orders, self._events
@@ -158,7 +170,10 @@ class FeatureBuilder:
     def signal_inputs(self, request: ScoreOrderRequest, t0: datetime | None = None) -> SignalInputs:
         """§9.2 policy inputs: feature values plus the weight of the links carrying each signal."""
         t = self._check_t0(t0, request)
-        tab, graph = self._analysis(query_from_request(request), t)
+        return self._signal_inputs(query_from_request(request), t)
+
+    def _signal_inputs(self, q: OrderQuery, t0: int) -> SignalInputs:
+        tab, graph = self._analysis(q, t0)
         f, s = graph.features, graph.signal_fields
         return SignalInputs(
             device_confirmed_abuse_weight=f["device_confirmed_abuse_weight"],
@@ -176,6 +191,20 @@ class FeatureBuilder:
             prior_suspicious_claims_180d=tab["prior_suspicious_claims_180d"],
         )
 
+    def _policy_inputs(self, q: OrderQuery, t0: int) -> dict:
+        inputs = asdict(self._signal_inputs(q, t0))
+        inputs["burst_link_kinds"] = sorted(inputs["burst_link_kinds"])
+        returns, matured = matured_return_counts(self.state, q.account_id, t0)
+        row = {**inputs,
+               "clv_inr": clv_inr(self.state, q.account_id, t0, gross_margin_rate=self._margin_rate,
+                                  floor_inr=self._clv_floor, cap_inr=self._clv_cap),
+               "graph_state_as_of": from_micros(t0),       # offline replay: state holds everything before t0
+               "matured_return_rate": returns / matured if matured else None,
+               "matured_returns": returns,
+               "payment_method": q.payment_method,
+               "order_value_inr": order_value_inr(q)}
+        return {name: row[name] for name in POLICY_INPUT_COLUMNS}
+
     def discounted_links(self, request: ScoreOrderRequest, t0: datetime | None = None) -> list[DiscountedLink]:
         t = self._check_t0(t0, request)
         return list(self._analysis(query_from_request(request), t)[1].discounted)
@@ -186,12 +215,41 @@ class FeatureBuilder:
                        floor_inr=self._clv_floor, cap_inr=self._clv_cap)
 
 
+def _utc(values) -> pd.Series:
+    return pd.to_datetime(values, utc=True).astype("datetime64[us, UTC]")
+
+
+def build_tables(world, policy_config: PolicyConfig | None = None) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """One replay, two tables with one row per historical order:
+    features (order_id, split, t0, feature_set_version, every feature) and
+    policy inputs (order_id, split, t0, POLICY_INPUT_COLUMNS)."""
+    feature_rows, policy_rows = [], []
+    for row in FeatureBuilder(world, policy_config).iter_order_features(policy_inputs=True):
+        feature_rows.append({"order_id": row.order_id, "split": row.split, "t0": row.t0,
+                             "feature_set_version": definitions.FEATURE_SET_VERSION, **row.features})
+        policy_rows.append({"order_id": row.order_id, "split": row.split, "t0": row.t0, **row.policy_inputs})
+    features = pd.DataFrame(feature_rows,
+                            columns=["order_id", "split", "t0", "feature_set_version", *definitions.all_features()])
+    features["t0"] = _utc(features["t0"])
+    policy = pd.DataFrame(policy_rows, columns=["order_id", "split", "t0", *POLICY_INPUT_COLUMNS])
+    for column in ("t0", "graph_state_as_of"):
+        policy[column] = _utc(policy[column])
+    policy["matured_return_rate"] = policy["matured_return_rate"].astype("float64")
+    return features, policy
+
+
 def build_feature_table(world, policy_config: PolicyConfig | None = None) -> pd.DataFrame:
-    """One row per historical order: order_id, split, t0, feature_set_version and every feature."""
-    rows = []
-    for row in FeatureBuilder(world, policy_config).iter_order_features():
-        rows.append({"order_id": row.order_id, "split": row.split, "t0": row.t0,
-                     "feature_set_version": definitions.FEATURE_SET_VERSION, **row.features})
-    df = pd.DataFrame(rows, columns=["order_id", "split", "t0", "feature_set_version", *definitions.all_features()])
-    df["t0"] = pd.to_datetime(df["t0"], utc=True).astype("datetime64[us, UTC]")
-    return df
+    return build_tables(world, policy_config)[0]
+
+
+def signal_inputs_from_row(row) -> SignalInputs:
+    """Rebuild SignalInputs from one policy_inputs.parquet row (any mapping)."""
+    defaults = SignalInputs()
+    values = {}
+    for name in SIGNAL_INPUT_COLUMNS:
+        default = getattr(defaults, name)
+        if isinstance(default, frozenset):
+            values[name] = frozenset(row[name])
+        else:
+            values[name] = type(default)(row[name])
+    return SignalInputs(**values)

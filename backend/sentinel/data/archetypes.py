@@ -624,11 +624,13 @@ class RingSpec:
     launch_share: float = 0.0        # share of members who start inside the launch burst
     launch_days: int = 0             # length of the launch burst at the start of the window
     earliest_day: int = 1            # no order, identifier or newly created account before this day
+    wave_starts: tuple[int, ...] = ()   # recruitment waves (R1, R2); empty = no waves
 
 
 RINGS = (
-    RingSpec("R1", 24, 40, 90, 6, 4),
-    RingSpec("R2", 36, 170, 260, 9, 6),
+    # R1 and R2 recruit in equal waves, so later waves order after earlier members were confirmed
+    RingSpec("R1", 24, 40, 90, 6, 4, wave_starts=(40, 60, 80)),
+    RingSpec("R2", 36, 170, 260, 9, 6, wave_starts=(170, 195, 220, 245)),
     # cold-start ring: TEST only; opens with a launch burst, before any member can be confirmed
     RingSpec("R3", 30, 315, 345, 8, 5, launch_share=0.5, launch_days=4, earliest_day=306),
 )
@@ -666,7 +668,110 @@ def _ring_targets(rng, catalog) -> tuple[Product, ...]:
     return tuple(pool[int(i)] for i in rng.choice(len(pool), size=2, replace=False))
 
 
+# Waves (R1, R2): each member starts within WAVE_START_JITTER_DAYS of its wave start and is active for at
+# most WAVE_MAX_ACTIVE_DAYS. A wave has its own devices and tokens (the ring's counts spread over its waves);
+# every later wave also reuses one device and one token of the previous wave, carried by WAVE_REUSE_MEMBERS
+# members who start on the same day so their use is concurrent.
+# The reused device may be shared more widely than the reused token: it is the shared device of the first
+# WAVE_REUSE_DEVICE_MEMBERS members of each later wave, which keep their own wave's token and their own
+# start day; only the first WAVE_REUSE_MEMBERS share the token and start together. Architect decision 3
+# reverted this to WAVE_REUSE_MEMBERS: widening it to 6 raised the TRAIN confirmed-neighbour count but cost
+# R3 cold-start recall 0.727 -> 0.494, and the count only ever proxied a test since dropped (#25).
+WAVE_START_JITTER_DAYS = 3
+WAVE_MAX_ACTIVE_DAYS = 10
+WAVE_REUSE_MEMBERS = 3
+WAVE_REUSE_DEVICE_MEMBERS = WAVE_REUSE_MEMBERS
+WAVE_REUSE_MIN_USERS = 2
+WAVE_MAX_ATTEMPTS = 200
+
+
+def _member_orders(rng, catalog, key, w: Wallet, days, targets, shared_device, shared_token) -> list[OrderPlan]:
+    orders = []
+    for d in days:
+        placed_at = time_on_day(rng, d)
+        device = shared_device if rng.random() < RING_SHARED_DEVICE_PROB else w.device
+        address = ring_address(rng, key)
+        if rng.random() < RING_COVER_SHARE:
+            orders.append(_ring_cover_order(rng, catalog, key, placed_at, device=device, address=address, w=w))
+        else:
+            token = shared_token if rng.random() < RING_SHARED_TOKEN_PROB else None
+            orders.append(_ring_abusive_order(rng, catalog, key, placed_at, targets, device=device, token=token,
+                                              own_card=w.card, own_upi=w.upi, address=address))
+    return orders
+
+
+def _member_account(rng, key: str, rid: str, first_day: int, earliest: datetime) -> AccountSpec:
+    if rng.random() < RING_DORMANT_ACCOUNT_SHARE:     # aged account with no order history
+        created = created_before(rng, first_day, *RING_DORMANT_ACCOUNT_AGE_DAYS)
+    else:
+        created = max(earliest, created_before(rng, first_day, 0.2, 30))
+    return AccountSpec(key, created, "RING", ring_id=rid)
+
+
+def _split_evenly(items: list, parts: int) -> list[list]:
+    size, extra = divmod(len(items), parts)
+    out, i = [], 0
+    for k in range(parts):
+        n = size + (1 if k < extra else 0)
+        out.append(items[i:i + n])
+        i += n
+    return out
+
+
+def gen_ring_waves(rng: np.random.Generator, catalog: Catalog, spec: RingSpec) -> Population:
+    """R1/R2: members recruited in waves; later waves reuse a device and a token of the previous wave."""
+    pop = Population()
+    rid = spec.ring_id
+    waves = len(spec.wave_starts)
+    devices = [f"RING-{rid}:device:{j}" for j in range(spec.n_devices)]
+    tokens = [f"RING-{rid}:card:{j}" for j in range(spec.n_tokens)]
+    wave_devices, wave_tokens = _split_evenly(devices, waves), _split_evenly(tokens, waves)
+    targets = _ring_targets(rng, catalog)
+    earliest = day_start(spec.earliest_day)
+    lo_orders, hi_orders = RING_MEMBER_ORDERS
+    lo_span, hi_span = RING_MEMBER_SPAN_DAYS
+    members = [f"RING-{rid}-{m:02d}" for m in range(spec.members)]
+    for k, (start, keys) in enumerate(zip(spec.wave_starts, _split_evenly(members, waves))):
+        reuse_device = wave_devices[0][0] if k else None
+        reuse_token = wave_tokens[0][0] if k else None
+        for _ in range(WAVE_MAX_ATTEMPTS):
+            accounts, orders = [], []
+            device_users, token_users = set(), set()
+            reuse_day = int(rng.integers(start, start + WAVE_START_JITTER_DAYS + 1))
+            for i, key in enumerate(keys):
+                w = Wallet.own(key)
+                n = int(rng.integers(lo_orders, hi_orders + 1))
+                span = int(rng.integers(lo_span, hi_span + 1))
+                reuse = k > 0 and i < WAVE_REUSE_MEMBERS
+                device_reuse = k > 0 and i < WAVE_REUSE_DEVICE_MEMBERS
+                first_day = reuse_day if reuse else int(rng.integers(start, start + WAVE_START_JITTER_DAYS + 1))
+                days = [first_day] + sorted(int(d) for d in rng.integers(first_day, first_day + span + 1,
+                                                                          size=n - 1))
+                accounts.append(_member_account(rng, key, rid, first_day, earliest))
+                own_device = wave_devices[k][i % len(wave_devices[k])]
+                own_token = wave_tokens[k][i % len(wave_tokens[k])]
+                shared_device = reuse_device if device_reuse else own_device
+                shared_token = reuse_token if reuse else own_token
+                member_orders = _member_orders(rng, catalog, key, w, days, targets, shared_device, shared_token)
+                orders.extend(member_orders)
+                if reuse:
+                    if any(o.device == reuse_device for o in member_orders):
+                        device_users.add(key)
+                    if any(o.token == reuse_token for o in member_orders):
+                        token_users.add(key)
+            if k == 0 or (len(device_users) >= WAVE_REUSE_MIN_USERS and len(token_users) >= WAVE_REUSE_MIN_USERS):
+                break
+        else:
+            raise RuntimeError(f"ring {rid} wave {k + 1}: no draw reused a device and a token by "
+                               f"{WAVE_REUSE_MIN_USERS} members")
+        pop.accounts.extend(accounts)
+        pop.orders.extend(orders)
+    return pop
+
+
 def gen_ring(rng: np.random.Generator, catalog: Catalog, spec: RingSpec) -> Population:
+    if spec.wave_starts:
+        return gen_ring_waves(rng, catalog, spec)
     pop = Population()
     rid = spec.ring_id
     devices = [f"RING-{rid}:device:{j}" for j in range(spec.n_devices)]
@@ -687,24 +792,9 @@ def gen_ring(rng: np.random.Generator, catalog: Catalog, spec: RingSpec) -> Popu
         else:
             first_day = int(rng.integers(spec.start_day, spec.end_day - span + 1))
         days = [first_day] + sorted(int(d) for d in rng.integers(first_day, first_day + span + 1, size=n - 1))
-        if rng.random() < RING_DORMANT_ACCOUNT_SHARE:     # aged account with no order history
-            created = created_before(rng, first_day, *RING_DORMANT_ACCOUNT_AGE_DAYS)
-        else:
-            created = max(earliest, created_before(rng, first_day, 0.2, 30))
-        pop.accounts.append(AccountSpec(key, created, "RING", ring_id=rid))
-        shared_device, shared_token = devices[m % len(devices)], tokens[m % len(tokens)]
-        for d in days:
-            placed_at = time_on_day(rng, d)
-            device = shared_device if rng.random() < RING_SHARED_DEVICE_PROB else w.device
-            address = ring_address(rng, key)
-            if rng.random() < RING_COVER_SHARE:
-                pop.orders.append(_ring_cover_order(rng, catalog, key, placed_at, device=device,
-                                                    address=address, w=w))
-            else:
-                token = shared_token if rng.random() < RING_SHARED_TOKEN_PROB else None
-                pop.orders.append(_ring_abusive_order(rng, catalog, key, placed_at, targets,
-                                                      device=device, token=token, own_card=w.card,
-                                                      own_upi=w.upi, address=address))
+        pop.accounts.append(_member_account(rng, key, rid, first_day, earliest))
+        pop.orders.extend(_member_orders(rng, catalog, key, w, days, targets, devices[m % len(devices)],
+                                         tokens[m % len(tokens)]))
     return pop
 
 

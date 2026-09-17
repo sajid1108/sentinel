@@ -1,0 +1,115 @@
+{
+  "cpu_count": 8,
+  "models": {
+    "abuse": {
+      "artifact": "models/abuse.joblib",
+      "calibration_method": "sigmoid",
+      "calibration_window": {
+        "first_t0": "2026-04-19T03:35:36+00:00",
+        "last_t0": "2026-06-02T15:48:21+00:00",
+        "positives": 37,
+        "rows": 1241,
+        "split": "CALIBRATION"
+      },
+      "feature_list": [
+        "order_value_inr",
+        "primary_category",
+        "account_age_days",
+        "prior_orders",
+        "prior_suspicious_claims_180d",
+        "device_other_accounts_30d",
+        "device_confirmed_abuse_weight",
+        "token_other_accounts_30d",
+        "address_other_accounts_weighted_30d",
+        "component_size_reliable_90d",
+        "component_abuse_ratio_smoothed",
+        "confirmed_abuse_proximity",
+        "linked_orders_24h",
+        "linked_same_sku_7d",
+        "identifier_reuse_velocity_7d",
+        "component_recent_claims_30d",
+        "new_device_for_account"
+      ],
+      "feature_set_version": "fs-1.0-0ad43d7f",
+      "model_version": "abuse-hgb-fs1.0-446c817f",
+      "monotonic_constraints": {
+        "account_age_days": 0,
+        "address_other_accounts_weighted_30d": 1,
+        "component_abuse_ratio_smoothed": 1,
+        "component_recent_claims_30d": 1,
+        "component_size_reliable_90d": 0,
+        "confirmed_abuse_proximity": 1,
+        "device_confirmed_abuse_weight": 1,
+        "device_other_accounts_30d": 1,
+        "identifier_reuse_velocity_7d": 1,
+        "linked_orders_24h": 1,
+        "linked_same_sku_7d": 1,
+        "new_device_for_account": 0,
+        "order_value_inr": 0,
+        "primary_category": 0,
+        "prior_orders": 0,
+        "prior_suspicious_claims_180d": 1,
+        "token_other_accounts_30d": 1
+      },
+      "sha256": "446c817f97bd67b61706d7ada5e727bf4732d474ecb24161e8862dac6bd20f20",
+      "sklearn_version": "1.9.1",
+      "train_window": {
+        "first_t0": "2025-09-01T04:27:12+00:00",
+        "last_t0": "2026-03-19T17:35:03+00:00",
+        "positives": 181,
+        "rows": 5068,
+        "split": "TRAIN"
+      },
+      "trained_at": "2026-09-01T10:30:00+05:30"
+    },
+    "return": {
+      "artifact": "models/return.joblib",
+      "calibration_method": "isotonic",
+      "calibration_window": {
+        "first_t0": "2026-04-19T03:35:36+00:00",
+        "last_t0": "2026-06-02T15:48:21+00:00",
+        "positives": 281,
+        "rows": 1251,
+        "split": "CALIBRATION"
+      },
+      "feature_list": [
+        "order_value_inr",
+        "primary_category",
+        "discount_pct",
+        "n_items",
+        "n_variants_same_product",
+        "account_age_days",
+        "prior_orders",
+        "matured_return_rate_smoothed",
+        "prior_returns_90d",
+        "delivery_speed",
+        "payment_method_cod"
+      ],
+      "feature_set_version": "fs-1.0-0ad43d7f",
+      "model_version": "return-hgb-fs1.0-e3c877bc",
+      "monotonic_constraints": {
+        "account_age_days": 0,
+        "delivery_speed": 0,
+        "discount_pct": 0,
+        "matured_return_rate_smoothed": 1,
+        "n_items": 0,
+        "n_variants_same_product": 1,
+        "order_value_inr": 0,
+        "payment_method_cod": 0,
+        "primary_category": 0,
+        "prior_orders": 0,
+        "prior_returns_90d": 1
+      },
+      "sha256": "e3c877bc2a16d2991246c1e6b22271e214e517bcfe886b9c011b5221dcf074f8",
+      "sklearn_version": "1.9.1",
+      "train_window": {
+        "first_t0": "2025-09-01T04:27:12+00:00",
+        "last_t0": "2026-03-19T17:35:03+00:00",
+        "positives": 1212,
+        "rows": 5107,
+        "split": "TRAIN"
+      },
+      "trained_at": "2026-09-01T10:30:00+05:30"
+    }
+  }
+}

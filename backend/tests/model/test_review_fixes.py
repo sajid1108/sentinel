@@ -151,10 +151,15 @@ def test_c5_non_graph_model_is_weak(world):
 
 
 # ── C6: demo isolation ───────────────────────────────────────────────────────
-def test_c6_demo_account_orders_are_recent_only(orders_with_truth):
+def test_c6_demo_account_orders_are_recent_only(world, orders_with_truth):
     demo = orders_with_truth[orders_with_truth["archetype"] == "DEMO"]
     assert len(demo) == 59 and (demo["split"] == "RECENT").all()
-    assert not orders_with_truth.loc[orders_with_truth["archetype"] != "DEMO", "split"].eq("RECENT").any()
+    # every hand-authored demo account, including the supporting peers (-HH, -DEV, -ADR), is RECENT only
+    hand_written = set(world["accounts"].loc[world["accounts"]["source"] == "DEMO", "account_id"])
+    assert {"ACC-DEMO-001-HH", "ACC-DEMO-003-DEV", "ACC-DEMO-003-ADR"} <= hand_written
+    peers = orders_with_truth[orders_with_truth["account_id"].isin(hand_written)]
+    assert not peers["split"].isin(["TRAIN", "CALIBRATION", "TEST"]).any()
+    assert not orders_with_truth.loc[~orders_with_truth["account_id"].isin(hand_written), "split"].eq("RECENT").any()
 
 
 def test_c6_demo_request_orders_not_in_history(world):

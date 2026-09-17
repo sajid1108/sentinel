@@ -21,6 +21,9 @@ DEMO_PLACED_AT = DEMO_CLOCK - timedelta(minutes=5)
 DEMO_1, DEMO_2, DEMO_3 = "ACC-DEMO-001", "ACC-DEMO-002", "ACC-DEMO-003"
 DEMO_1_HOUSEHOLD = "ACC-DEMO-001-HH"          # shares Demo 1's address, no abuse
 DEMO_3_DEVICE_PEER = "ACC-DEMO-003-DEV"       # shares Demo 3's device concurrently, not confirmed
+DEMO_3_DEVICE_PEER_2 = "ACC-DEMO-003-DEV2"    # second concurrent device peer (deviation #26)
+DEMO_3_DEVICE_PEER_3 = "ACC-DEMO-003-DEV3"    # third concurrent device peer (deviation #26)
+DEMO_3_DEVICE_PEERS = (DEMO_3_DEVICE_PEER, DEMO_3_DEVICE_PEER_2, DEMO_3_DEVICE_PEER_3)
 DEMO_3_ADDRESS_PEER = "ACC-DEMO-003-ADR"      # Demo 3's address, confirmed abusive long ago
 
 # Synthetic identifier values (hashed by the generator)
@@ -142,15 +145,28 @@ def _demo_3() -> Population:
                                               {"evidence_source": "CARRIER", "contradicts_claim": True}),
                             ]))
 
-    # Device peer: ordering on the same device within the last 30 days, never confirmed.
-    pop.accounts.append(AccountSpec(DEMO_3_DEVICE_PEER, at(200, "09:00"), "NORMAL",
-                                    source="DEMO", account_id=DEMO_3_DEVICE_PEER))
-    for n, day in enumerate((210, 260, 300, 330, 354), start=1):
-        placed = at(day, "20:45")
-        pop.orders.append(_plan(f"ORD-DEMO-003-DEV{n:02d}", DEMO_3_DEVICE_PEER, placed,
-                                (make_line(_BELT if n % 2 else _TOP, "TAN" if n % 2 else "M"),), "PREPAID_UPI",
-                                device=D3_DEVICE, address="DEMO-003-DEV:address", token="DEMO-003-DEV:upi",
-                                events=_kept(placed)))
+    # Device peers (§11 as amended by the architect, deviation #26): the device is shared concurrently
+    # with three other accounts in the last 30 days, none of them confirmed abusive. Each peer is a
+    # recent account (created within 60 days of the demo order) whose first use of the device is within
+    # 30 days of it, with 1-3 kept orders, its own address and token, and no abuse event anywhere.
+    # The first peer's second order sits inside the 24 h window before the demo order (D366 10:25), so the
+    # device is shared *concurrently* in the §11 sense and linked_orders_24h is 1 (architect decision 1).
+    # Exactly one order is in the window: TEMPORAL_BURST needs linked_orders_24h >= 3 and stays absent.
+    device_peers = (
+        (DEMO_3_DEVICE_PEER, 356, (361, 365)),
+        (DEMO_3_DEVICE_PEER_2, 320, (340, 352)),
+        (DEMO_3_DEVICE_PEER_3, 345, (355, 358, 363)),
+    )
+    for account, created_day, order_days in device_peers:
+        tag = account.removeprefix("ACC-")
+        pop.accounts.append(AccountSpec(account, at(created_day, "09:00"), "NORMAL",
+                                        source="DEMO", account_id=account))
+        for n, day in enumerate(order_days, start=1):
+            placed = at(day, "20:45")
+            pop.orders.append(_plan(f"ORD-{tag}{n:02d}", account, placed,
+                                    (make_line(_BELT if n % 2 else _TOP, "TAN" if n % 2 else "M"),),
+                                    "PREPAID_UPI", device=D3_DEVICE, address=f"{tag}:address",
+                                    token=f"{tag}:upi", events=_kept(placed)))
 
     # Address peer: last shipped to Demo 3's address 150 days before the demo order
     # (0.4 * 0.5^(150/45) ~= 0.04, STALE_RELATIONSHIP); that order was confirmed abusive.

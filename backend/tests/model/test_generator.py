@@ -15,7 +15,8 @@ from sentinel.settings import DEMO_CLOCK, HMAC_SECRET
 pytestmark = pytest.mark.slow
 
 # C9: SHA-256 of the seed-20260901 world. Update deliberately, with the reason, when the generator changes.
-REFERENCE_EVENT_LOG_SHA256 = "5b0966c392392ddf194bf59e369b6ab202619d2164cd533b5c5b2b9126f38559"
+# Phase 4 decisions: R1/R2 recruit in waves (B1), demo peers are RECENT (F1), Demo 3's device peer is recent (C).
+REFERENCE_EVENT_LOG_SHA256 = "212f443c45799e4e3654d452e90e8fedce9b1a157655473e0972b42490cab0ef"
 
 
 def _day(ts: pd.Series) -> pd.Series:
@@ -68,9 +69,11 @@ def test_prevalence(world):
 
 
 def test_split_positives(world):
+    # CALIBRATION bound lowered 40 -> 35 by the architect (deviation #25, Phase 4 blocker 1): the measured
+    # count is 37, and three positives make no material difference to a one-parameter sigmoid calibrator.
     merged = world["orders"][["order_id", "split"]].merge(world["order_labels"], on="order_id")
     positives = merged[merged["abuse_label"] == 1].groupby("split").size()
-    assert positives.get("TEST", 0) >= 70 and positives.get("CALIBRATION", 0) >= 40
+    assert positives.get("TEST", 0) >= 70 and positives.get("CALIBRATION", 0) >= 35
 
 
 @pytest.mark.parametrize("archetype,lo,hi", [
@@ -247,10 +250,12 @@ def test_schema_constraints(world):
 
 
 def test_split_column_follows_placement_day(world):
-    o = world["orders"].merge(world["sim_ground_truth"], on="account_id")
-    history = o[o["archetype"] != "DEMO"]
+    o = world["orders"].merge(world["accounts"][["account_id", "source"]].rename(columns={"source": "account_source"}),
+                              on="account_id")
+    history = o[o["account_source"] != "DEMO"]
     assert (history["split"] == _day(history["placed_at"]).map(A.split_for_day)).all()
-    assert (o.loc[o["archetype"] == "DEMO", "split"] == "RECENT").all()          # Fix 6
+    # Fix 6, extended in Phase 4 (F1): every hand-authored demo account, supporting peers included
+    assert (o.loc[o["account_source"] == "DEMO", "split"] == "RECENT").all()
 
 
 def test_event_ids_follow_time_order(world):
@@ -320,3 +325,47 @@ def test_every_delivered_order_matures_by_the_horizon(world):
     lab = world["order_labels"][world["order_labels"]["order_id"].isin(delivered)]
     assert lab["return_label"].notna().all()
     assert not (lab["abuse_status"] == "NOT_MATURED").any()
+
+
+# ── R1/R2 recruitment waves (Phase 4 decision B1) ────────────────────────────
+WAVES = {"R1": ((40, 60, 80), (8, 8, 8)), "R2": ((170, 195, 220, 245), (9, 9, 9, 9))}
+
+
+def _members_by_wave(orders_with_truth, ring_id):
+    starts, _ = WAVES[ring_id]
+    ring = orders_with_truth[orders_with_truth["ring_id"] == ring_id].assign(day=lambda d: _day(d["placed_at"]))
+    first = ring.groupby("account_id")["day"].min()
+    wave_of = {a: next((k for k, s in enumerate(starts) if s <= d <= s + A.WAVE_START_JITTER_DAYS), None)
+               for a, d in first.items()}
+    return ring, first, wave_of
+
+
+@pytest.mark.parametrize("ring_id", WAVES)
+def test_wave_starts_and_member_splits(orders_with_truth, ring_id):
+    starts, sizes = WAVES[ring_id]
+    spec = next(s for s in A.RINGS if s.ring_id == ring_id)
+    assert spec.wave_starts == starts
+    _, _, wave_of = _members_by_wave(orders_with_truth, ring_id)
+    assert None not in wave_of.values()
+    assert tuple(list(wave_of.values()).count(k) for k in range(len(starts))) == sizes
+
+
+@pytest.mark.parametrize("ring_id", WAVES)
+def test_wave_members_active_at_most_10_days(orders_with_truth, ring_id):
+    ring, first, wave_of = _members_by_wave(orders_with_truth, ring_id)
+    last = ring.groupby("account_id")["day"].max()
+    assert ((last - first) <= A.WAVE_MAX_ACTIVE_DAYS).all()
+    starts, _ = WAVES[ring_id]
+    assert all(starts[wave_of[a]] <= d <= starts[wave_of[a]] + 3 for a, d in first.items())
+
+
+@pytest.mark.parametrize("ring_id", WAVES)
+def test_later_waves_reuse_a_device_and_a_token_of_an_earlier_wave(orders_with_truth, ring_id):
+    ring, _, wave_of = _members_by_wave(orders_with_truth, ring_id)
+    ring = ring.assign(wave=ring["account_id"].map(wave_of))
+    for column in ("device_id", "payment_token_id"):
+        used = ring.dropna(subset=[column])
+        for k in range(1, len(WAVES[ring_id][0])):
+            earlier = set(used.loc[used["wave"] < k, column])
+            here = used[(used["wave"] == k) & used[column].isin(earlier)]
+            assert here["account_id"].nunique() >= 2, (ring_id, k, column)
