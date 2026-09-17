@@ -1,0 +1,273 @@
+"""Relationship features (§6.1, §6.3) and the evidence the policy needs (§9.2), as of t0.
+
+One GraphAnalysis per (order, t0). The order's own identifiers are the query keys: the account's
+use of them is treated as happening at t0 (age 0), but they are never written to the graph here.
+Two accounts are linked through an identifier as a two-hop path; the link weight is the other
+account's edge weight (reliability x decay), with sequential device use at 0.2 and multi-tenant
+addresses at 0.1. Neighbour abuse counts only use confirmations visible at t0 (P4, P10).
+"""
+from __future__ import annotations
+
+from collections import deque
+from dataclasses import dataclass, field
+
+from sentinel.api.schemas import DiscountedLink
+from sentinel.features.graph_state import (BASE_RELIABILITY, BFS_MAX_ACCOUNTS, HIGH_FANOUT_ACCOUNTS,
+                                           HIGH_FANOUT_WINDOW_DAYS, MICROS_PER_DAY, MULTI_TENANT_RELIABILITY,
+                                           RELIABLE_MIN_WEIGHT, RELIABLE_WINDOW_DAYS,
+                                           SEQUENTIAL_DEVICE_RELIABILITY, GraphState, decayed_weight, in_window,
+                                           is_sequential, node_id, visible)
+from sentinel.features.identifiers import is_rejected_id
+from sentinel.features.tabular_features import OrderQuery, count_in_window
+
+DEVICE_OTHER_ACCOUNTS_CAP = 25
+PROXIMITY_MAX_HOPS = 6
+HOUSEHOLD_MAX_OTHER_ACCOUNTS = 3
+COMPONENT_PRIOR_CONFIRMED = 1
+COMPONENT_PRIOR_ACCOUNTS = 10
+KIND_OF_PREFIX = {"DEV": "DEVICE", "ADR": "ADDRESS", "TOK": "PAYMENT_TOKEN"}
+
+
+@dataclass(frozen=True)
+class Link:
+    """Another account's use of one identifier, seen from the query account at t0."""
+    account_id: str
+    kind: str
+    ident_node: str
+    first_seen: int
+    last_seen: int
+    reliability: float
+    weight: float
+    sequential: bool
+    confirmed: bool              # ABUSE_CONFIRMED visible at t0
+
+
+@dataclass
+class Reached:
+    depth: int                   # account hops from the query account
+    kinds: frozenset[str]        # identifier kinds on the BFS path
+    bottleneck: float            # smallest edge weight on the BFS path
+
+
+@dataclass
+class GraphAnalysis:
+    features: dict[str, float | int]
+    signal_fields: dict = field(default_factory=dict)
+    discounted: list[DiscountedLink] = field(default_factory=list)
+    component: dict[str, Reached] = field(default_factory=dict)
+
+
+class _Context:
+    def __init__(self, state: GraphState, q: OrderQuery, t0: int):
+        self.state, self.q, self.t0 = state, q, t0
+        self.account = q.account_id
+        self._fanout: dict[str, bool] = {}
+        # the query account's identifier uses: existing edges plus the order's own identifiers at t0
+        self.self_edges: dict[str, tuple[int, int]] = {
+            n: (d["first_seen"], d["last_seen"]) for n, d in state.account_edges(self.account).items()}
+        self.query_nodes: list[tuple[str, str]] = []
+        for kind, ident in q.identifiers:
+            if ident is None or is_rejected_id(ident):
+                continue
+            n = node_id(kind, ident)
+            first = self.self_edges.get(n, (t0, t0))[0]
+            self.self_edges[n] = (first, t0)
+            self.query_nodes.append((kind, n))
+
+    # ── identifier context ──
+    def multi_tenant(self, n: str) -> bool:
+        if not n.startswith("ADR:"):
+            return False
+        return visible(self.state.meta(n[4:], "ADDRESS").multi_tenant_set_at, self.t0)       # P7
+
+    def high_fanout(self, n: str) -> bool:
+        if not n.startswith("ADR:"):
+            return False
+        if n not in self._fanout:
+            accounts = {a for a, d in self.state.identifier_accounts(n).items()
+                        if in_window(d["last_seen"], self.t0, HIGH_FANOUT_WINDOW_DAYS)}
+            if n in self.self_edges:
+                accounts.add(self.account)
+            self._fanout[n] = len(accounts) > HIGH_FANOUT_ACCOUNTS
+        return self._fanout[n]
+
+    def edges_of(self, account_id: str) -> dict[str, tuple[int, int]]:
+        if account_id == self.account:
+            return self.self_edges
+        return {n: (d["first_seen"], d["last_seen"]) for n, d in self.state.account_edges(account_id).items()}
+
+    def reliability(self, kind: str, n: str, sequential: bool) -> float:
+        if kind == "DEVICE" and sequential:
+            return SEQUENTIAL_DEVICE_RELIABILITY
+        if kind == "ADDRESS" and self.multi_tenant(n):
+            return MULTI_TENANT_RELIABILITY
+        return BASE_RELIABILITY[kind]
+
+    def confirmed(self, account_id: str) -> bool:
+        acc = self.state.accounts.get(account_id)
+        return acc is not None and visible(acc.confirmed_at, self.t0)                     # P4
+
+    def links(self, n: str, from_account: str | None = None) -> list[Link]:
+        """Other accounts on identifier n, seen from from_account (default: the query account)."""
+        source = from_account or self.account
+        kind = KIND_OF_PREFIX[n[:3]]
+        own = self.edges_of(source).get(n)
+        out = []
+        for other, d in sorted(self.state.identifier_accounts(n).items()):
+            if other == source:
+                continue
+            use = (d["first_seen"], d["last_seen"])
+            if other == self.account:
+                use = self.self_edges.get(n, use)
+            sequential = kind == "DEVICE" and own is not None and is_sequential(own, use)
+            rel = self.reliability(kind, n, sequential)
+            out.append(Link(other, kind, n, use[0], use[1], rel,
+                            decayed_weight(rel, kind, use[1], self.t0), sequential, self.confirmed(other)))
+        return out
+
+    def reliable(self, kind: str, n: str, last_seen: int, weight: float) -> bool:
+        if self.multi_tenant(n) or self.high_fanout(n):
+            return False
+        # last_seen <= t0 always: graph edges are visible, and the query's own uses are at t0
+        return weight >= RELIABLE_MIN_WEIGHT and last_seen >= self.t0 - RELIABLE_WINDOW_DAYS * MICROS_PER_DAY
+
+
+def _component(ctx: _Context) -> dict[str, Reached]:
+    """BFS over the reliable subgraph from the query account, capped at 200 accounts (§6.1)."""
+    reached = {ctx.account: Reached(0, frozenset(), 1.0)}
+    queue = deque([ctx.account])
+    while queue:
+        a = queue.popleft()
+        here = reached[a]
+        for n, (first, last) in sorted(ctx.edges_of(a).items()):
+            kind = KIND_OF_PREFIX[n[:3]]
+            w_a = decayed_weight(BASE_RELIABILITY[kind] if not (kind == "ADDRESS" and ctx.multi_tenant(n))
+                                 else MULTI_TENANT_RELIABILITY, kind, last, ctx.t0)
+            if not ctx.reliable(kind, n, last, w_a):
+                continue
+            for link in ctx.links(n, from_account=a):
+                if link.account_id in reached or link.sequential:
+                    continue
+                if not ctx.reliable(kind, n, link.last_seen, link.weight):
+                    continue
+                if len(reached) >= BFS_MAX_ACCOUNTS:
+                    return reached
+                reached[link.account_id] = Reached(here.depth + 1, here.kinds | {kind},
+                                                   min(here.bottleneck, w_a, link.weight))
+                queue.append(link.account_id)
+    return reached
+
+
+def _discounted_link(ctx: _Context, kind: str, n: str, links: list[Link]) -> DiscountedLink | None:
+    """At most one discount per identifier, by precedence."""
+    if not links:
+        return None
+    label = ctx.state.meta(n[4:], kind).display_label
+    strongest = max(link.weight for link in links)
+
+    def record(reason: str, weight: float) -> DiscountedLink:
+        return DiscountedLink(identifier_label=label, kind=kind, reason=reason, weight=round(weight, 4))
+
+    if kind == "ADDRESS":
+        if ctx.high_fanout(n):
+            return record("HIGH_FANOUT_IDENTIFIER", 0.0)
+        if ctx.multi_tenant(n):
+            return record("MULTI_TENANT_ADDRESS", strongest)
+        if len(links) <= HOUSEHOLD_MAX_OTHER_ACCOUNTS and not any(link.confirmed for link in links):
+            return record("HOUSEHOLD_PATTERN", strongest)
+    if kind == "DEVICE":
+        sequential = [link for link in links if link.sequential]
+        if sequential:
+            return record("SEQUENTIAL_DEVICE_USE", max(link.weight for link in sequential))
+    stale = [link for link in links if link.reliability >= RELIABLE_MIN_WEIGHT and link.weight < RELIABLE_MIN_WEIGHT]
+    if stale:
+        return record("STALE_RELATIONSHIP", max(link.weight for link in stale))
+    return None
+
+
+def analyse(state: GraphState, q: OrderQuery, t0: int) -> GraphAnalysis:
+    ctx = _Context(state, q, t0)
+    by_kind: dict[str, tuple[str, list[Link]]] = {kind: (n, ctx.links(n)) for kind, n in ctx.query_nodes}
+
+    # device
+    device_links = by_kind.get("DEVICE", (None, []))[1]
+    device_other = len({link.account_id for link in device_links
+                        if not link.sequential and in_window(link.last_seen, t0, 30)})
+    device_confirmed_weight = sum(link.weight for link in device_links if link.confirmed)
+
+    # payment token (COD: the account's prior tokens)
+    if "PAYMENT_TOKEN" in by_kind:
+        token_links = by_kind["PAYMENT_TOKEN"][1]
+    else:
+        token_links = [link for n in sorted(ctx.self_edges) if n.startswith("TOK:") for link in ctx.links(n)]
+    token_other = len({link.account_id for link in token_links if in_window(link.last_seen, t0, 30)})
+
+    # address (high-fanout addresses carry no weight)
+    address_node, address_links = by_kind.get("ADDRESS", (None, []))
+    fanout = address_node is not None and ctx.high_fanout(address_node)
+    address_weighted = 0.0 if fanout else sum(link.weight for link in address_links
+                                              if in_window(link.last_seen, t0, 30))
+    address_confirmed_weight = 0.0 if fanout else sum(link.weight for link in address_links if link.confirmed)
+
+    # reliable component
+    component = _component(ctx)
+    size = min(len(component), BFS_MAX_ACCOUNTS)
+    confirmed = sorted(a for a in component if ctx.confirmed(a))
+    hops = [component[a].depth for a in confirmed if component[a].depth <= PROXIMITY_MAX_HOPS]
+    proximity = 1.0 / (1 + min(hops)) if hops else 0.0
+
+    skus = q.skus
+    orders_24h = same_sku_7d = 0
+    burst_kinds: set[str] = set()
+    burst_weight = 0.0
+    recent_claims = 0
+    for a in sorted(component):
+        acc = state.accounts.get(a)
+        if acc is not None:
+            recent_claims += count_in_window(acc.flag_times, t0, 30)
+        if a == ctx.account:
+            continue
+        contributes = False
+        for o in state.recent_orders_of(a):
+            if in_window(o["placed_at"], t0, 1):                 # [t0 - 24 h, t0)
+                orders_24h += 1
+                contributes = True
+            if in_window(o["placed_at"], t0, 7) and o["skus"] & skus:
+                same_sku_7d += 1
+                contributes = True
+        if contributes:
+            burst_kinds |= component[a].kinds
+            burst_weight = max(burst_weight, component[a].bottleneck)
+
+    reuse = 0
+    for _, n in ctx.query_nodes:
+        reuse += sum(1 for d in state.identifier_accounts(n).values() if in_window(d["first_seen"], t0, 7))
+    device_node = by_kind.get("DEVICE", (None, None))[0]
+    new_device = int(device_node is None or device_node not in state.account_edges(ctx.account))
+
+    features = {
+        "device_other_accounts_30d": min(device_other, DEVICE_OTHER_ACCOUNTS_CAP),
+        "device_confirmed_abuse_weight": device_confirmed_weight,
+        "token_other_accounts_30d": token_other,
+        "address_other_accounts_weighted_30d": address_weighted,
+        "component_size_reliable_90d": size,
+        "component_abuse_ratio_smoothed": (len(confirmed) + COMPONENT_PRIOR_CONFIRMED) / (size + COMPONENT_PRIOR_ACCOUNTS),
+        "confirmed_abuse_proximity": proximity,
+        "linked_orders_24h": orders_24h,
+        "linked_same_sku_7d": same_sku_7d,
+        "identifier_reuse_velocity_7d": reuse,
+        "component_recent_claims_30d": recent_claims,
+        "new_device_for_account": new_device,
+    }
+    signal_fields = {
+        "device_weight": max((link.weight for link in device_links), default=0.0),
+        "token_weight": max((link.weight for link in token_links), default=0.0),
+        "address_is_multi_tenant": address_node is not None and ctx.multi_tenant(address_node),
+        "address_confirmed_abuse_weight": address_confirmed_weight,
+        "address_weight": 0.0 if fanout else max((link.weight for link in address_links), default=0.0),
+        "burst_link_kinds": frozenset(burst_kinds),
+        "burst_weight": burst_weight,
+    }
+    discounted = [d for kind in ("DEVICE", "ADDRESS", "PAYMENT_TOKEN") if kind in by_kind
+                  for d in [_discounted_link(ctx, kind, *by_kind[kind])] if d is not None]
+    return GraphAnalysis(features, signal_fields, discounted, component)

@@ -39,8 +39,28 @@ def cmd_world_stats(args):
 
 
 def cmd_build_features(args):
+    import time
+
+    import pandas as pd
+
+    from sentinel.data.generator import OUTPUT_FILES
+    from sentinel.features.builder import WORLD_TABLES, build_feature_table
+    from sentinel.features.definitions import FEATURE_SET_VERSION
+    from sentinel.settings import DATA_DIR
+
+    missing = [OUTPUT_FILES[t] for t in WORLD_TABLES if not (DATA_DIR / OUTPUT_FILES[t]).exists()]
+    if missing:
+        sys.exit(f"missing {', '.join(missing)} in {DATA_DIR}; run `python -m sentinel.cli generate` first")
     print("Building point-in-time features...")
-    print("[Phase 3] Not yet implemented")
+    start = time.perf_counter()
+    world = {t: pd.read_parquet(DATA_DIR / OUTPUT_FILES[t]) for t in WORLD_TABLES}
+    table = build_feature_table(world)
+    path = DATA_DIR / "features.parquet"
+    table.to_parquet(path, index=False)
+    elapsed = time.perf_counter() - start
+    print(f"  wrote {path}")
+    print(f"  {len(table)} orders, {table.shape[1] - 4} features, feature_set_version {FEATURE_SET_VERSION}")
+    print(f"  elapsed {elapsed:.1f} s")
 
 
 def cmd_train(args):
@@ -87,7 +107,7 @@ def main():
 
     sub.add_parser("generate", help="Generate the synthetic world into data/")
     sub.add_parser("world-stats", help="Print prevalence and ring diagnostics for the seeded world")
-    sub.add_parser("build-features", help="[Phase 3] Build point-in-time features")
+    sub.add_parser("build-features", help="Build point-in-time features into data/features.parquet")
     sub.add_parser("train", help="[Phase 4] Train return and abuse models")
     sub.add_parser("evaluate", help="[Phase 4] Run evaluation suite")
     sub.add_parser("seed-db", help="[Phase 6] Seed the demo database")

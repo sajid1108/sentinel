@@ -743,7 +743,9 @@ def r4_key(member: int) -> str:
 
 def gen_ring_r4(rng: np.random.Generator, catalog: Catalog) -> Population:
     pop = Population()
-    targets = (ANCHOR_PRODUCTS["R4_PHONE"], ANCHOR_PRODUCTS["R4_EARBUDS"])
+    # Sampled R4 carts never buy the Demo 2 phone: it appears only on the scheduled rows, so Demo 2
+    # sees exactly 3 same-SKU linked orders in the prior 7 days (§11).
+    targets = (ANCHOR_PRODUCTS["R4_EARBUDS"],)
     wallets = {m: Wallet.own(r4_key(m)) for m in range(1, R4_MEMBERS + 1)}
     first_activity = {m: min([d for mm, d, *_ in R4_CONFIRMED if mm == m]
                              + [d for mm, d, *_ in R4_SCHEDULE if mm == m]) for m in wallets}

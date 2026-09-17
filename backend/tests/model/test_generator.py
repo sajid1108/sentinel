@@ -15,7 +15,7 @@ from sentinel.settings import DEMO_CLOCK, HMAC_SECRET
 pytestmark = pytest.mark.slow
 
 # C9: SHA-256 of the seed-20260901 world. Update deliberately, with the reason, when the generator changes.
-REFERENCE_EVENT_LOG_SHA256 = "1e4e81ed39e25d01577cfcbd70f3b3472b7eec453d85af0d41fad1179c04e810"
+REFERENCE_EVENT_LOG_SHA256 = "5b0966c392392ddf194bf59e369b6ab202619d2164cd533b5c5b2b9126f38559"
 
 
 def _day(ts: pd.Series) -> pd.Series:

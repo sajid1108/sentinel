@@ -31,6 +31,7 @@ D3_DEVICE, D3_ADDRESS, D3_UPI = "DEMO-003:device", "DEMO-003:address", "DEMO-003
 # Hand-authored history products
 _DRESS_2 = Product("PRD-APPAREL-D02", "APPAREL", 1999.0, ("M", "L"))
 _SHOES = Product("PRD-FOOTWEAR-D02", "FOOTWEAR", 2499.0, ("UK8",))
+_CANVAS_SHOES = Product("PRD-FOOTWEAR-D03", "FOOTWEAR", 1499.0, ("UK8",))    # Demo 1: CLV ~₹30,000 (§11)
 _TOP = Product("PRD-APPAREL-D03", "APPAREL", 1299.0, ("M",))
 _BELT = Product("PRD-ACCESSORIES-D01", "ACCESSORIES", 899.0, ("TAN",))
 _KETTLE = Product("PRD-HOME-D01", "HOME", 1799.0, ("STD",))
@@ -76,7 +77,7 @@ def _demo_1() -> Population:
         if kind == 0:
             lines, fraction = (make_line(_DRESS_2, "M"), make_line(_DRESS_2, "L")), 0.5
         elif kind == 1:
-            lines, fraction = (make_line(_SHOES, "UK8"),), 1.0
+            lines, fraction = (make_line(_CANVAS_SHOES, "UK8"),), 1.0
         elif kind == 2:
             lines, fraction = (make_line(_TOP, "M"),), 1.0
         else:
@@ -122,7 +123,7 @@ def _demo_3() -> Population:
         (158, (make_line(_SHOES, "UK8"),), "COD", _kept),
         (190, (make_line(_DRESS_2, "M"),), "PREPAID_UPI", lambda p: _returned_passed_qc(p, 1.0)),
         (222, (make_line(_BELT, "TAN"),), "COD", _kept),
-        (305, (make_line(_KETTLE, "STD"),), "COD", _kept),
+        (305, (make_line(_EARPHONES, "STD"),), "COD", _kept),        # CLV ~₹15,000 (§11)
         (350, (make_line(_TOP, "M"),), "PREPAID_UPI", _kept),
     )
     for n, (day, lines, method, outcome) in enumerate(history, start=1):
