@@ -1,12 +1,5 @@
-"""One synthetic world per test session; generation is deterministic (§5)."""
+"""Model-level fixtures. The session-scoped `world` fixture lives in tests/conftest.py."""
 import pytest
-
-from sentinel.data.generator import generate
-
-
-@pytest.fixture(scope="session")
-def world():
-    return generate()
 
 
 @pytest.fixture(scope="session")

@@ -198,7 +198,7 @@ def demo_request_identifiers() -> list[tuple[str, str]]:
 
 def demo_requests(secret: str = HMAC_SECRET) -> list[dict]:
     """ScoreOrderRequest payloads for Demo 1-3 (§11)."""
-    from sentinel.data.generator import identifier_id
+    from sentinel.features.identifiers import identifier_id
 
     def ids(device: str, address: str, token: str | None) -> dict:
         return {"device_id": identifier_id("DEVICE", device, secret),

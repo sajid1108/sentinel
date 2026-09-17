@@ -1,6 +1,6 @@
 # SENTINEL — Return Abuse Detection with Cost-Weighted Decisioning
 
-**Build status:** Phase 1 (policy engine) complete, including the Phase 1 review fixes (decision-time G4, degraded mode without scores, Python 3.12, exact frontend pins). Phase 2 (synthetic generator) complete: `python -m sentinel.cli generate` writes the seeded world, ground truth and ld-1.0 labels to `backend/data/`. Features, models, the demo DB and API routes are not built yet.
+**Build status:** Phase 1 (policy engine) complete, including the Phase 1 review fixes (decision-time G4, degraded mode without scores, Python 3.12, exact frontend pins). Phase 2 (synthetic generator) complete, including the Phase 2 review fixes (rings hidden at account level, investigation coverage, high-value genuine carts, `features/identifiers.py`, demo isolation): `python -m sentinel.cli generate` writes the seeded world, ground truth and ld-1.0 labels to `backend/data/`, and `python -m sentinel.cli world-stats` prints prevalence and ring diagnostics. Features, models, the demo DB and API routes are not built yet.
 
 > **A prediction is not a decision.**
 
@@ -77,7 +77,8 @@ The frontend proxies API requests to `http://127.0.0.1:8000`.
 
 ```bash
 cd backend
-python -m pytest tests/ -v
+python -m pytest tests/ -v            # everything
+python -m pytest tests/ -m "not slow" # skip world generation and model checks
 ```
 
 ## Demo Scenarios

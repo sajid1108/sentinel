@@ -12,6 +12,11 @@ from sentinel.data.generator import (EVENT_TYPES, OUTPUT_FILES, SEED, as_of_view
                                      generate, identifier_id, stream_generators, summarize, write_outputs)
 from sentinel.settings import DEMO_CLOCK, HMAC_SECRET
 
+pytestmark = pytest.mark.slow
+
+# C9: SHA-256 of the seed-20260901 world. Update deliberately, with the reason, when the generator changes.
+REFERENCE_EVENT_LOG_SHA256 = "1e4e81ed39e25d01577cfcbd70f3b3472b7eec453d85af0d41fad1179c04e810"
+
 
 def _day(ts: pd.Series) -> pd.Series:
     return (ts - pd.Timestamp(A.SIM_START)) // pd.Timedelta(days=1) + 1
@@ -20,6 +25,10 @@ def _day(ts: pd.Series) -> pd.Series:
 # ── Determinism ──────────────────────────────────────────────────────────────
 def test_two_generations_have_identical_event_log_sha256(world):
     assert event_log_sha256(generate()) == event_log_sha256(world)
+
+
+def test_c9_event_log_matches_stored_reference_hash(world):
+    assert event_log_sha256(world) == REFERENCE_EVENT_LOG_SHA256
 
 
 def test_different_seed_changes_the_world(world):
@@ -54,15 +63,20 @@ def test_scale(world):
 def test_prevalence(world):
     s = summarize(world)
     assert 0.15 <= s["return_rate"] <= 0.25
-    assert 0.03 <= s["confirmed_abuse_rate"] <= 0.07
+    assert 0.03 <= s["confirmed_abuse_rate"] <= 0.06          # Fix 4
     assert s["rings"] == 4
-    assert 70 <= s["test_abuse_positives"] <= 110          # "~90 positives" in TEST
+
+
+def test_split_positives(world):
+    merged = world["orders"][["order_id", "split"]].merge(world["order_labels"], on="order_id")
+    positives = merged[merged["abuse_label"] == 1].groupby("split").size()
+    assert positives.get("TEST", 0) >= 70 and positives.get("CALIBRATION", 0) >= 40
 
 
 @pytest.mark.parametrize("archetype,lo,hi", [
     ("NORMAL", 2000, 2300), ("FREQUENT_RETURNER", 250, 250), ("HOUSEHOLD", 80, 160),
     ("OFFICE_HOSTEL_PG", 75, 180), ("REFURB_DEVICE", 60, 60), ("OPPORTUNISTIC", 85, 95),
-    ("UNCONFIRMED_ABUSER", 30, 30), ("RING", 37, 37),
+    ("UNCONFIRMED_ABUSER", 30, 30), ("RING", 97, 97),
 ])
 def test_archetype_account_counts(world, archetype, lo, hi):
     n = (world["sim_ground_truth"]["archetype"] == archetype).sum()
@@ -141,15 +155,16 @@ def test_hostel_has_sequential_device_reuse(orders_with_truth):
 def test_ring_sizes(world):
     truth = world["sim_ground_truth"]
     synthetic = truth[truth["archetype"] == "RING"]
-    assert synthetic.groupby("ring_id").size().to_dict() == {"R1": 8, "R2": 12, "R3": 10, "R4": 7}
+    assert synthetic.groupby("ring_id").size().to_dict() == {"R1": 24, "R2": 36, "R3": 30, "R4": 7}
 
 
 def test_r3_exists_only_in_test_dates(world, orders_with_truth):
     r3 = orders_with_truth[orders_with_truth["ring_id"] == "R3"]
     days = _day(r3["placed_at"])
     assert days.between(306, 365).all() and (r3["split"] == "TEST").all()
-    accounts = world["accounts"].set_index("account_id").loc[r3["account_id"].unique()]
-    assert (accounts["created_at"] >= pd.Timestamp(A.day_start(306))).all()
+    # dormant recruits may be old accounts, but none has an order before TEST
+    assert not orders_with_truth[orders_with_truth["account_id"].isin(r3["account_id"])
+                                 & (_day(orders_with_truth["placed_at"]) < 306)].shape[0]
     shared = set(r3["device_id"]) | set(r3["payment_token_id"].dropna())
     earlier = orders_with_truth[_day(orders_with_truth["placed_at"]) < 306]
     assert shared.isdisjoint(set(earlier["device_id"]) | set(earlier["payment_token_id"].dropna()))
@@ -232,8 +247,10 @@ def test_schema_constraints(world):
 
 
 def test_split_column_follows_placement_day(world):
-    o = world["orders"]
-    assert (o["split"] == _day(o["placed_at"]).map(A.split_for_day)).all()
+    o = world["orders"].merge(world["sim_ground_truth"], on="account_id")
+    history = o[o["archetype"] != "DEMO"]
+    assert (history["split"] == _day(history["placed_at"]).map(A.split_for_day)).all()
+    assert (o.loc[o["archetype"] == "DEMO", "split"] == "RECENT").all()          # Fix 6
 
 
 def test_event_ids_follow_time_order(world):

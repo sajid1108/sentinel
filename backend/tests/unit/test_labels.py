@@ -117,3 +117,35 @@ def test_derive_labels_from_event_table():
     assert pd.isna(df.loc["ORD-B", "return_label"]) and df.loc["ORD-B", "abuse_status"] == "NOT_MATURED"
     assert df.loc["ORD-C", "abuse_status"] == "NOT_MATURED"
     assert str(df["abuse_label"].dtype) == "Int64"
+
+
+# ── C8: label edge cases (Phase 2 review) ────────────────────────────────────
+def test_c8_claim_after_adjudication_window_is_no_claim():
+    lab = label([("CLAIM_FILED", d(61), {"claim_type": "ITEM_NOT_RECEIVED"})])
+    assert (lab.abuse_status, lab.abuse_label) == ("NO_CLAIM", 0)
+
+
+@pytest.mark.parametrize("first,second,expected", [
+    ("RETURN_REQUESTED", "EXCHANGE_REQUESTED", "FULL"),
+    ("EXCHANGE_REQUESTED", "RETURN_REQUESTED", "EXCHANGE"),
+])
+def test_c8_earliest_return_event_decides_return_type(first, second, expected):
+    # listed out of time order on purpose: the earliest occurred_at decides
+    lab = label([(second, d(12), {"returned_value_fraction": 1.0}),
+                 (first, d(4), {"returned_value_fraction": 1.0})])
+    assert (lab.return_label, lab.return_type) == (1, expected)
+
+
+def test_c8_first_resolution_wins():
+    lab = label([("QC_FLAGGED", d(8), {}), ("ABUSE_CLEARED", d(20), {}), ("ABUSE_CONFIRMED", d(40), {})])
+    assert (lab.abuse_status, lab.abuse_label, lab.abuse_label_resolved_at) == ("CLEARED", 0, d(20))
+
+
+def test_c8_as_of_exactly_at_return_window_end_is_null():
+    lab = label([], as_of=d(30))
+    assert (lab.return_label, lab.return_type, lab.return_label_resolved_at) == (None, None, None)
+
+
+def test_c8_return_without_fraction_defaults_to_full():
+    lab = label([("RETURN_REQUESTED", d(5), {})])
+    assert (lab.return_label, lab.return_type, lab.returned_value_fraction) == (1, "FULL", 1.0)

@@ -24,6 +24,7 @@ import pandas as pd
 
 from sentinel.data import archetypes as A
 from sentinel.data import demo_orders, labels as L
+from sentinel.features.identifiers import identifier_id
 from sentinel.settings import DEMO_CLOCK, HMAC_SECRET
 
 SEED = 20260901
@@ -51,8 +52,12 @@ ARCHETYPE_GENERATORS = {
 CANCEL_PROB = 0.01
 COD_RTO_PROB = 0.03
 EXCHANGE_SHARE = 0.25
-NEVER_RESOLVES_PROB = 0.05
-CARRIER_CONTRADICTS_ABUSIVE = 0.75
+NEVER_RESOLVES_PROB = 0.05          # share of investigated disputes that never resolve
+# Investigation coverage (deviation #20). A dispute is evidence-backed when QC flagged the return
+# or carrier evidence contradicts the claim; the same coverage applies to every archetype.
+EVIDENCE_BACKED_COVERAGE = 0.95
+OTHER_DISPUTE_COVERAGE = 0.60
+CARRIER_CONTRADICTS_ABUSIVE = 0.95      # tuned for CALIBRATION positives >= 40 (deviation #20)
 CARRIER_CONTRADICTS_GENUINE = 0.02
 CATEGORY_RETURN_EFFECT = {"APPAREL": 0.35, "FOOTWEAR": 0.25, "ELECTRONICS": -0.35,
                           "BEAUTY": -0.60, "HOME": -0.25, "ACCESSORIES": -0.10}
@@ -86,11 +91,6 @@ OUTPUT_FILES = {
 # ── Ids ──────────────────────────────────────────────────────────────────────
 def _hmac_hex(secret: str, message: str) -> str:
     return hmac.new(secret.encode("utf-8"), message.encode("utf-8"), hashlib.sha256).hexdigest()
-
-
-def identifier_id(kind: str, value: str, secret: str = HMAC_SECRET) -> str:
-    """§5: HMAC-SHA256(secret, f"{kind}:{value}")[:32]."""
-    return _hmac_hex(secret, f"{kind}:{value}")[:32]
 
 
 def display_label(kind: str, ident: str) -> str:
@@ -199,7 +199,8 @@ def simulate_outcomes(plan: A.OrderPlan, rng: np.random.Generator) -> list[Event
                     events.append(Event("REFUNDED", _after(qc_at, rng.uniform(0.5, 2)), {}))
 
     if dispute_at is not None:
-        if rng.random() < b.investigation_coverage:
+        coverage = (EVIDENCE_BACKED_COVERAGE if evidence else OTHER_DISPUTE_COVERAGE) if b.investigated else 0.0
+        if rng.random() < coverage:
             if rng.random() >= NEVER_RESOLVES_PROB:
                 resolved = _after(dispute_at, rng.uniform(3, 25))
                 if abusive and evidence:
@@ -239,6 +240,7 @@ def generate(seed: int = SEED, secret: str = HMAC_SECRET) -> World:
     identifiers: dict[str, tuple[str, str]] = {}          # id -> (kind, value)
     multi_tenant: dict[str, datetime] = {}
     key_to_id: dict[str, str] = {}
+    acc_archetype: dict[str, str] = {}
 
     def register(kind: str, value: str) -> str:
         ident = identifier_id(kind, value, secret)
@@ -257,6 +259,7 @@ def generate(seed: int = SEED, secret: str = HMAC_SECRET) -> World:
             if acc.key in key_to_id:
                 raise ValueError(f"duplicate account key {acc.key}")
             key_to_id[acc.key] = account_id
+            acc_archetype[acc.key] = acc.archetype
             account_rows.append((account_id, acc.created_at, acc.source))
             truth_rows.append((account_id, acc.archetype, acc.ring_id))
         for address, set_at in pop.multi_tenant_addresses.items():
@@ -275,7 +278,8 @@ def generate(seed: int = SEED, secret: str = HMAC_SECRET) -> World:
                 plan.delivery_speed, plan.payment_method, register("DEVICE", plan.device),
                 register("ADDRESS", plan.address),
                 register("PAYMENT_TOKEN", plan.token) if plan.token is not None else None,
-                "HISTORY", A.split_for_day(day),
+                "HISTORY", "RECENT" if acc_archetype[plan.account_key] == "DEMO"
+                else A.split_for_day(day),
             ))
             for i, ln in enumerate(plan.lines, start=1):
                 line_rows.append((order_id, i, ln.sku_id, ln.product_id, ln.variant, ln.category,
@@ -405,4 +409,57 @@ def summarize(world: World) -> dict[str, float | int | str]:
         "test_abuse_positives": int(((merged["split"] == "TEST") & (merged["abuse_label"] == 1)).sum()),
         "rings": int(truth["ring_id"].dropna().nunique()),
         "sha256": event_log_sha256(world),
+    }
+
+
+FLAGGED_CLAIM_EVENTS = ("CLAIM_FILED", "QC_FLAGGED")
+
+
+def ring_order_account_history(world: World) -> pd.DataFrame:
+    """Ring (R1-R4) orders with the member's own history at placement (offline diagnostics).
+
+    prior_orders: the member's orders placed before this one. own_flagged_180d: CLAIM_FILED or
+    QC_FLAGGED events on the member's own orders in [placed_at - 180 d, placed_at).
+    """
+    orders, truth, ev = world["orders"], world["sim_ground_truth"], world["order_events"]
+    ring = orders.merge(truth[truth["archetype"] == "RING"], on="account_id")
+    flags = ev[ev["event_type"].isin(FLAGGED_CLAIM_EVENTS)].merge(orders[["order_id", "account_id"]], on="order_id")
+    def utc_micros(ts: pd.Series) -> np.ndarray:
+        return ts.dt.tz_convert("UTC").dt.tz_localize(None).astype("datetime64[us]").to_numpy()
+
+    flag_times = {a: np.sort(utc_micros(g["occurred_at"])) for a, g in flags.groupby("account_id")}
+    order_times = {a: np.sort(utc_micros(g["placed_at"])) for a, g in orders.groupby("account_id")}
+    window = np.timedelta64(180, "D")
+    prior, own = [], []
+    for account, t in zip(ring["account_id"], utc_micros(ring["placed_at"])):
+        prior.append(int(np.searchsorted(order_times[account], t, side="left")))
+        times = flag_times.get(account)
+        own.append(0 if times is None else int(np.searchsorted(times, t, side="left")
+                                               - np.searchsorted(times, t - window, side="left")))
+    return ring.assign(prior_orders=prior, own_flagged_180d=own)
+
+
+def world_stats(world: World) -> dict:
+    """Figures printed by `python -m sentinel.cli world-stats` (offline only)."""
+    orders, lab, ev = world["orders"], world["order_labels"], world["order_events"]
+    merged = orders[["order_id", "split"]].merge(lab, on="order_id")
+    disputed = set(ev.loc[ev["event_type"].isin(FLAGGED_CLAIM_EVENTS), "order_id"])
+    unresolved = int((lab["abuse_status"] == "UNRESOLVED").sum())
+    positives = (merged[merged["abuse_label"] == 1].groupby("split").size()
+                 .reindex(["TRAIN", "GAP", "CALIBRATION", "TEST", "RECENT"], fill_value=0))
+    ring = ring_order_account_history(world)
+    per_member = ring.groupby(["ring_id", "account_id"]).size()
+    rings = {rid: {"members": int(len(g)), "median_orders": float(g.median()), "max_orders": int(g.max())}
+             for rid, g in per_member.groupby(level="ring_id")}
+    return {
+        "accounts": len(world["accounts"]),
+        "orders": len(orders),
+        "return_rate": float(lab["return_label"].dropna().mean()),
+        "confirmed_abuse_share": float((lab["abuse_status"] == "CONFIRMED").mean()),
+        "disputed_orders": len(disputed),
+        "unresolved": unresolved,
+        "unresolved_share_of_disputes": unresolved / len(disputed) if disputed else 0.0,
+        "positives_by_split": {k: int(v) for k, v in positives.items()},
+        "rings": rings,
+        "ring_orders_with_own_prior_flagged_claim": float((ring["own_flagged_180d"] >= 1).mean()),
     }

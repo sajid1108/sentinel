@@ -130,9 +130,6 @@ def build_catalog(rng: np.random.Generator) -> Catalog:
 
 
 # ── Plans ────────────────────────────────────────────────────────────────────
-GENUINE_COVERAGE = 0.60          # investigation coverage for disputes on genuine accounts
-OPPORTUNISTIC_COVERAGE = 0.50    # §5
-RING_COVERAGE = 0.70             # §5
 QC_FLAG_ABUSIVE = 0.75           # §5
 QC_FLAG_GENUINE = 0.02           # §5
 GENUINE_CLAIM_PROB = 0.005       # §5: lost parcels
@@ -143,7 +140,7 @@ class Behaviour:
     """Hidden truth for outcome sampling. Never written to any output table."""
     return_logit: float
     abuse_mode: str | None = None            # None | "RETURN" | "CLAIM"
-    investigation_coverage: float = GENUINE_COVERAGE
+    investigated: bool = True                # False: disputes are never investigated (UNCONFIRMED_ABUSER)
     qc_flag_prob_abusive: float = QC_FLAG_ABUSIVE
     qc_flag_prob_genuine: float = QC_FLAG_GENUINE
     genuine_claim_prob: float = GENUINE_CLAIM_PROB
@@ -308,6 +305,36 @@ def token_for(method: str, upi: str, card: str) -> str | None:
     return {"PREPAID_UPI": upi, "PREPAID_CARD": card, "COD": None}[method]
 
 
+# Fix 3 (deviation #20): genuine customers also buy high-value items, so order value is not an abuse shortcut.
+HIGH_VALUE_CATEGORIES = ("ELECTRONICS", "FOOTWEAR", "ACCESSORIES")
+HIGH_VALUE_MIN_INR = 8000.0
+HIGH_VALUE_MAX_INR = 40000.0
+NORMAL_HIGH_VALUE_SHARE = 0.12
+FREQUENT_RETURNER_HIGH_VALUE_SHARE = 0.15
+
+
+def high_value_pool(catalog: Catalog) -> list[Product]:
+    return [p for c in HIGH_VALUE_CATEGORIES for p in catalog.products[c]
+            if HIGH_VALUE_MIN_INR <= p.price_inr <= HIGH_VALUE_MAX_INR]
+
+
+def high_value_cart(rng: np.random.Generator, catalog: Catalog) -> tuple[Line, ...]:
+    """One item priced ₹8,000-₹40,000 from ELECTRONICS, FOOTWEAR or ACCESSORIES."""
+    product = pick(rng, high_value_pool(catalog))
+    return (make_line(product, pick(rng, product.variants)),)
+
+
+def high_value_order(rng: np.random.Generator, catalog: Catalog, key: str, placed_at: datetime,
+                     profile: Profile, behaviour: Behaviour, **ids) -> OrderPlan:
+    """A high-value cart whose discounted value stays inside ₹8,000-₹40,000."""
+    plan = sampled_order(rng, catalog, key, placed_at, profile, behaviour, lines=high_value_cart(rng, catalog), **ids)
+    price = sum(ln.unit_price_inr * ln.quantity for ln in plan.lines)
+    if price * (1 - plan.discount_pct / 100) < HIGH_VALUE_MIN_INR:
+        plan = OrderPlan(plan.account_key, plan.placed_at, plan.lines, 0.0, plan.delivery_speed,
+                         plan.payment_method, plan.device, plan.address, plan.token, behaviour=plan.behaviour)
+    return plan
+
+
 def sampled_order(rng: np.random.Generator, catalog: Catalog, key: str, placed_at: datetime,
                   profile: Profile, behaviour: Behaviour, *, device: str, address: str,
                   upi: str, card: str, lines: tuple[Line, ...] | None = None,
@@ -353,9 +380,9 @@ def gen_normal(rng: np.random.Generator, catalog: Catalog) -> Population:
         for d in days:
             device = f"{key}:device:1" if second_device_day and d >= second_device_day else w.device
             address = f"{key}:address:1" if second_address and rng.random() < 0.3 else w.address
-            pop.orders.append(sampled_order(rng, catalog, key, time_on_day(rng, d), NORMAL_PROFILE,
-                                            behaviour, device=device, address=address,
-                                            upi=w.upi, card=w.card))
+            make = high_value_order if rng.random() < NORMAL_HIGH_VALUE_SHARE else sampled_order
+            pop.orders.append(make(rng, catalog, key, time_on_day(rng, d), NORMAL_PROFILE,
+                                   behaviour, device=device, address=address, upi=w.upi, card=w.card))
     return pop
 
 
@@ -374,9 +401,9 @@ def gen_frequent_returner(rng: np.random.Generator, catalog: Catalog) -> Populat
         behaviour = genuine(float(rng.uniform(0.30, 0.55)), qc_flag_prob_genuine=0.0)
         pop.accounts.append(AccountSpec(key, created, "FREQUENT_RETURNER"))
         for d in days:
-            pop.orders.append(sampled_order(rng, catalog, key, time_on_day(rng, d), RETURNER_PROFILE,
-                                            behaviour, device=w.device, address=w.address,
-                                            upi=w.upi, card=w.card))
+            make = high_value_order if rng.random() < FREQUENT_RETURNER_HIGH_VALUE_SHARE else sampled_order
+            pop.orders.append(make(rng, catalog, key, time_on_day(rng, d), RETURNER_PROFILE,
+                                   behaviour, device=w.device, address=w.address, upi=w.upi, card=w.card))
     return pop
 
 
@@ -516,7 +543,7 @@ UNCONFIRMED_ABUSER_ACCOUNTS = 30
 def _gen_opportunistic(rng: np.random.Generator, catalog: Catalog, n_accounts: int,
                        archetype: str, prefix: str) -> Population:
     unconfirmed = archetype == "UNCONFIRMED_ABUSER"
-    coverage = 0.0 if unconfirmed else OPPORTUNISTIC_COVERAGE
+    investigated = not unconfirmed                # UNCONFIRMED_ABUSER: never investigated (label noise)
     pop = Population()
     for i in range(n_accounts):
         key = f"{prefix}-{i:03d}"
@@ -527,7 +554,7 @@ def _gen_opportunistic(rng: np.random.Generator, catalog: Catalog, n_accounts: i
         else:                                                    # dormant account
             created = created_before(rng, 1, 200, 1500)
             if b0 > 150 and rng.random() < 0.5:
-                old = genuine(0.15, investigation_coverage=coverage)
+                old = genuine(0.15, investigated=investigated)
                 for d in sorted(int(x) for x in rng.integers(1, b0 - 120, size=int(rng.integers(1, 3)))):
                     pop.orders.append(sampled_order(rng, catalog, key, time_on_day(rng, d), NORMAL_PROFILE,
                                                     old, device=w.device, address=w.address,
@@ -543,12 +570,12 @@ def _gen_opportunistic(rng: np.random.Generator, catalog: Catalog, n_accounts: i
             if j in abusive:
                 mode = "RETURN" if unconfirmed or rng.random() < 0.5 else "CLAIM"
                 behaviour = Behaviour(return_logit=logit(return_rate), abuse_mode=mode,
-                                      investigation_coverage=coverage,
+                                      investigated=investigated,
                                       # undetected wardrobing: QC passes, so the account stays labelled 0
                                       qc_flag_prob_abusive=QC_FLAG_GENUINE if unconfirmed else QC_FLAG_ABUSIVE)
                 profile = HIGH_VALUE_PROFILE
             else:
-                behaviour = genuine(return_rate, investigation_coverage=coverage)
+                behaviour = genuine(return_rate, investigated=investigated)
                 profile = HIGH_VALUE_PROFILE if rng.random() < 0.5 else NORMAL_PROFILE
             pop.orders.append(sampled_order(rng, catalog, key, time_on_day(rng, d), profile, behaviour,
                                             device=burst_device, address=w.address,
@@ -565,11 +592,21 @@ def gen_unconfirmed_abuser(rng: np.random.Generator, catalog: Catalog) -> Popula
 
 
 # ── RINGS ────────────────────────────────────────────────────────────────────
+# Members look clean on their own (§5): a handful of orders each, placed in one short stretch,
+# so a member's own claims are rarely visible when its next order is placed. Coordination only
+# shows ACROSS members: shared devices and tokens, and same-SKU bursts on shared drop days.
 RING_COVER_SHARE = 0.20
 RING_SHARED_DEVICE_PROB = 0.85
 RING_SHARED_TOKEN_PROB = 0.75
-RING_PAYMENT_WEIGHTS = (0.60, 0.25, 0.15)
+RING_PAYMENT_WEIGHTS = (0.40, 0.40, 0.20)
 RING_ADDRESSES_PER_MEMBER = 4
+RING_MEMBER_ORDERS = (3, 6)          # orders per member, all inside the ring window
+RING_MEMBER_SPAN_DAYS = (1, 6)       # a member's orders fall within this many days of its first
+RING_TARGET_SKU_PROB = 0.70
+# Rings also recruit dormant accounts (created long ago, never ordered), so account age alone does
+# not separate members from genuine customers. earliest_day limits orders and new accounts only.
+RING_DORMANT_ACCOUNT_SHARE = 0.5
+RING_DORMANT_ACCOUNT_AGE_DAYS = (90, 1500)
 
 
 def ring_address(rng: np.random.Generator, member_key: str) -> str:
@@ -584,26 +621,26 @@ class RingSpec:
     end_day: int
     n_devices: int
     n_tokens: int
-    orders_per_member_day: float
-    earliest_day: int = 1            # no account or order of the ring before this day
+    launch_share: float = 0.0        # share of members who start inside the launch burst
+    launch_days: int = 0             # length of the launch burst at the start of the window
+    earliest_day: int = 1            # no order, identifier or newly created account before this day
 
 
 RINGS = (
-    RingSpec("R1", 8, 40, 90, 2, 1, 0.45),
-    RingSpec("R2", 12, 170, 260, 3, 2, 0.40),
-    RingSpec("R3", 10, 315, 345, 2, 1, 0.60, earliest_day=306),   # cold-start ring: TEST only
+    RingSpec("R1", 24, 40, 90, 6, 4),
+    RingSpec("R2", 36, 170, 260, 9, 6),
+    # cold-start ring: TEST only; opens with a launch burst, before any member can be confirmed
+    RingSpec("R3", 30, 315, 345, 8, 5, launch_share=0.5, launch_days=4, earliest_day=306),
 )
 
 
 def _ring_abusive_order(rng, catalog, key, placed_at, targets, *, device, token,
                         own_card, own_upi, address, product: Product | None = None) -> OrderPlan:
     if product is None:
-        product = pick(rng, targets) if rng.random() < 0.70 else pick(
-            rng, catalog.band(pick(rng, ("ELECTRONICS", "ACCESSORIES")), "HIGH"))
+        product = pick(rng, targets) if rng.random() < RING_TARGET_SKU_PROB else pick(rng, high_value_pool(catalog))
     lines = (make_line(product, pick(rng, product.variants)),)
     behaviour = Behaviour(return_logit=logit(0.3),
-                          abuse_mode="CLAIM" if rng.random() < 0.6 else "RETURN",
-                          investigation_coverage=RING_COVERAGE)
+                          abuse_mode="CLAIM" if rng.random() < 0.6 else "RETURN")
     discount = float(rng.integers(0, 16)) if rng.random() < 0.5 else 0.0
     speed = "EXPRESS" if rng.random() < 0.5 else "STANDARD"
     method = pick(rng, PAYMENT_METHODS, RING_PAYMENT_WEIGHTS)
@@ -613,19 +650,20 @@ def _ring_abusive_order(rng, catalog, key, placed_at, targets, *, device, token,
 
 
 def _ring_cover_order(rng, catalog, key, placed_at, *, device, address, w: Wallet) -> OrderPlan:
-    return sampled_order(rng, catalog, key, placed_at, COVER_PROFILE,
-                         genuine(0.05, keep=True, investigation_coverage=RING_COVERAGE),
+    return sampled_order(rng, catalog, key, placed_at, COVER_PROFILE, genuine(0.05, keep=True),
                          device=device, address=address, upi=w.upi, card=w.card)
 
 
 def _ring_prior_orders(rng, catalog, key, days, w: Wallet) -> list[OrderPlan]:
-    b = genuine(0.12, investigation_coverage=RING_COVERAGE)
+    b = genuine(0.12)
     return [sampled_order(rng, catalog, key, time_on_day(rng, d), NORMAL_PROFILE, b,
                           device=w.device, address=w.address, upi=w.upi, card=w.card) for d in days]
 
 
 def _ring_targets(rng, catalog) -> tuple[Product, ...]:
-    return (pick(rng, catalog.band("ELECTRONICS", "HIGH")), pick(rng, catalog.band("ACCESSORIES", "HIGH")))
+    """Two resellable items from the same ₹8,000-₹40,000 pool genuine high-value carts use."""
+    pool = high_value_pool(catalog)
+    return tuple(pool[int(i)] for i in rng.choice(len(pool), size=2, replace=False))
 
 
 def gen_ring(rng: np.random.Generator, catalog: Catalog, spec: RingSpec) -> Population:
@@ -636,26 +674,27 @@ def gen_ring(rng: np.random.Generator, catalog: Catalog, spec: RingSpec) -> Popu
     # Addresses rotate deliberately: each member cycles through its own drop addresses, so an
     # address never links two members. Device and token carry the ring signal (§5).
     targets = _ring_targets(rng, catalog)
-    window = spec.end_day - spec.start_day + 1
-    bursts = sorted(int(d) for d in rng.choice(np.arange(spec.start_day, spec.end_day + 1),
-                                               size=max(3, window // 3), replace=False))
     earliest = day_start(spec.earliest_day)
+    lo_orders, hi_orders = RING_MEMBER_ORDERS
+    lo_span, hi_span = RING_MEMBER_SPAN_DAYS
     for m in range(spec.members):
         key = f"RING-{rid}-{m:02d}"
         w = Wallet.own(key)
-        n_prior = int(rng.integers(0, 4))                     # 0–3 prior orders
-        lo = max(spec.earliest_day, spec.start_day - 90)
-        prior_days = sorted(int(d) for d in rng.integers(lo, spec.start_day - 2, size=n_prior))
-        first_day = prior_days[0] if prior_days else spec.start_day
-        created = created_before(rng, first_day, 0.2, 30)
-        if spec.earliest_day > 1:
-            created = max(earliest, created)
+        n = int(rng.integers(lo_orders, hi_orders + 1))
+        span = int(rng.integers(lo_span, hi_span + 1))
+        if rng.random() < spec.launch_share:
+            first_day = int(rng.integers(spec.start_day, spec.start_day + spec.launch_days))
+        else:
+            first_day = int(rng.integers(spec.start_day, spec.end_day - span + 1))
+        days = [first_day] + sorted(int(d) for d in rng.integers(first_day, first_day + span + 1, size=n - 1))
+        if rng.random() < RING_DORMANT_ACCOUNT_SHARE:     # aged account with no order history
+            created = created_before(rng, first_day, *RING_DORMANT_ACCOUNT_AGE_DAYS)
+        else:
+            created = max(earliest, created_before(rng, first_day, 0.2, 30))
         pop.accounts.append(AccountSpec(key, created, "RING", ring_id=rid))
-        pop.orders.extend(_ring_prior_orders(rng, catalog, key, prior_days, w))
         shared_device, shared_token = devices[m % len(devices)], tokens[m % len(tokens)]
-        n = max(3, int(rng.poisson(spec.orders_per_member_day * window)))
-        for _ in range(n):
-            placed_at = time_on_day(rng, pick(rng, bursts))
+        for d in days:
+            placed_at = time_on_day(rng, d)
             device = shared_device if rng.random() < RING_SHARED_DEVICE_PROB else w.device
             address = ring_address(rng, key)
             if rng.random() < RING_COVER_SHARE:

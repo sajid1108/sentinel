@@ -26,6 +26,9 @@ dev = [
 sentinel = "sentinel.cli:main"
 
 [tool.pytest.ini_options]
+markers = [
+    "slow: generates the synthetic world or trains a model (deselect with -m \"not slow\")",
+]
 filterwarnings = [
     "ignore:Using `httpx` with `starlette.testclient` is deprecated",
 ]

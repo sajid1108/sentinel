@@ -36,3 +36,10 @@ def order_payload(valid_placed_at):
         "address_id": VALID_ID,
         "payment_token_id": VALID_ID,
     }
+
+
+@pytest.fixture(scope="session")
+def world():
+    """The synthetic world, generated once per test session (generation is deterministic, §5)."""
+    from sentinel.data.generator import generate
+    return generate()

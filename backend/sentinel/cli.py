@@ -19,6 +19,25 @@ def cmd_generate(args):
     print(f"  event log sha256 {s['sha256']}")
 
 
+def cmd_world_stats(args):
+    from sentinel.data.generator import SEED, generate, world_stats
+
+    s = world_stats(generate())
+    print(f"World (seed {SEED})")
+    print(f"  accounts {s['accounts']}, orders {s['orders']}")
+    print(f"  return rate {s['return_rate']:.1%}")
+    print(f"  confirmed abuse {s['confirmed_abuse_share']:.1%} of orders")
+    print(f"  UNRESOLVED {s['unresolved']} of {s['disputed_orders']} disputed orders "
+          f"({s['unresolved_share_of_disputes']:.1%})")
+    print("  abuse positives by split: "
+          + ", ".join(f"{split} {n}" for split, n in s["positives_by_split"].items()))
+    for ring_id, r in s["rings"].items():
+        print(f"  ring {ring_id}: {r['members']} members, orders per member median {r['median_orders']:g}, "
+              f"max {r['max_orders']}")
+    print(f"  ring orders with >= 1 own prior flagged claim (180 d): "
+          f"{s['ring_orders_with_own_prior_flagged_claim']:.1%}")
+
+
 def cmd_build_features(args):
     print("Building point-in-time features...")
     print("[Phase 3] Not yet implemented")
@@ -67,6 +86,7 @@ def main():
     sub = parser.add_subparsers(dest="command", required=True)
 
     sub.add_parser("generate", help="Generate the synthetic world into data/")
+    sub.add_parser("world-stats", help="Print prevalence and ring diagnostics for the seeded world")
     sub.add_parser("build-features", help="[Phase 3] Build point-in-time features")
     sub.add_parser("train", help="[Phase 4] Train return and abuse models")
     sub.add_parser("evaluate", help="[Phase 4] Run evaluation suite")
@@ -82,6 +102,7 @@ def main():
     args = parser.parse_args()
     cmd_map = {
         "generate": cmd_generate,
+        "world-stats": cmd_world_stats,
         "build-features": cmd_build_features,
         "train": cmd_train,
         "evaluate": cmd_evaluate,

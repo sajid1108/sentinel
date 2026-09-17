@@ -10,8 +10,10 @@ import pytest
 from sentinel.api.schemas import ScoreOrderRequest
 from sentinel.data import archetypes as A
 from sentinel.data import demo_orders as D
-from sentinel.data.generator import identifier_id
+from sentinel.features.identifiers import identifier_id
 from sentinel.settings import DEMO_CLOCK
+
+pytestmark = pytest.mark.slow
 
 T0 = pd.Timestamp(D.DEMO_PLACED_AT)
 
