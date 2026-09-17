@@ -3,8 +3,20 @@ import sys
 
 
 def cmd_generate(args):
+    from sentinel.data.generator import generate, summarize, write_outputs
+    from sentinel.settings import DATA_DIR
+
     print("Generating synthetic data...")
-    print("[Phase 2] Not yet implemented")
+    world = generate()
+    paths = write_outputs(world, DATA_DIR)
+    for path in paths.values():
+        print(f"  wrote {path}")
+    s = summarize(world)
+    print(f"  accounts {s['accounts']}, orders {s['orders']}, events {s['events']}")
+    print(f"  return rate {s['return_rate']:.1%}, confirmed abuse {s['confirmed_abuse_rate']:.1%} of orders, "
+          f"unresolved {s['unresolved']}")
+    print(f"  TEST abuse positives {s['test_abuse_positives']}, rings {s['rings']}")
+    print(f"  event log sha256 {s['sha256']}")
 
 
 def cmd_build_features(args):
@@ -54,7 +66,7 @@ def main():
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
-    sub.add_parser("generate", help="[Phase 2] Generate synthetic data")
+    sub.add_parser("generate", help="Generate the synthetic world into data/")
     sub.add_parser("build-features", help="[Phase 3] Build point-in-time features")
     sub.add_parser("train", help="[Phase 4] Train return and abuse models")
     sub.add_parser("evaluate", help="[Phase 4] Run evaluation suite")
