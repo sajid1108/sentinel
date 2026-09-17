@@ -6,7 +6,7 @@
 | Ground truth | File | Rule |
 |---|---|---|
 | The contract | `docs/ARCHITECTURE.md` (1,799 lines) | **Frozen. Never edit.** |
-| Accepted changes | `docs/DEVIATIONS.md` (#1–#26) | Overrides the contract where they conflict. Append only. |
+| Accepted changes | `docs/DEVIATIONS.md` (#1–#27, plus the "Carried-forward TODOs" section) | Overrides the contract where they conflict. Append only. |
 | Build status | `README.md` (top) | Updated by whoever commits a stage. |
 | This file | `october_master_architecture.md` | Roles, scope, protocol, current state. Architect writes; others read. |
 
@@ -167,8 +167,8 @@ The specification's build order is Phase 0–12 (`ARCHITECTURE.md` §12). Stages
 | 2 | 1 | Policy engine | **[COMPLETED]** |
 | 3 | 2 | Synthetic generator | **[COMPLETED]** |
 | 4 | 3 | Feature builder | **[COMPLETED]** |
-| 5 | 4 | Train, calibrate, evaluate | **[ACTIVE: FIXER]** — built, **uncommitted**, 3 blockers decided |
-| 6 | 5 | Explanations | **[ACTIVE: BUILDER — starts only after Stage 5 commits]** |
+| 5 | 4 | Train, calibrate, evaluate | **[COMPLETED]** — `1c2259c`, follow-ups `53158b2` |
+| 6 | 5 | Explanations | **[ACTIVE: BUILDER]** — unblocked; stage 5 has landed |
 | 7 | 6 | DB, audit, scoring service | [PENDING] |
 | 8 | 7 | API | [PENDING] |
 | 9 | 8 | Frontend: order detail | [PENDING] |
@@ -192,11 +192,27 @@ The specification's build order is Phase 0–12 (`ARCHITECTURE.md` §12). Stages
 
 **Measured evidence the design works** (stage 5 run, pre-commit): abuse TEST PR-AUC **0.814** with graph features vs **0.527** without; cold-start ring R3 recall **0.727** vs 0.143; hard-negative archetypes have a genuine block rate of **0.0**.
 
-### C2. Stage 5 — **[ACTIVE: FIXER TASK]** — Train, calibrate, evaluate
+### C2. Stage 5 — **[COMPLETED]** — Train, calibrate, evaluate
 
-State: fully built and measured in the working tree, **not committed**. `561 passed, 3 failed`. Architect decisions on all three blockers have been issued; the Fixer applies them.
+Committed as `1c2259c` (models and evaluation) and `53158b2` (follow-ups). **567 tests pass**, slow included. Artifacts committed under `backend/artifacts/`.
 
-Owned files (Fixer is the only writer):
+What exists: two calibrated models (return: isotonic; abuse: sigmoid, both with monotonic constraints on evidence features), a registry that verifies SHA-256 and scikit-learn version on load, `evaluation.json` with model metrics, risk-band calibration, cohorts, a four-strategy realized-cost backtest, cost and label sensitivity sweeps, and the `guardrail_cost` section. CLI: `train`, `evaluate`, `score-demos`.
+
+Headline measurements to preserve and never tune away:
+
+| Result | Value |
+|---|---|
+| Abuse TEST PR-AUC, with graph features | **0.814** |
+| Same model without graph features | 0.527 |
+| Cold-start ring R3 recall (full vs no-graph) | **0.727** vs 0.143 |
+| Hard-negative archetypes, genuine block rate | **0.0** |
+| Tuned fixed-threshold baseline vs Sentinel, realized cost / 1,000 | ₹1,60,112 vs ₹1,95,313 |
+| Guardrail price per genuine block avoided | ₹9,211, i.e. **2.05×** the policy's own modelled false-block cost |
+| New-account (<30 d) friction vs older cohorts | **0.3611** vs 0.0479–0.0586 (block rate 0.0074) |
+
+Two findings that shape later stages: the confirmed-neighbour features are **redundant, not absent** (individually predictive, zero splits in the full model, because `account_age_days`, `component_size_reliable_90d` and `primary_category` identify the same rows first), which is why deviation #27 makes reason codes evidence-based; and Demo 3 is reviewed because **cost** says so (BLOCK ₹4,051.94 vs MANUAL_REVIEW ₹1,858.14 at p = 0.6913), not because guardrail G3 forbade blocking. MANUAL_REVIEW is cost-optimal for 0.0930 < p < 0.8413.
+
+Historical file ownership for this stage (now merged to main; listed so later stages know what stage 5 owns):
 
 ```
 backend/sentinel/models/{train,calibrate,registry}.py, __init__.py
@@ -208,21 +224,13 @@ backend/tests/{model,scenarios,unit}/ (stage-5 files)
 backend/artifacts/**
 ```
 
-Tasks:
+How it closed: the CALIBRATION positives bound was lowered to ≥ 35 (measured 37); the "model responds to confirmed-neighbour evidence" test was dropped as unreachable from the data side and replaced by a ≥ 20 data-health count (measured 21); the ring wave-widening experiment was reverted, keeping R3 recall at 0.727; §11's Demo 3 device fact was amended to three concurrent peers, with one peer order moved inside the 24-hour window to give `linked_orders_24h = 1`. Details in #25 and #26.
 
-1. **CALIBRATION positives 37 < 40** → lower the bound to **≥ 35**; do not move the R2 wave 3 schedule (a regeneration would risk the now-passing Demo 2). Record in #25.
-2. **TRAIN positives with confirmed-neighbour evidence 21 < 40** → replace the count bound with a *behaviour* test. Measure calibrated `p_abuse` on the Demo 2 row across `device_confirmed_abuse_weight ∈ {0, 0.3, 0.6, 1.0, 1.5, 2.235}` and `confirmed_abuse_proximity ∈ {0, 0.2, 0.25, 0.33, 0.5, 1.0}`. If either rises ≥ 0.10 end-to-end: assert that as a slow test, keep a weakened count check at ≥ 20, no regeneration. If both are flat: make the reused inter-wave device the shared device for up to 6 members of each later wave (R1/R2 only), regenerate, retrain, re-verify C1–C9 + #23 bounds + demo bands, re-measure; if still flat, **stop and escalate**.
-3. **Demo 3 band** → architect amendment to §11: the device is shared concurrently with **3 other accounts** (none confirmed). Add two hand-written peers in `demo_orders.py` only (created within 60 days, 1–3 orders each, first device use within 30 days, unconfirmed, no shared address/token, split `RECENT`). No retraining needed. Required: `p_abuse ∈ [0.20, 0.70]`; action MANUAL_REVIEW; counted signals exactly DEVICE + ACCOUNT_CLAIMS with BLOCK removed by **G3 only**; `(ALLOW cost − REVIEW cost) ≥ 0.15 × REVIEW cost`. Record as #26.
-
-Checks to run: `pytest` (full, slow included), then `generate` (only if step 2 branch b), `build-features`, `train --force`, `evaluate`, `score-demos`.
-
-Gate: commit `phase 4: models and evaluation` (artifacts included) **only if every stage-5 test passes**, including demo bands and actions. Otherwise do not commit; escalate with numbers.
-
-Known honest result to preserve, never tune away: the tuned fixed-threshold baseline beats Sentinel on realized cost (₹1,60,112 vs ₹1,95,313 per 1,000). The `guardrail_cost` section prices the difference: guardrails change 49 decisions, cost ~₹40,203 per 1,000, and avoid 8 genuine blocks (~₹9,211 each, close to the policy's own false-block cost).
+Open debts recorded in `DEVIATIONS.md` under "Carried-forward TODOs": the account-age cohort friction table must appear in the stage 12 dashboard work, and the stage 13 model card must state the new-account friction disparity plainly.
 
 ### C3. Stage 6 — **[ACTIVE: BUILDER TASK]** — Explanations
 
-**Hard dependency:** attributions are computed against the committed model artifacts. If the Fixer takes branch (b) of task 2, every attribution changes. **The Builder must not start coding until the Fixer's stage-5 commit lands**, and must then rebase onto it. Until then the Builder may only read `ARCHITECTURE.md` §6.5, `config/reason_codes.toml` and `features/definitions.py`, and draft the reason-code text.
+**Dependency satisfied:** stage 5 landed at `53158b2`, so the committed artifacts are stable and the Builder may start. Work from `main` at or after that commit. Do not retrain or modify `backend/artifacts/models/*.joblib`; the reference vector is produced by a separate CLI step (see below).
 
 Files to create (Builder is the only writer):
 
@@ -258,8 +266,8 @@ Gate: full suite green, commit `phase 5: explanations`, report, stop.
 | 10 | Review queue with filters and the "Simulate checkout" presets for the three demo orders. |
 | 11 | Overview: decision activity tiles and the synthetic backtest panel, kept visually separate. |
 | 12 | Backtest depth: cost/label sensitivity, cohort friction table, R3 cold-start panel (data already produced in stage 5). |
-| 13 | Hardening: demo reset, degraded-mode toggle, audit verify in the UI, model card, drift placeholder. |
-| 14 | Two cold-start rehearsals and a recorded fallback video. |
+| 13 | Hardening: demo reset, degraded-mode toggle, audit verify in the UI, `docs/MODEL_CARD.md` (must state the new-account friction disparity), drift placeholder. |
+| 14 | `docs/DEMO_SCRIPT.md`, two cold-start rehearsals, and a recorded fallback video. |
 | 15 | Pitch narrative and submission, reviewed against the honesty rules in B1. |
 
 ---

@@ -35,9 +35,10 @@ def test_demo_2_ring_member_block(scored):
 # accounts in the last 30 days, none confirmed. All four required outcomes are asserted here.
 DEMO_3_COST_MARGIN = 0.15
 # The band is a guard on the measured score, not the property under test: what matters is that
-# MANUAL_REVIEW is the right action and that cost - not a guardrail - selects it. Widened from 0.70 to
-# 0.85 so the demo is not one retrain away from a red suite (#26).
-DEMO_3_BAND = (0.20, 0.85)
+# MANUAL_REVIEW is the right action and that cost - not a guardrail - selects it. Widened from 0.70 so the
+# demo is not one retrain away from a red suite, then held at 0.84 - just under the measured cost-optimality
+# crossover 0.8413 - so the band can never pass while the cost assertion below fails (#26).
+DEMO_3_BAND = (0.20, 0.84)
 # Cost-optimality grid for Demo 3's own order value and CLV, guardrails not applied. MANUAL_REVIEW is
 # cost-optimal on every point below and not at 0.90; the measured crossover is recorded in #26.
 DEMO_3_REVIEW_OPTIMAL_AT = (0.20, 0.40, 0.60, 0.6913, 0.75, 0.83)
