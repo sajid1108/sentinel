@@ -4,7 +4,8 @@ One GraphAnalysis per (order, t0). The order's own identifiers are the query key
 use of them is treated as happening at t0 (age 0), but they are never written to the graph here.
 Two accounts are linked through an identifier as a two-hop path; the link weight is the other
 account's edge weight (reliability x decay), with sequential device use at 0.2 and multi-tenant
-addresses at 0.1. Neighbour abuse counts only use confirmations visible at t0 (P4, P10).
+addresses at 0.1. Neighbour abuse counts only use confirmations visible at t0 (P4, P10), and only
+those of OTHER accounts: the query account's own confirmation never counts as graph evidence.
 """
 from __future__ import annotations
 
@@ -209,10 +210,11 @@ def analyse(state: GraphState, q: OrderQuery, t0: int) -> GraphAnalysis:
                                               if in_window(link.last_seen, t0, 30))
     address_confirmed_weight = 0.0 if fanout else sum(link.weight for link in address_links if link.confirmed)
 
-    # reliable component
+    # reliable component. The query account's own confirmation is account history, not graph
+    # evidence: it is left out of the confirmed count (the component size still includes the account).
     component = _component(ctx)
     size = min(len(component), BFS_MAX_ACCOUNTS)
-    confirmed = sorted(a for a in component if ctx.confirmed(a))
+    confirmed = sorted(a for a in component if a != ctx.account and ctx.confirmed(a))
     hops = [component[a].depth for a in confirmed if component[a].depth <= PROXIMITY_MAX_HOPS]
     proximity = 1.0 / (1 + min(hops)) if hops else 0.0
 

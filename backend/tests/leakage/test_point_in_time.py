@@ -64,6 +64,47 @@ def test_p4_neighbour_counts_only_if_confirmed_before_t0(confirmed_at, counted):
     assert f["confirmed_abuse_proximity"] == (0.5 if counted else 0.0)
 
 
+# ── Self-confirmation is account history, not graph evidence (deviation #24) ─
+def _self_confirmed_world(with_neighbour: bool):
+    w = MiniWorld()
+    device, address = w.ident("DEVICE", "self-device"), w.ident("ADDRESS", "self-address")
+    w.order("ORD-SELF", "ACC-SELF", T0 - 20 * DAY, device=device, address=address)
+    w.event("ORD-SELF", "DELIVERED", T0 - 17 * DAY)
+    w.event("ORD-SELF", "QC_FLAGGED", T0 - 12 * DAY)
+    w.event("ORD-SELF", "ABUSE_CONFIRMED", T0 - 5 * DAY)
+    if with_neighbour:
+        w.order("ORD-BAD", "ACC-BAD", T0 - 20 * DAY, device=device, address=address)
+        w.event("ORD-BAD", "DELIVERED", T0 - 17 * DAY)
+        w.event("ORD-BAD", "QC_FLAGGED", T0 - 12 * DAY)
+        w.event("ORD-BAD", "ABUSE_CONFIRMED", T0 - 6 * DAY)
+    now = w.order("ORD-NOW", "ACC-SELF", T0, device=device, address=address)
+    return w, now
+
+
+def test_self_confirmed_account_without_confirmed_neighbours_has_no_graph_abuse_evidence():
+    w, now = _self_confirmed_world(with_neighbour=False)
+    b = builder_at(w, T0)
+    f = b.features_for_request(w.request(now))
+    assert f["component_size_reliable_90d"] == 1
+    assert f["confirmed_abuse_proximity"] == 0.0
+    assert f["component_abuse_ratio_smoothed"] == pytest.approx((0 + 1) / (1 + 10))
+    assert f["device_confirmed_abuse_weight"] == 0.0
+    assert b.signal_inputs(w.request(now)).address_confirmed_abuse_weight == 0.0
+    assert offline_features(w)["ORD-NOW"] == f
+
+
+def test_self_confirmed_account_counts_only_the_confirmed_neighbour():
+    w, now = _self_confirmed_world(with_neighbour=True)
+    b = builder_at(w, T0)
+    f = b.features_for_request(w.request(now))
+    assert f["component_size_reliable_90d"] == 2
+    assert f["confirmed_abuse_proximity"] == 0.5          # the neighbour: 1 account hop (ACC-DEV-ACC)
+    assert f["component_abuse_ratio_smoothed"] == pytest.approx((1 + 1) / (2 + 10))
+    assert f["device_confirmed_abuse_weight"] == pytest.approx(0.8 * 0.5 ** (20 / 30))
+    assert b.signal_inputs(w.request(now)).address_confirmed_abuse_weight == pytest.approx(0.4 * 0.5 ** (20 / 45))
+    assert offline_features(w)["ORD-NOW"] == f
+
+
 # ── P5: matured history only ─────────────────────────────────────────────────
 def test_p5_open_return_window_is_not_counted():
     w = MiniWorld()

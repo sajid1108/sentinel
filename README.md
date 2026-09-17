@@ -77,8 +77,8 @@ The frontend proxies API requests to `http://127.0.0.1:8000`.
 
 ```bash
 cd backend
-python -m pytest tests/ -v            # everything
-python -m pytest tests/ -m "not slow" # skip world generation and model checks
+python -m pytest tests/ -m "not slow" # while iterating: skips world generation, training and model checks
+python -m pytest tests/               # the full suite, including slow tests: run before every commit
 ```
 
 ## Demo Scenarios

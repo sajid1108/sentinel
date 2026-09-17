@@ -51,6 +51,17 @@ def test_non_present_signals_have_zero_weight_and_do_not_count():
         assert (s.present, s.counts_for_corroboration, s.weight) == (False, False, 0.0)
 
 
+def test_absent_signal_weight_is_zero_although_inputs_hold_raw_link_weights():
+    inputs = SignalInputs(device_weight=0.7, token_weight=0.8, address_weight=0.35, burst_weight=0.6,
+                          device_other_accounts_30d=2, token_other_accounts_30d=1, linked_orders_24h=2,
+                          burst_link_kinds=frozenset({"DEVICE"}))
+    signals = corroborating_signals(inputs)
+    assert [s.signal for s in signals if s.present] == []
+    assert all(s.weight == 0.0 for s in signals)
+    assert (inputs.device_weight, inputs.token_weight, inputs.address_weight, inputs.burst_weight) == \
+        (0.7, 0.8, 0.35, 0.6)
+
+
 def test_signals_always_listed_in_order():
     names = [s.signal for s in corroborating_signals(SignalInputs())]
     assert names == ["DEVICE", "PAYMENT_TOKEN", "ADDRESS", "TEMPORAL_BURST", "ACCOUNT_CLAIMS"]
