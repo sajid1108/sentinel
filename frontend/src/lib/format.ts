@@ -76,3 +76,11 @@ export function humanise(key: string): string {
   const words = key.replace(/_inr$/, '').replace(/_/g, ' ').trim()
   return words.charAt(0).toUpperCase() + words.slice(1)
 }
+
+/**
+ * A count that is not a probability and not money: reviews per 1,000 orders. One decimal, as the
+ * backtest table shows every rate (§D2).
+ */
+export function formatOneDecimal(value: number): string {
+  return value.toFixed(1)
+}

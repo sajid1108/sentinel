@@ -15,6 +15,13 @@ export type OverrideRequest = components['schemas']['OverrideRequest']
 export type OverrideResponse = components['schemas']['OverrideResponse']
 export type AppealRequest = components['schemas']['AppealRequest']
 export type AuditEventOut = components['schemas']['AuditEventOut']
+export type QueueResponse = components['schemas']['QueueResponse']
+export type QueueItem = components['schemas']['QueueItem']
+export type ScoreOrderRequest = components['schemas']['ScoreOrderRequest']
+export type ScoreOrderResponse = components['schemas']['ScoreOrderResponse']
+export type DemoResetResponse = components['schemas']['DemoResetResponse']
+export type MetricsResponse = components['schemas']['MetricsResponse']
+export type HealthResponse = components['schemas']['HealthResponse']
 
 export class ApiError extends Error {
   constructor(
@@ -90,6 +97,42 @@ export function postAppeal(
     headers: { 'X-Reviewer-Id': reviewerId },
     body: JSON.stringify(body),
   })
+}
+
+/** GET /internal/orders. The caller owns the query string, which is also the page's URL state (§A). */
+export function getQueue(query: string): Promise<QueueResponse> {
+  return apiFetch<QueueResponse>(`/internal/orders${query ? `?${query}` : ''}`)
+}
+
+/** GET /health, for the policy version the Overview labels the backtest with (#7). Not under /api/v1. */
+export async function getHealth(): Promise<HealthResponse> {
+  const res = await fetch('/health')
+  if (!res.ok) throw new ApiError(res.status, res.statusText)
+  return res.json() as Promise<HealthResponse>
+}
+
+export function getMetrics(): Promise<MetricsResponse> {
+  return apiFetch<MetricsResponse>('/internal/metrics')
+}
+
+/**
+ * GET /internal/demo/presets. 404 when DEMO_MODE is off, and the panel then does not render at all
+ * (§B) — so the 404 is an ordinary answer here, not an error to report.
+ */
+export function getPresets(): Promise<ScoreOrderRequest[]> {
+  return apiFetch<ScoreOrderRequest[]>('/internal/demo/presets')
+}
+
+/** POST /internal/score-order with the preset exactly as the server gave it. Idempotent per order. */
+export function postScoreOrder(preset: ScoreOrderRequest): Promise<ScoreOrderResponse> {
+  return apiFetch<ScoreOrderResponse>('/internal/score-order', {
+    method: 'POST',
+    body: JSON.stringify(preset),
+  })
+}
+
+export function postDemoReset(): Promise<DemoResetResponse> {
+  return apiFetch<DemoResetResponse>('/internal/demo/reset', { method: 'POST' })
 }
 
 export { INTERNAL }

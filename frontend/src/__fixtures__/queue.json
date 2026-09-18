@@ -1,0 +1,861 @@
+{
+  "items": [
+    {
+      "order_id": "ORD-DEMO-001",
+      "decision_id": "2e9508e1-82ba-41b9-8d2a-7c6263a77161",
+      "scored_at": "2026-09-01T05:00:00Z",
+      "order_value": {
+        "inr": 4500.01,
+        "display": "₹4,500"
+      },
+      "p_return": 0.6153846153846154,
+      "p_abuse": 4.407411157210499e-05,
+      "recommended_action": "ALLOW",
+      "current_action": "ALLOW",
+      "status": "AUTO_APPLIED",
+      "graph_risk_summary": "Shared address discounted: household pattern",
+      "corroborating_signal_count": 0,
+      "source": "LIVE"
+    },
+    {
+      "order_id": "ORD-DEMO-002",
+      "decision_id": "632a1c36-e3b1-410a-a19d-64029bab803f",
+      "scored_at": "2026-09-01T05:00:00Z",
+      "order_value": {
+        "inr": 24000.0,
+        "display": "₹24,000"
+      },
+      "p_return": 0.3783783783783784,
+      "p_abuse": 0.9507175565522707,
+      "recommended_action": "BLOCK",
+      "current_action": "BLOCK",
+      "status": "AUTO_APPLIED",
+      "graph_risk_summary": "Linked group of 8 accounts, 3 confirmed abusive",
+      "corroborating_signal_count": 3,
+      "source": "LIVE"
+    },
+    {
+      "order_id": "ORD-DEMO-003",
+      "decision_id": "506e3d61-d065-409a-a7bb-6a196b3d9677",
+      "scored_at": "2026-09-01T05:00:00Z",
+      "order_value": {
+        "inr": 12000.0,
+        "display": "₹12,000"
+      },
+      "p_return": 0.2457627118644068,
+      "p_abuse": 0.6913106294322455,
+      "recommended_action": "MANUAL_REVIEW",
+      "current_action": "PREPAID_ONLY",
+      "status": "OVERRIDDEN",
+      "graph_risk_summary": "Relationship evidence: device",
+      "corroborating_signal_count": 2,
+      "source": "LIVE"
+    },
+    {
+      "order_id": "ORD-C317D03C31C3",
+      "decision_id": "69dc2718-f522-5e76-a23e-565bbc26cf8b",
+      "scored_at": "2026-08-31T15:45:00Z",
+      "order_value": {
+        "inr": 4999.0,
+        "display": "₹4,999"
+      },
+      "p_return": 0.3,
+      "p_abuse": 0.22022599212670618,
+      "recommended_action": "PREPAID_ONLY",
+      "current_action": "PREPAID_ONLY",
+      "status": "AUTO_APPLIED",
+      "graph_risk_summary": "Linked group of 7 accounts, 3 confirmed abusive",
+      "corroborating_signal_count": 1,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-343BDE231D25",
+      "decision_id": "378a49c2-e2e7-5137-a9c5-3f7dadd6ec2e",
+      "scored_at": "2026-08-31T13:00:00Z",
+      "order_value": {
+        "inr": 24000.0,
+        "display": "₹24,000"
+      },
+      "p_return": 0.1926605504587156,
+      "p_abuse": 0.9543901004168804,
+      "recommended_action": "BLOCK",
+      "current_action": "BLOCK",
+      "status": "AUTO_APPLIED",
+      "graph_risk_summary": "Linked group of 7 accounts, 3 confirmed abusive",
+      "corroborating_signal_count": 2,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-4617D195F7B1",
+      "decision_id": "57dbe0f5-ec9d-50d9-9f13-c0660d531060",
+      "scored_at": "2026-08-31T08:35:00Z",
+      "order_value": {
+        "inr": 20640.0,
+        "display": "₹20,640"
+      },
+      "p_return": 0.1926605504587156,
+      "p_abuse": 0.9413808398409752,
+      "recommended_action": "BLOCK",
+      "current_action": "BLOCK",
+      "status": "AUTO_APPLIED",
+      "graph_risk_summary": "Linked group of 7 accounts, 3 confirmed abusive",
+      "corroborating_signal_count": 2,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-3AFA899E8569",
+      "decision_id": "2b4b44ca-8948-5eff-a627-cea53c314ea4",
+      "scored_at": "2026-08-31T06:17:21Z",
+      "order_value": {
+        "inr": 3218.16,
+        "display": "₹3,218"
+      },
+      "p_return": 0.13227513227513227,
+      "p_abuse": 0.00010778043708762663,
+      "recommended_action": "ALLOW",
+      "current_action": "ALLOW",
+      "status": "AUTO_APPLIED",
+      "graph_risk_summary": "No relationship evidence",
+      "corroborating_signal_count": 0,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-BA7A88E00C94",
+      "decision_id": "0b804a23-2a72-53a2-bc5c-15ff916488be",
+      "scored_at": "2026-08-31T06:10:00Z",
+      "order_value": {
+        "inr": 24000.0,
+        "display": "₹24,000"
+      },
+      "p_return": 0.1926605504587156,
+      "p_abuse": 0.9157692612832484,
+      "recommended_action": "BLOCK",
+      "current_action": "BLOCK",
+      "status": "AUTO_APPLIED",
+      "graph_risk_summary": "Linked group of 7 accounts, 3 confirmed abusive",
+      "corroborating_signal_count": 2,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-E36423BBCD56",
+      "decision_id": "f1dc5334-776e-519f-a3fb-ed0f28879058",
+      "scored_at": "2026-08-31T04:44:37Z",
+      "order_value": {
+        "inr": 8199.0,
+        "display": "₹8,199"
+      },
+      "p_return": 0.1926605504587156,
+      "p_abuse": 0.00032058256819067455,
+      "recommended_action": "ALLOW",
+      "current_action": "ALLOW",
+      "status": "AUTO_APPLIED",
+      "graph_risk_summary": "No relationship evidence",
+      "corroborating_signal_count": 0,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-99192EF64EED",
+      "decision_id": "a86eb016-9976-5bb2-8f6b-f6d45f44270d",
+      "scored_at": "2026-08-31T03:39:10Z",
+      "order_value": {
+        "inr": 6499.0,
+        "display": "₹6,499"
+      },
+      "p_return": 0.20114942528735633,
+      "p_abuse": 0.0017320447220554845,
+      "recommended_action": "ALLOW",
+      "current_action": "ALLOW",
+      "status": "AUTO_APPLIED",
+      "graph_risk_summary": "No relationship evidence",
+      "corroborating_signal_count": 0,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-EA242E82F5C9",
+      "decision_id": "dceb807c-55e2-5899-8bb0-7586b60e201f",
+      "scored_at": "2026-08-31T02:50:52Z",
+      "order_value": {
+        "inr": 8199.0,
+        "display": "₹8,199"
+      },
+      "p_return": 0.3783783783783784,
+      "p_abuse": 8.163408719324188e-05,
+      "recommended_action": "ALLOW",
+      "current_action": "ALLOW",
+      "status": "AUTO_APPLIED",
+      "graph_risk_summary": "No relationship evidence",
+      "corroborating_signal_count": 0,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-954C74644EF6",
+      "decision_id": "a82d1763-7bde-5fd5-80b3-9397da9ac279",
+      "scored_at": "2026-08-30T17:38:10Z",
+      "order_value": {
+        "inr": 19574.13,
+        "display": "₹19,574"
+      },
+      "p_return": 0.13227513227513227,
+      "p_abuse": 0.0005077507210991734,
+      "recommended_action": "ALLOW",
+      "current_action": "ALLOW",
+      "status": "AUTO_APPLIED",
+      "graph_risk_summary": "No relationship evidence",
+      "corroborating_signal_count": 0,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-3490D76D6939",
+      "decision_id": "4d4284a1-a871-5550-9ecd-9ed82f45a9ce",
+      "scored_at": "2026-08-30T11:02:51Z",
+      "order_value": {
+        "inr": 165.17,
+        "display": "₹165"
+      },
+      "p_return": 0.075,
+      "p_abuse": 2.3163841601727963e-05,
+      "recommended_action": "ALLOW",
+      "current_action": "ALLOW",
+      "status": "AUTO_APPLIED",
+      "graph_risk_summary": "Shared address discounted: multi tenant address",
+      "corroborating_signal_count": 0,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-66BEF3E199C5",
+      "decision_id": "341f8565-be20-5f6d-8729-f0c82b9fabd2",
+      "scored_at": "2026-08-30T10:31:12Z",
+      "order_value": {
+        "inr": 1393.18,
+        "display": "₹1,393"
+      },
+      "p_return": 0.16605166051660517,
+      "p_abuse": 0.0002937005847497972,
+      "recommended_action": "ALLOW",
+      "current_action": "ALLOW",
+      "status": "AUTO_APPLIED",
+      "graph_risk_summary": "Shared device discounted: sequential device use",
+      "corroborating_signal_count": 0,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-9802BC45D552",
+      "decision_id": "3ac43024-c549-50be-ad2c-ac779b5be0fa",
+      "scored_at": "2026-08-30T10:01:36Z",
+      "order_value": {
+        "inr": 8199.0,
+        "display": "₹8,199"
+      },
+      "p_return": 0.2457627118644068,
+      "p_abuse": 0.00031065876309363186,
+      "recommended_action": "ALLOW",
+      "current_action": "ALLOW",
+      "status": "AUTO_APPLIED",
+      "graph_risk_summary": "No relationship evidence",
+      "corroborating_signal_count": 1,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-3ECF83C9C66B",
+      "decision_id": "4c55246c-0170-57f0-8f80-00de3a8b6552",
+      "scored_at": "2026-08-30T08:25:41Z",
+      "order_value": {
+        "inr": 74199.0,
+        "display": "₹74,199"
+      },
+      "p_return": 0.16605166051660517,
+      "p_abuse": 0.4247101983973069,
+      "recommended_action": "MANUAL_REVIEW",
+      "current_action": "MANUAL_REVIEW",
+      "status": "PENDING_REVIEW",
+      "graph_risk_summary": "Shared device discounted: stale relationship",
+      "corroborating_signal_count": 0,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-89489A198B21",
+      "decision_id": "fb9203e5-c6e6-593e-8541-7ca00413feec",
+      "scored_at": "2026-08-30T08:05:00Z",
+      "order_value": {
+        "inr": 4849.03,
+        "display": "₹4,849"
+      },
+      "p_return": 0.2457627118644068,
+      "p_abuse": 0.26368666902069404,
+      "recommended_action": "MANUAL_REVIEW",
+      "current_action": "MANUAL_REVIEW",
+      "status": "PENDING_REVIEW",
+      "graph_risk_summary": "Linked group of 7 accounts, 2 confirmed abusive",
+      "corroborating_signal_count": 3,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-1D7E69DF2911",
+      "decision_id": "1683796c-48f7-5ca9-a12e-51e8669a98fe",
+      "scored_at": "2026-08-30T04:35:00Z",
+      "order_value": {
+        "inr": 10323.11,
+        "display": "₹10,323"
+      },
+      "p_return": 0.16605166051660517,
+      "p_abuse": 0.9311813068071835,
+      "recommended_action": "MANUAL_REVIEW",
+      "current_action": "MANUAL_REVIEW",
+      "status": "PENDING_REVIEW",
+      "graph_risk_summary": "Linked group of 7 accounts, 3 confirmed abusive",
+      "corroborating_signal_count": 1,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-F1912A407E45",
+      "decision_id": "e9ce373b-f861-5284-99e2-755917b8314b",
+      "scored_at": "2026-08-29T13:35:00Z",
+      "order_value": {
+        "inr": 4999.0,
+        "display": "₹4,999"
+      },
+      "p_return": 0.20114942528735633,
+      "p_abuse": 0.0994857310144018,
+      "recommended_action": "PREPAID_ONLY",
+      "current_action": "PREPAID_ONLY",
+      "status": "AUTO_APPLIED",
+      "graph_risk_summary": "Linked group of 7 accounts, 2 confirmed abusive",
+      "corroborating_signal_count": 3,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-D9900B2536F3",
+      "decision_id": "4e68729f-2562-5905-9b05-b408db63a35d",
+      "scored_at": "2026-08-29T10:45:00Z",
+      "order_value": {
+        "inr": 4999.0,
+        "display": "₹4,999"
+      },
+      "p_return": 0.16605166051660517,
+      "p_abuse": 0.09152151885451615,
+      "recommended_action": "PREPAID_ONLY",
+      "current_action": "PREPAID_ONLY",
+      "status": "AUTO_APPLIED",
+      "graph_risk_summary": "Linked group of 7 accounts, 3 confirmed abusive",
+      "corroborating_signal_count": 2,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-928BC6783148",
+      "decision_id": "15557243-18c7-56c0-9ff4-e2eadcf02932",
+      "scored_at": "2026-08-29T10:05:32Z",
+      "order_value": {
+        "inr": 16807.12,
+        "display": "₹16,807"
+      },
+      "p_return": 0.2457627118644068,
+      "p_abuse": 0.5215873907565156,
+      "recommended_action": "MANUAL_REVIEW",
+      "current_action": "MANUAL_REVIEW",
+      "status": "PENDING_REVIEW",
+      "graph_risk_summary": "No relationship evidence",
+      "corroborating_signal_count": 1,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-0371B1556E34",
+      "decision_id": "4e3d7ba0-a831-55cb-9474-8bb36a23d798",
+      "scored_at": "2026-08-28T16:35:35Z",
+      "order_value": {
+        "inr": 22499.0,
+        "display": "₹22,499"
+      },
+      "p_return": 0.20114942528735633,
+      "p_abuse": 0.05981258634729537,
+      "recommended_action": "MANUAL_REVIEW",
+      "current_action": "MANUAL_REVIEW",
+      "status": "PENDING_REVIEW",
+      "graph_risk_summary": "No relationship evidence",
+      "corroborating_signal_count": 0,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-3563D5126AE5",
+      "decision_id": "408ae788-a3cd-5929-9111-8fae1cd42aa3",
+      "scored_at": "2026-08-28T14:40:00Z",
+      "order_value": {
+        "inr": 4649.07,
+        "display": "₹4,649"
+      },
+      "p_return": 0.20114942528735633,
+      "p_abuse": 0.22301355281271823,
+      "recommended_action": "PREPAID_ONLY",
+      "current_action": "PREPAID_ONLY",
+      "status": "AUTO_APPLIED",
+      "graph_risk_summary": "Linked group of 7 accounts, 2 confirmed abusive",
+      "corroborating_signal_count": 3,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-614B2DED4B56",
+      "decision_id": "0fad7f03-4ccd-58d3-83a3-2a8171bb25b6",
+      "scored_at": "2026-08-28T14:25:42Z",
+      "order_value": {
+        "inr": 24223.1,
+        "display": "₹24,223"
+      },
+      "p_return": 0.13227513227513227,
+      "p_abuse": 0.10169581598338043,
+      "recommended_action": "MANUAL_REVIEW",
+      "current_action": "MANUAL_REVIEW",
+      "status": "PENDING_REVIEW",
+      "graph_risk_summary": "Shared address discounted: household pattern",
+      "corroborating_signal_count": 0,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-E9D2E0EC09E1",
+      "decision_id": "c002dfe9-c244-52ee-bc17-23eeabf38533",
+      "scored_at": "2026-08-28T07:09:58Z",
+      "order_value": {
+        "inr": 20924.07,
+        "display": "₹20,924"
+      },
+      "p_return": 0.21518987341772153,
+      "p_abuse": 0.006589578227022274,
+      "recommended_action": "ALLOW",
+      "current_action": "ALLOW",
+      "status": "AUTO_APPLIED",
+      "graph_risk_summary": "No relationship evidence",
+      "corroborating_signal_count": 0,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-B62EF93F4930",
+      "decision_id": "c678318f-0b93-5d0a-8edc-b94a917152da",
+      "scored_at": "2026-08-27T17:37:48Z",
+      "order_value": {
+        "inr": 3237.3,
+        "display": "₹3,237"
+      },
+      "p_return": 0.2727272727272727,
+      "p_abuse": 0.0005881034006883444,
+      "recommended_action": "ALLOW",
+      "current_action": "ALLOW",
+      "status": "AUTO_APPLIED",
+      "graph_risk_summary": "No relationship evidence",
+      "corroborating_signal_count": 0,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-03C08452CD8E",
+      "decision_id": "f1fdf0aa-1a40-544b-a60d-46f9cc5548eb",
+      "scored_at": "2026-08-26T15:30:00Z",
+      "order_value": {
+        "inr": 4599.08,
+        "display": "₹4,599"
+      },
+      "p_return": 0.16605166051660517,
+      "p_abuse": 0.0723104763509817,
+      "recommended_action": "ALLOW",
+      "current_action": "ALLOW",
+      "status": "AUTO_APPLIED",
+      "graph_risk_summary": "Linked group of 5 accounts, 2 confirmed abusive",
+      "corroborating_signal_count": 1,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-BE1ED7AC96AE",
+      "decision_id": "1dc145ba-ce7b-5710-8125-0561c7d4213c",
+      "scored_at": "2026-08-26T11:55:00Z",
+      "order_value": {
+        "inr": 11599.0,
+        "display": "₹11,599"
+      },
+      "p_return": 0.2457627118644068,
+      "p_abuse": 0.05775445205269033,
+      "recommended_action": "PREPAID_ONLY",
+      "current_action": "PREPAID_ONLY",
+      "status": "AUTO_APPLIED",
+      "graph_risk_summary": "No relationship evidence",
+      "corroborating_signal_count": 0,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-070E7C0F6DF8",
+      "decision_id": "448fd061-34f1-5953-9d36-6e7685c3d7a0",
+      "scored_at": "2026-08-26T09:29:16Z",
+      "order_value": {
+        "inr": 4980.12,
+        "display": "₹4,980"
+      },
+      "p_return": 0.16605166051660517,
+      "p_abuse": 5.7674481489505524e-05,
+      "recommended_action": "ALLOW",
+      "current_action": "ALLOW",
+      "status": "AUTO_APPLIED",
+      "graph_risk_summary": "No relationship evidence",
+      "corroborating_signal_count": 0,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-39B657EE2878",
+      "decision_id": "8379ab57-afdd-5c8f-9ac4-8b0db5c796a6",
+      "scored_at": "2026-08-26T07:10:00Z",
+      "order_value": {
+        "inr": 515.14,
+        "display": "₹515"
+      },
+      "p_return": 0.13227513227513227,
+      "p_abuse": 0.00019286641325633492,
+      "recommended_action": "ALLOW",
+      "current_action": "ALLOW",
+      "status": "AUTO_APPLIED",
+      "graph_risk_summary": "Linked group of 4 accounts, 1 confirmed abusive",
+      "corroborating_signal_count": 2,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-0E45F2D8A039",
+      "decision_id": "9705fa59-cc68-538a-8439-320c1433e29a",
+      "scored_at": "2026-08-26T04:11:40Z",
+      "order_value": {
+        "inr": 9099.0,
+        "display": "₹9,099"
+      },
+      "p_return": 0.20114942528735633,
+      "p_abuse": 0.10177997737138861,
+      "recommended_action": "PREPAID_ONLY",
+      "current_action": "PREPAID_ONLY",
+      "status": "AUTO_APPLIED",
+      "graph_risk_summary": "No relationship evidence",
+      "corroborating_signal_count": 0,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-E1BC014DE90C",
+      "decision_id": "af1e0b09-b98a-517d-8346-8b5ecd636493",
+      "scored_at": "2026-08-25T13:33:52Z",
+      "order_value": {
+        "inr": 4398.0,
+        "display": "₹4,398"
+      },
+      "p_return": 0.13227513227513227,
+      "p_abuse": 0.00029965191993369173,
+      "recommended_action": "ALLOW",
+      "current_action": "ALLOW",
+      "status": "AUTO_APPLIED",
+      "graph_risk_summary": "No relationship evidence",
+      "corroborating_signal_count": 0,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-30BFA1D64A70",
+      "decision_id": "6ab5644d-9c5d-5e26-b47b-ea028628d32c",
+      "scored_at": "2026-08-25T04:22:30Z",
+      "order_value": {
+        "inr": 9099.0,
+        "display": "₹9,099"
+      },
+      "p_return": 0.3,
+      "p_abuse": 0.3906595170344537,
+      "recommended_action": "MANUAL_REVIEW",
+      "current_action": "MANUAL_REVIEW",
+      "status": "PENDING_REVIEW",
+      "graph_risk_summary": "No relationship evidence",
+      "corroborating_signal_count": 0,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-D62CCBE0D90C",
+      "decision_id": "c2b5c7a8-c384-5821-84f8-b4e76415c00f",
+      "scored_at": "2026-08-23T13:59:04Z",
+      "order_value": {
+        "inr": 1598.0,
+        "display": "₹1,598"
+      },
+      "p_return": 0.1926605504587156,
+      "p_abuse": 7.006013918658782e-05,
+      "recommended_action": "ALLOW",
+      "current_action": "ALLOW",
+      "status": "AUTO_APPLIED",
+      "graph_risk_summary": "No relationship evidence",
+      "corroborating_signal_count": 0,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-6EA06D79C5EE",
+      "decision_id": "382b2b7c-c095-56a1-8471-c4e2ea6a9591",
+      "scored_at": "2026-08-22T17:13:02Z",
+      "order_value": {
+        "inr": 551.08,
+        "display": "₹551"
+      },
+      "p_return": 0.21518987341772153,
+      "p_abuse": 2.6934450576318115e-05,
+      "recommended_action": "ALLOW",
+      "current_action": "ALLOW",
+      "status": "AUTO_APPLIED",
+      "graph_risk_summary": "No relationship evidence",
+      "corroborating_signal_count": 0,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-34505D662B35",
+      "decision_id": "e557a542-08f7-5bc1-822f-088ee45682e6",
+      "scored_at": "2026-08-22T15:08:51Z",
+      "order_value": {
+        "inr": 26599.05,
+        "display": "₹26,599"
+      },
+      "p_return": 0.3,
+      "p_abuse": 0.25047264517320117,
+      "recommended_action": "MANUAL_REVIEW",
+      "current_action": "MANUAL_REVIEW",
+      "status": "PENDING_REVIEW",
+      "graph_risk_summary": "No relationship evidence",
+      "corroborating_signal_count": 0,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-2083BAC42EE4",
+      "decision_id": "f874b0c6-ba10-58ab-8054-bc490f5994d1",
+      "scored_at": "2026-08-22T12:42:51Z",
+      "order_value": {
+        "inr": 29985.06,
+        "display": "₹29,985"
+      },
+      "p_return": 0.3,
+      "p_abuse": 0.06983450512867524,
+      "recommended_action": "MANUAL_REVIEW",
+      "current_action": "MANUAL_REVIEW",
+      "status": "PENDING_REVIEW",
+      "graph_risk_summary": "No relationship evidence",
+      "corroborating_signal_count": 0,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-FECA5605E3D6",
+      "decision_id": "fe74ec90-f6ea-5f81-9707-4525572d4f25",
+      "scored_at": "2026-08-22T05:15:48Z",
+      "order_value": {
+        "inr": 4598.0,
+        "display": "₹4,598"
+      },
+      "p_return": 0.20114942528735633,
+      "p_abuse": 0.000418680392447956,
+      "recommended_action": "ALLOW",
+      "current_action": "ALLOW",
+      "status": "AUTO_APPLIED",
+      "graph_risk_summary": "No relationship evidence",
+      "corroborating_signal_count": 0,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-B097558FC557",
+      "decision_id": "eea1381a-42a6-5dee-96d1-bca34f1b7d72",
+      "scored_at": "2026-08-21T12:10:36Z",
+      "order_value": {
+        "inr": 4156.02,
+        "display": "₹4,156"
+      },
+      "p_return": 0.5384615384615384,
+      "p_abuse": 0.00010230679494416417,
+      "recommended_action": "ALLOW",
+      "current_action": "ALLOW",
+      "status": "AUTO_APPLIED",
+      "graph_risk_summary": "No relationship evidence",
+      "corroborating_signal_count": 0,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-7F88DF75FDBE",
+      "decision_id": "8e3a8c39-953e-507c-9f19-4ba6d8de190f",
+      "scored_at": "2026-08-21T07:47:03Z",
+      "order_value": {
+        "inr": 599.0,
+        "display": "₹599"
+      },
+      "p_return": 0.1926605504587156,
+      "p_abuse": 2.9896212301221927e-05,
+      "recommended_action": "ALLOW",
+      "current_action": "ALLOW",
+      "status": "AUTO_APPLIED",
+      "graph_risk_summary": "No relationship evidence",
+      "corroborating_signal_count": 0,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-A8281380EF21",
+      "decision_id": "33b6da0d-83e3-5316-a4a0-3e9250fd2c22",
+      "scored_at": "2026-08-21T03:29:11Z",
+      "order_value": {
+        "inr": 299.0,
+        "display": "₹299"
+      },
+      "p_return": 0.03571428571428571,
+      "p_abuse": 3.761476045952513e-05,
+      "recommended_action": "ALLOW",
+      "current_action": "ALLOW",
+      "status": "AUTO_APPLIED",
+      "graph_risk_summary": "No relationship evidence",
+      "corroborating_signal_count": 0,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-4341C33839E4",
+      "decision_id": "8407b98d-0cdd-5f2c-9f57-484372b64b27",
+      "scored_at": "2026-08-20T06:52:47Z",
+      "order_value": {
+        "inr": 3161.07,
+        "display": "₹3,161"
+      },
+      "p_return": 0.13227513227513227,
+      "p_abuse": 0.007968342216956614,
+      "recommended_action": "ALLOW",
+      "current_action": "ALLOW",
+      "status": "AUTO_APPLIED",
+      "graph_risk_summary": "No relationship evidence",
+      "corroborating_signal_count": 0,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-C0790DC0DDE7",
+      "decision_id": "ae430b9c-cb97-53f2-b9df-aec5c86bc408",
+      "scored_at": "2026-08-19T11:37:46Z",
+      "order_value": {
+        "inr": 3024.22,
+        "display": "₹3,024"
+      },
+      "p_return": 0.16605166051660517,
+      "p_abuse": 4.56059121151992e-05,
+      "recommended_action": "ALLOW",
+      "current_action": "ALLOW",
+      "status": "AUTO_APPLIED",
+      "graph_risk_summary": "No relationship evidence",
+      "corroborating_signal_count": 0,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-ECBAE47B4595",
+      "decision_id": "aafc1208-2645-55f3-98ac-7e767cdde41f",
+      "scored_at": "2026-08-19T04:24:39Z",
+      "order_value": {
+        "inr": 2399.0,
+        "display": "₹2,399"
+      },
+      "p_return": 0.13227513227513227,
+      "p_abuse": 1.588805915065721e-05,
+      "recommended_action": "ALLOW",
+      "current_action": "ALLOW",
+      "status": "AUTO_APPLIED",
+      "graph_risk_summary": "No relationship evidence",
+      "corroborating_signal_count": 0,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-7E20F4DA9EFA",
+      "decision_id": "eb5ab27a-f4a6-53c6-b5a8-b191b28b5012",
+      "scored_at": "2026-08-18T16:08:23Z",
+      "order_value": {
+        "inr": 3771.18,
+        "display": "₹3,771"
+      },
+      "p_return": 0.3783783783783784,
+      "p_abuse": 0.08315090013032497,
+      "recommended_action": "PREPAID_ONLY",
+      "current_action": "PREPAID_ONLY",
+      "status": "AUTO_APPLIED",
+      "graph_risk_summary": "No relationship evidence",
+      "corroborating_signal_count": 0,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-2D7B8478B1EF",
+      "decision_id": "01e01eef-d2f8-552c-bac2-94eb1db413da",
+      "scored_at": "2026-08-18T07:37:09Z",
+      "order_value": {
+        "inr": 11599.0,
+        "display": "₹11,599"
+      },
+      "p_return": 0.20114942528735633,
+      "p_abuse": 0.09198132209091313,
+      "recommended_action": "PREPAID_ONLY",
+      "current_action": "PREPAID_ONLY",
+      "status": "AUTO_APPLIED",
+      "graph_risk_summary": "No relationship evidence",
+      "corroborating_signal_count": 0,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-4B56B8BD1AAA",
+      "decision_id": "c2e9fcda-b4b6-5a02-921c-3b63b2149005",
+      "scored_at": "2026-08-18T04:19:35Z",
+      "order_value": {
+        "inr": 9899.0,
+        "display": "₹9,899"
+      },
+      "p_return": 0.2457627118644068,
+      "p_abuse": 0.2712715112745466,
+      "recommended_action": "MANUAL_REVIEW",
+      "current_action": "MANUAL_REVIEW",
+      "status": "PENDING_REVIEW",
+      "graph_risk_summary": "No relationship evidence",
+      "corroborating_signal_count": 0,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-9C329F11B246",
+      "decision_id": "67600235-8846-5f7c-b046-888fce7d515a",
+      "scored_at": "2026-08-17T17:39:30Z",
+      "order_value": {
+        "inr": 11599.0,
+        "display": "₹11,599"
+      },
+      "p_return": 0.2457627118644068,
+      "p_abuse": 0.07492762034911046,
+      "recommended_action": "PREPAID_ONLY",
+      "current_action": "PREPAID_ONLY",
+      "status": "AUTO_APPLIED",
+      "graph_risk_summary": "No relationship evidence",
+      "corroborating_signal_count": 0,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-E6BF2285E881",
+      "decision_id": "519f092e-0a32-5f78-99de-b8dae9812654",
+      "scored_at": "2026-08-17T12:31:33Z",
+      "order_value": {
+        "inr": 11716.14,
+        "display": "₹11,716"
+      },
+      "p_return": 0.20114942528735633,
+      "p_abuse": 0.07639497596783551,
+      "recommended_action": "PREPAID_ONLY",
+      "current_action": "PREPAID_ONLY",
+      "status": "AUTO_APPLIED",
+      "graph_risk_summary": "No relationship evidence",
+      "corroborating_signal_count": 0,
+      "source": "BACKTEST_REPLAY"
+    },
+    {
+      "order_id": "ORD-624C4A4B41F9",
+      "decision_id": "60e27535-4055-5d98-bdc0-620ece4537e7",
+      "scored_at": "2026-08-17T02:43:50Z",
+      "order_value": {
+        "inr": 28709.1,
+        "display": "₹28,709"
+      },
+      "p_return": 0.1926605504587156,
+      "p_abuse": 0.1549657602084345,
+      "recommended_action": "MANUAL_REVIEW",
+      "current_action": "MANUAL_REVIEW",
+      "status": "PENDING_REVIEW",
+      "graph_risk_summary": "Shared address discounted: household pattern",
+      "corroborating_signal_count": 0,
+      "source": "BACKTEST_REPLAY"
+    }
+  ],
+  "total": 253,
+  "counts_by_action": {
+    "ALLOW": 91,
+    "PREPAID_ONLY": 16,
+    "MANUAL_REVIEW": 126,
+    "BLOCK": 20
+  }
+}
