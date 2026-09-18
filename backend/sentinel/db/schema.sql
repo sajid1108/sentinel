@@ -133,6 +133,10 @@ CREATE TABLE decisions (
   degraded_mode           INTEGER NOT NULL DEFAULT 0,
   source                  TEXT NOT NULL CHECK (source IN ('DEMO','BACKTEST_REPLAY','LIVE')),
   latest_audit_event_id   TEXT NOT NULL,
+  -- Point-in-time graph evidence captured when the decision was made (DEVIATIONS #32): the discounted links
+  -- and the reviewer GraphPayload. NULL graph payload only when no graph state existed (degraded mode).
+  discounted_links_json   TEXT,
+  graph_payload_json      TEXT,
   -- Only degraded decisions may lack scores (no model output means nothing to record).
   CHECK ((degraded_mode = 1) OR (p_return IS NOT NULL AND p_abuse IS NOT NULL AND cost_optimal_action IS NOT NULL))
 );
@@ -144,7 +148,7 @@ BEFORE UPDATE OF decision_id, order_id, scored_at, features_as_of, feature_set_v
                  return_model_version, abuse_model_version, policy_version,
                  cost_optimal_action, recommended_action, selected_rule,
                  costs_json, guardrails_json, reasons_json, graph_summary_json,
-                 degraded_mode, source
+                 degraded_mode, source, discounted_links_json, graph_payload_json
 ON decisions
 BEGIN SELECT RAISE(ABORT, 'decision core fields are immutable'); END;
 

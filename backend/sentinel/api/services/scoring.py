@@ -28,9 +28,10 @@ from typing import Callable, Literal
 
 import pandas as pd
 
-from sentinel.api.schemas import (Action, DiscountedLink, EvidenceSignal, GraphEvidenceSummary, PolicyDecision,
-                                  ReasonCode, ScoreOrderRequest, ScoreOrderResponse, Scores)
+from sentinel.api.schemas import (Action, DiscountedLink, EvidenceSignal, GraphEvidenceSummary, GraphPayload,
+                                  PolicyDecision, ReasonCode, ScoreOrderRequest, ScoreOrderResponse, Scores)
 from sentinel.api.services.errors import Conflict, RequestRejected
+from sentinel.api.services.graph_view import build_graph_payload
 from sentinel.audit.chain import canonical_json
 from sentinel.audit.schemas import AuditActor, AuditEventPayload, AuditModelVersions
 from sentinel.audit.service import AppendedEvent, append_event, event_payload
@@ -214,8 +215,8 @@ INSERT INTO decisions (decision_id, order_id, scored_at, features_as_of, feature
                        p_return, p_abuse, p_abuse_without_graph, return_model_version, abuse_model_version,
                        policy_version, cost_optimal_action, recommended_action, current_action, status,
                        selected_rule, costs_json, guardrails_json, reasons_json, graph_summary_json,
-                       degraded_mode, source, latest_audit_event_id)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                       degraded_mode, source, latest_audit_event_id, discounted_links_json, graph_payload_json)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 """
 
 
@@ -225,8 +226,12 @@ def _json(models: list) -> str:
 
 def write_decision(conn: sqlite3.Connection, *, decision_id: str, event_id: str, order_id: str,
                    scored_at: datetime, features_as_of: datetime, assessment: Assessment,
-                   versions: AuditModelVersions, source: Source) -> AppendedEvent:
-    """The decisions row and its DECISION_CREATED event. Caller holds BEGIN IMMEDIATE and commits both."""
+                   versions: AuditModelVersions, source: Source,
+                   graph_payload: GraphPayload | None) -> AppendedEvent:
+    """The decisions row and its DECISION_CREATED event. Caller holds BEGIN IMMEDIATE and commits both.
+
+    `graph_payload` is the point-in-time reviewer graph captured with the decision (#32); None for a degraded
+    decision. The discounted links are the graph summary's, stored in their own column."""
     e, d = assessment.explanation, assessment.decision
     action = d.selected_action.value
     conn.execute(_INSERT_DECISION, (
@@ -238,7 +243,8 @@ def write_decision(conn: sqlite3.Connection, *, decision_id: str, event_id: str,
         None if d.cost_optimal_action is None else d.cost_optimal_action.value, action, action,
         decision_status(d.selected_action), d.selected_rule, _json(d.costs), _json(d.guardrails),
         _json(reason_codes(assessment)), canonical_json(assessment.graph_summary.model_dump(mode="json")),
-        int(e is None), source, event_id))
+        int(e is None), source, event_id, _json(assessment.graph_summary.discounted_links),
+        None if graph_payload is None else canonical_json(graph_payload.model_dump(mode="json"))))
     return append_event(conn, decision_payload(
         event_id=event_id, occurred_at=scored_at, decision_id=decision_id, order_id=order_id,
         features_as_of=features_as_of, assessment=assessment, versions=versions))
@@ -381,14 +387,14 @@ class ScoringService:
                 raise RequestRejected(f"unknown account {request.account_id}")
 
         query = query_from_request(request)
-        assessment = self._assess(request, query)
+        assessment, graph_payload = self._assess(request, query)
         decision_id, event_id = str(uuid.uuid4()), str(uuid.uuid4())
         with immediate_transaction(self.engine) as conn:
             if decision_row(conn, request.order_id) is None:          # re-checked under the write lock
                 self._insert_order(conn, request, query, source)
                 write_decision(conn, decision_id=decision_id, event_id=event_id, order_id=request.order_id,
                                scored_at=DEMO_CLOCK, features_as_of=request.placed_at, assessment=assessment,
-                               versions=self._versions(conn), source=source)
+                               versions=self._versions(conn), source=source, graph_payload=graph_payload)
                 fresh = True
             else:
                 fresh = False
@@ -410,10 +416,12 @@ class ScoringService:
     def _versions(self, conn: sqlite3.Connection) -> AuditModelVersions:
         return self.models.versions if self.models is not None else registry_versions(conn)
 
-    def _assess(self, request: ScoreOrderRequest, query: OrderQuery) -> Assessment:
+    def _assess(self, request: ScoreOrderRequest, query: OrderQuery) -> tuple[Assessment, GraphPayload | None]:
+        """The assessment and the point-in-time reviewer graph (#32; None when degraded)."""
         value = order_value_inr(query)
         if self.models is None or self.builder is None:
-            return degraded_assessment(value, self.cfg, DEMO_CLOCK, self.startup_error or "model or graph state unavailable")
+            return degraded_assessment(value, self.cfg, DEMO_CLOCK,
+                                       self.startup_error or "model or graph state unavailable"), None
         b, t0 = self.builder, request.placed_at
         last = b.state.last_applied
         if last is not None and not visible(last, to_micros(t0)):
@@ -427,15 +435,17 @@ class ScoringService:
             evidence = b.evidence_values(request, t0)
             matured = matured_return_counts(b.state, request.account_id, to_micros(t0))
             clv = b.clv_inr(request.account_id, t0)
+            graph_payload = build_graph_payload(b.ego_view(query, to_micros(t0)), query, to_micros(t0), t0)
         except Exception as exc:                                   # G6: never crash the request
-            return degraded_assessment(value, self.cfg, DEMO_CLOCK, f"feature building failed ({type(exc).__name__})")
+            return degraded_assessment(value, self.cfg, DEMO_CLOCK,
+                                       f"feature building failed ({type(exc).__name__})"), None
         result = assess(features=features, signal_inputs=signal_inputs, discounted_links=links,
                         device_evidence=evidence, matured=matured, models=self.models, cfg=self.cfg,
                         order_value=value, clv_inr=clv, decided_at=DEMO_CLOCK,
                         graph_state_as_of=b.graph_state_as_of, predict_hook=lambda: self._stage("predict"))
         if isinstance(result, str):
-            return degraded_assessment(value, self.cfg, DEMO_CLOCK, result)
-        return result
+            return degraded_assessment(value, self.cfg, DEMO_CLOCK, result), None
+        return result, graph_payload
 
     @staticmethod
     def _insert_order(conn: sqlite3.Connection, request: ScoreOrderRequest, query: OrderQuery, source: str) -> None:

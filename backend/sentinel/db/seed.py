@@ -7,6 +7,8 @@
    ALLOW, filled to 250 with a seeded draw of ALLOW orders. Each is built by the scoring service's own
    assessment core from the offline feature and policy-input rows, with decided_at = graph_state_as_of = t0
    as in the backtest, and writes one DECISION_CREATED event at t0, in chronological order.
+   Discounted links and the reviewer GraphPayload are captured point-in-time by one chronological replay of
+   the as-of-DEMO_CLOCK world, paused at each seeded order's t0 (DEVIATIONS #32).
 5. Deterministic: ids are uuid5 of the order id, so two seeds give byte-identical decisions and audit_events.
 """
 from __future__ import annotations
@@ -21,7 +23,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from sentinel.api.schemas import Action
+from sentinel.api.schemas import Action, DiscountedLink, GraphPayload
+from sentinel.api.services.graph_view import build_graph_payload
 from sentinel.api.services.scoring import (Assessment, Models, assess, load_models, seeded_decision_id,
                                            seeded_event_id, write_decision)
 from sentinel.data.archetypes import SIM_START
@@ -30,7 +33,8 @@ from sentinel.db.models import (create_database, delete_database, get_engine, im
                                 read_connection, utc_iso)
 from sentinel.evaluation.backtest import ACTIONS, sentinel_actions
 from sentinel.features import definitions
-from sentinel.features.builder import EVIDENCE_COLUMNS, WORLD_TABLES, signal_inputs_from_row
+from sentinel.features.builder import EVIDENCE_COLUMNS, WORLD_TABLES, FeatureBuilder, signal_inputs_from_row
+from sentinel.features.graph_state import from_micros
 from sentinel.models import predict, registry
 from sentinel.policy.config import PolicyConfig, load_policy_config
 from sentinel.settings import ARTIFACTS_DIR, CONFIG_DIR, DATA_DIR, DB_PATH, DEMO_CLOCK, DEMO_MODE
@@ -164,13 +168,34 @@ def matured_counts(returns: int, rate) -> tuple[int, int] | None:
     return returns, round(returns / rate)
 
 
-def replay_assessment(row: dict, models: Models, cfg: PolicyConfig) -> Assessment:
+@dataclass(frozen=True)
+class GraphCapture:
+    discounted_links: list[DiscountedLink]
+    graph_payload: GraphPayload
+
+
+def capture_graph_evidence(world: dict[str, pd.DataFrame], order_ids, cfg: PolicyConfig) -> dict[str, GraphCapture]:
+    """Replay the world once in time order; at each wanted order's t0 (state = everything strictly before it)
+    record its discounted links and its reviewer graph. Nothing at or after t0 can appear (#32)."""
+    builder = FeatureBuilder(world, cfg)
+    captured = {}
+    for q, t0 in builder.iter_points_in_time(order_ids):
+        captured[q.order_id] = GraphCapture(builder.discounted_links_at(q, t0),
+                                            build_graph_payload(builder.ego_view(q, t0), q, t0, from_micros(t0)))
+    missing = set(order_ids) - set(captured)
+    if missing:
+        raise RuntimeError(f"graph capture missed {len(missing)} seeded orders, e.g. {sorted(missing)[:3]}")
+    return captured
+
+
+def replay_assessment(row: dict, models: Models, cfg: PolicyConfig,
+                      discounted_links: list[DiscountedLink]) -> Assessment:
     """One TEST order through the scoring core, from its offline rows, exactly as the backtest decides it."""
     t0 = row["t0"].to_pydatetime()
     matured = matured_counts(int(row["matured_returns"]), row["matured_return_rate"])
     features = {name: row[name] for name in definitions.all_features()}
     result = assess(features=features, signal_inputs=signal_inputs_from_row(row),
-                    discounted_links=[],             # not in the offline rows; see DEVIATIONS (Phase 6)
+                    discounted_links=discounted_links,          # captured point-in-time (#32)
                     device_evidence={c: _value(row[c]) for c in EVIDENCE_COLUMNS}, matured=matured,
                     models=models, cfg=cfg, order_value=float(row["order_value_inr"]),
                     clv_inr=float(row["clv_inr"]), decided_at=t0,
@@ -192,6 +217,7 @@ def seed_database(db_path: Path = DB_PATH, data_dir: Path = DATA_DIR, artifacts_
     if missing:
         raise RuntimeError(f"policy_inputs.parquet lacks {missing}; run `python -m sentinel.cli build-features`")
     selection = select_replay_orders(features, policy, models, cfg)
+    captured = capture_graph_evidence(world, list(selection.rows["order_id"]), cfg)
 
     delete_database(db_path)
     create_database(db_path)
@@ -203,12 +229,13 @@ def seed_database(db_path: Path = DB_PATH, data_dir: Path = DATA_DIR, artifacts_
             versions = models.versions
             by_action: Counter = Counter()
             for row in selection.rows.to_dict("records"):
-                assessment = replay_assessment(row, models, cfg)
+                capture = captured[row["order_id"]]
+                assessment = replay_assessment(row, models, cfg, capture.discounted_links)
                 t0 = row["t0"].to_pydatetime()
                 write_decision(conn, decision_id=seeded_decision_id(row["order_id"]),
                                event_id=seeded_event_id(row["order_id"]), order_id=row["order_id"], scored_at=t0,
                                features_as_of=t0, assessment=assessment, versions=versions,
-                               source="BACKTEST_REPLAY")
+                               source="BACKTEST_REPLAY", graph_payload=capture.graph_payload)
                 by_action[assessment.decision.selected_action.value] += 1
             by_source = dict(conn.execute("SELECT source, COUNT(*) FROM decisions GROUP BY source").fetchall())
         with read_connection(engine) as conn:

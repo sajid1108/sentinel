@@ -10,9 +10,10 @@ against the state the write will actually change.
 from __future__ import annotations
 
 import sqlite3
+import time
 import uuid
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta
 from typing import Callable
 
 from sentinel.api.schemas import Action, AppealRequest, OverrideRequest, OverrideResponse
@@ -21,16 +22,24 @@ from sentinel.api.services.scoring import created_event_payload, decision_row
 from sentinel.audit.schemas import AuditActor, AuditAppeal, AuditEventPayload, AuditOverride
 from sentinel.audit.service import append_event
 from sentinel.db.models import immediate_transaction
+from sentinel.settings import DEMO_CLOCK
 
 G2_OVERRIDE_REASON = "INDEPENDENT_EVIDENCE_OF_ABUSE"
 G2_WARNING = "Override to BLOCK without corroboration (G2 unmet) — recorded"
 APPEAL_PREFIX = "APL"
 
 
-def wall_clock() -> datetime:
-    """When a reviewer acted. Reviewer actions are real events, so they carry real time, unlike the
-    fixed DEMO_CLOCK that anchors feature windows and decisions."""
-    return datetime.now(timezone.utc)
+class DemoReviewerClock:
+    """When a reviewer acted, in the demo world (DEVIATIONS #33): DEMO_CLOCK + wall time elapsed since the
+    clock was created (service start). Monotonic, never jumps from 2026-09-01 to the real date, and keeps
+    the real order and spacing of reviewer actions. Tests inject a fixed clock instead."""
+
+    def __init__(self, anchor: datetime = DEMO_CLOCK):
+        self.anchor = anchor
+        self._started = time.monotonic()
+
+    def __call__(self) -> datetime:
+        return self.anchor + timedelta(seconds=time.monotonic() - self._started)
 
 
 @dataclass(frozen=True)
@@ -54,9 +63,9 @@ def _event(created: dict, **changes) -> AuditEventPayload:
 
 
 class ReviewService:
-    def __init__(self, engine, clock: Callable[[], datetime] = wall_clock):
+    def __init__(self, engine, clock: Callable[[], datetime] | None = None):
         self.engine = engine
-        self.clock = clock
+        self.clock = clock if clock is not None else DemoReviewerClock()
 
     @staticmethod
     def _decision(conn: sqlite3.Connection, order_id: str) -> sqlite3.Row:

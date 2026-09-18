@@ -570,3 +570,125 @@ def test_reset_demo_refuses_when_demo_mode_is_off(tmp_path, data_dir):
     with pytest.raises(DemoModeOff):
         reset_demo(tmp_path / "never.db", demo_mode=False, data_dir=data_dir)
     assert not (tmp_path / "never.db").exists()
+
+
+# ── Phase 7 Part 1: point-in-time graph evidence (#32) ───────────────────────
+HARD_NEGATIVE_REASONS = {"HOUSEHOLD": "HOUSEHOLD_PATTERN", "OFFICE_HOSTEL_PG": "MULTI_TENANT_ADDRESS"}
+IDENTIFIER_COLUMNS = (("DEVICE", "DEV", "device_id"), ("ADDRESS", "ADR", "address_id"),
+                      ("PAYMENT_TOKEN", "TOK", "payment_token_id"))
+
+
+def _seeded_decisions(seeded) -> list[dict]:
+    engine = get_engine(seeded[0])
+    try:
+        return _rows(engine, "SELECT d.order_id, d.features_as_of, d.discounted_links_json, d.graph_payload_json, "
+                             "d.reasons_json, d.graph_summary_json, o.account_id FROM decisions d "
+                             "JOIN orders o USING (order_id)")
+    finally:
+        engine.dispose()
+
+
+def _utc(text: str):
+    from sentinel.db.models import parse_utc
+    return parse_utc(text.replace("Z", "+00:00"))
+
+
+def test_seeded_hard_negative_orders_show_their_discounted_link(seeded, data_dir):
+    """Ground truth is read by the test only, to find the hard negatives among the 250."""
+    import pandas as pd
+
+    from sentinel.data.generator import OUTPUT_FILES
+    truth = pd.read_parquet(data_dir / OUTPUT_FILES["sim_ground_truth"])
+    archetype = dict(zip(truth["account_id"], truth["archetype"]))
+    checked = 0
+    for d in _seeded_decisions(seeded):
+        expected = HARD_NEGATIVE_REASONS.get(archetype.get(d["account_id"]))
+        links = json.loads(d["discounted_links_json"])
+        if expected is None or expected not in {link["reason"] for link in links}:
+            continue
+        checked += 1
+        assert links == json.loads(d["graph_summary_json"])["discounted_links"]
+        assert "MITIGATING_DISCOUNTED_LINKS" in {r["code"] for r in json.loads(d["reasons_json"])}
+        dashed = [e for e in json.loads(d["graph_payload_json"])["edges"] if e["discount_reason"] == expected]
+        assert dashed and all(not e["counted_as_evidence"] for e in dashed)
+    assert checked >= 5                                # measured: 12 household + 5 office/hostel/PG
+
+
+def test_every_seeded_decision_has_links_and_a_point_in_time_graph(seeded):
+    for d in _seeded_decisions(seeded):
+        assert d["discounted_links_json"] is not None and d["graph_payload_json"] is not None
+        graph = json.loads(d["graph_payload_json"])
+        assert _utc(graph["as_of"]) == _utc(d["features_as_of"])
+        assert 2 <= len(graph["nodes"]) <= 40
+
+
+def test_seeded_graphs_contain_nothing_first_seen_at_or_after_t0(seeded):
+    """Every linked account, linked order and linked edge in a seeded graph existed strictly before t0."""
+    from sentinel.api.services.graph_view import identifier_node_id
+    engine = get_engine(seeded[0])
+    try:
+        with read_connection(engine) as conn:
+            for d in _seeded_decisions(seeded):
+                t0 = d["features_as_of"]
+                graph = json.loads(d["graph_payload_json"])
+                order = conn.execute("SELECT * FROM orders WHERE order_id = ?", (d["order_id"],)).fetchone()
+                idents = {identifier_node_id(kind, f"{prefix}:{order[col]}"): col
+                          for kind, prefix, col in IDENTIFIER_COLUMNS if order[col] is not None}
+                current = {f"ACC:{d['account_id']}", f"ORD:{d['order_id']}"}
+                for node in graph["nodes"]:
+                    if node["id"] in current:
+                        continue
+                    if node["kind"] == "ACCOUNT":
+                        acc = node["id"][4:]
+                        assert conn.execute("SELECT created_at < ? FROM accounts WHERE account_id = ?",
+                                            (t0, acc)).fetchone()[0] == 1
+                        assert conn.execute("SELECT COUNT(*) FROM orders WHERE account_id = ? AND placed_at < ?",
+                                            (acc, t0)).fetchone()[0] >= 1
+                    elif node["kind"] == "ORDER":
+                        placed = conn.execute("SELECT placed_at FROM orders WHERE order_id = ?",
+                                              (node["id"][4:],)).fetchone()[0]
+                        assert placed < t0 and "RECENT_24H" in node["flags"]
+                    else:
+                        assert node["id"] in idents    # only the order's own identifiers are drawn
+                for edge in graph["edges"]:
+                    if edge["source"] in current or edge["kind"] == "PLACED_BY":
+                        continue                       # own edges are at t0; order nodes checked above
+                    col = idents[edge["target"]]
+                    n = conn.execute(f"SELECT COUNT(*) FROM orders WHERE account_id = ? AND {col} = ? "
+                                     "AND placed_at < ?", (edge["source"][4:], order[col], t0)).fetchone()[0]
+                    assert n >= 1, (d["order_id"], edge["id"])
+    finally:
+        engine.dispose()
+
+
+def test_live_decisions_store_links_and_graph_from_the_frozen_builder(service, engine):
+    for oid, request in _requests().items():
+        response = service.score(request, "DEMO")
+        row = _rows(engine, "SELECT discounted_links_json, graph_payload_json FROM decisions WHERE order_id = ?", oid)[0]
+        links = json.loads(row["discounted_links_json"])
+        assert links == [link.model_dump(mode="json") for link in response.graph_summary.discounted_links]
+        graph = json.loads(row["graph_payload_json"])
+        assert _utc(graph["as_of"]) == request.placed_at
+        assert 2 < len(graph["nodes"]) <= 40
+    demo1 = _rows(engine, "SELECT discounted_links_json FROM decisions WHERE order_id = 'ORD-DEMO-001'")[0]
+    assert [link["reason"] for link in json.loads(demo1["discounted_links_json"])] == ["HOUSEHOLD_PATTERN"]
+    demo2 = _rows(engine, "SELECT graph_payload_json FROM decisions WHERE order_id = 'ORD-DEMO-002'")[0]
+    assert sum(n["state"] == "CONFIRMED_ABUSE" for n in json.loads(demo2["graph_payload_json"])["nodes"]) == 3
+
+
+def test_degraded_decisions_store_no_graph(service, engine):
+    def fail(stage):
+        raise RuntimeError("injected")
+
+    service.fault_hook = fail
+    service.score(_requests()["ORD-DEMO-003"], "DEMO")
+    row = _rows(engine, "SELECT discounted_links_json, graph_payload_json FROM decisions "
+                        "WHERE order_id = 'ORD-DEMO-003'")[0]
+    assert row["discounted_links_json"] == "[]" and row["graph_payload_json"] is None
+
+
+@pytest.mark.parametrize("column", ["discounted_links_json", "graph_payload_json"])
+def test_captured_graph_evidence_is_immutable(engine, column):
+    with read_connection(engine) as conn:
+        with pytest.raises(sqlite3.IntegrityError, match="immutable"):
+            conn.execute(f"UPDATE decisions SET {column} = '[]' WHERE rowid = 1")

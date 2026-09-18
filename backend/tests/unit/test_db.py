@@ -25,7 +25,7 @@ INSERT INTO model_registry VALUES ('ret-1', 'RETURN', 't', 'w', 'c', 'ISOTONIC',
 INSERT INTO model_registry VALUES ('abu-1', 'ABUSE', 't', 'w', 'c', 'SIGMOID', 'fs-1.0', '[]', '1', 's', '{{}}');
 INSERT INTO decisions VALUES ('DEC-1', 'ORD-T-1', '2026-09-01T05:00:00Z', '2026-09-01T04:55:00Z',
     'fs-1.0', '{{}}', 0.75, 0.03, NULL, 'ret-1', 'abu-1', 'v1.0', 'ALLOW', 'ALLOW', 'ALLOW',
-    'AUTO_APPLIED', 'MIN_EXPECTED_COST', '[]', '[]', '[]', '{{}}', 0, 'DEMO', 'EVT-1');
+    'AUTO_APPLIED', 'MIN_EXPECTED_COST', '[]', '[]', '[]', '{{}}', 0, 'DEMO', 'EVT-1', '[]', '{{}}');
 INSERT INTO audit_events (event_id, event_type, occurred_at, order_id, decision_id, actor_type,
     actor_id, previous_action, new_action, policy_version, return_model_version,
     abuse_model_version, payload_json, prev_hash, event_hash)
@@ -70,8 +70,10 @@ def test_audit_events_delete_aborts(db):
 
 
 def test_protected_column_list_is_complete():
-    assert len(_decision_columns()) == 24
-    assert len(PROTECTED) == 21
+    # 24 + discounted_links_json and graph_payload_json (#32), both protected by the trigger
+    assert len(_decision_columns()) == 26
+    assert len(PROTECTED) == 23
+    assert {"discounted_links_json", "graph_payload_json"} <= set(PROTECTED)
 
 
 @pytest.mark.parametrize("column", PROTECTED)
@@ -130,7 +132,7 @@ INSERT INTO orders VALUES ('ORD-T-2', 'ACC-T-1', '2026-09-01T04:56:00Z', 6000, 0
 def _decision_row(degraded_mode: int) -> str:
     return f"""INSERT INTO decisions VALUES ('DEC-2', 'ORD-T-2', '2026-09-01T05:00:00Z', '2026-09-01T04:56:00Z',
         'fs-1.0', '{{}}', NULL, NULL, NULL, 'ret-1', 'abu-1', 'v1.0', NULL, 'MANUAL_REVIEW', 'MANUAL_REVIEW',
-        'PENDING_REVIEW', 'DEGRADED_MODE_FALLBACK', '[]', '[]', '[]', '{{}}', {degraded_mode}, 'DEMO', 'EVT-2')"""
+        'PENDING_REVIEW', 'DEGRADED_MODE_FALLBACK', '[]', '[]', '[]', '{{}}', {degraded_mode}, 'DEMO', 'EVT-2', '[]', NULL)"""
 
 
 def test_non_degraded_decision_without_scores_rejected(db):

@@ -24,7 +24,7 @@ import pandas as pd
 
 from sentinel.api.schemas import DiscountedLink, ScoreOrderRequest
 from sentinel.features import definitions
-from sentinel.features.graph_features import GraphAnalysis, analyse
+from sentinel.features.graph_features import EgoView, GraphAnalysis, analyse, ego_view
 from sentinel.features.graph_state import (GraphState, IdentifierMeta, from_micros, series_to_micros,
                                            to_micros, visible)
 from sentinel.features.tabular_features import (OrderQuery, QueryLine, clv_inr, matured_return_counts,
@@ -117,7 +117,14 @@ class FeatureBuilder:
             inputs = self._policy_inputs(q, t) if policy_inputs else None
             yield OrderFeatures(q.order_id, split, from_micros(t), features, inputs)
 
-    def _run(self, until: int | None, compute: bool):
+    def iter_points_in_time(self, order_ids) -> Iterator[tuple[OrderQuery, int]]:
+        """Replay once; pause at each wanted historical order at its own t0, before its edges and that
+        timestamp's events are applied, so `self.state` holds exactly what was visible then (#32)."""
+        wanted = frozenset(order_ids)
+        for t, q, _, _ in self._run(until=None, compute=False, visit=wanted):
+            yield q, t
+
+    def _run(self, until: int | None, compute: bool, visit: frozenset[str] | None = None):
         orders, events = self._orders, self._events
         while True:
             t_order = orders[self._next_order][0] if self._next_order < len(orders) else _END
@@ -132,6 +139,10 @@ class FeatureBuilder:
             if compute:                                     # 1. features for every order placed at t
                 for _, q, split in batch:
                     yield t, q, split, self._features(q, t)
+            elif visit is not None:
+                for _, q, split in batch:
+                    if q.order_id in visit:
+                        yield t, q, split, None
             for _, q, _ in batch:                           # 2. then that timestamp's order edges
                 self.state.add_order(q.order_id, q.account_id, t, order_value_inr(q), q.skus, q.identifiers)
             self._next_order = end
@@ -217,6 +228,16 @@ class FeatureBuilder:
     def discounted_links(self, request: ScoreOrderRequest, t0: datetime | None = None) -> list[DiscountedLink]:
         t = self._check_t0(t0, request)
         return list(self._analysis(query_from_request(request), t)[1].discounted)
+
+    def discounted_links_at(self, q: OrderQuery, t0: int) -> list[DiscountedLink]:
+        """Discounted links for a historical order paused by iter_points_in_time (seeding, #32)."""
+        return list(self._analysis(q, t0)[1].discounted)
+
+    def ego_view(self, q: OrderQuery, t0: int) -> EgoView:
+        """The reviewer graph's raw material for `q` as of t0 (#32). State must hold nothing at or after t0."""
+        if self.state.last_applied is not None and not visible(self.state.last_applied, t0):
+            raise ValueError("graph state already contains events at or after t0; replay to an earlier time")
+        return ego_view(self.state, q, t0)
 
     def clv_inr(self, account_id: str, t0: datetime) -> float:
         """Point-in-time CLV (policy input, never a model feature)."""

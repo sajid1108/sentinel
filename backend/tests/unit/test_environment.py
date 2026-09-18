@@ -24,6 +24,17 @@ def test_sklearn_version_matches_pin():
     assert sklearn.__version__ == pins["scikit-learn"]
 
 
+def test_threadpoolctl_is_declared_and_matches_the_lock():
+    """models/attribution.py imports threadpoolctl directly (#27): a declared dependency, pinned to the
+    version requirements.lock already installs, not an accident of scikit-learn's."""
+    import threadpoolctl
+
+    pins = {d.split("==")[0]: d.split("==")[1] for d in _dependencies()}
+    lock = dict(line.strip().split("==") for line in (BACKEND / "requirements.lock").read_text(encoding="utf-8")
+                .splitlines() if "==" in line and not line.startswith("#"))
+    assert pins["threadpoolctl"] == lock["threadpoolctl"] == threadpoolctl.__version__ == "3.7.0"
+
+
 def test_cli_prints_rupee_without_pythonioencoding():
     env = {k: v for k, v in os.environ.items() if k not in ("PYTHONIOENCODING", "PYTHONUTF8")}
     code = ("import sys; sys.argv = ['sentinel', 'generate']; "
@@ -38,3 +49,14 @@ def test_architecture_contract_present():
     for heading in ("# 8. Expected-cost formula", "## 9.2 Corroborating signals",
                     "## 7.2 Leakage controls", "# Appendix A."):
         assert heading in doc
+
+
+def test_threadpoolctl_is_declared_and_matches_the_lock():
+    """models/attribution.py imports threadpoolctl directly (#27): it is a declared dependency, pinned to
+    the version requirements.lock already installs, not an accident of scikit-learn's."""
+    import threadpoolctl
+
+    pins = {d.split("==")[0]: d.split("==")[1] for d in _dependencies()}
+    lock = dict(line.strip().split("==") for line in (BACKEND / "requirements.lock").read_text(encoding="utf-8")
+                .splitlines() if "==" in line and not line.startswith("#"))
+    assert pins["threadpoolctl"] == lock["threadpoolctl"] == threadpoolctl.__version__ == "3.7.0"

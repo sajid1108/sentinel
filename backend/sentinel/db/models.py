@@ -220,6 +220,8 @@ class Decision(Base):
     degraded_mode: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     source: Mapped[str] = mapped_column(String, nullable=False)
     latest_audit_event_id: Mapped[str] = mapped_column(String, nullable=False)
+    discounted_links_json: Mapped[Optional[str]] = mapped_column(Text)   # point-in-time capture (#32)
+    graph_payload_json: Mapped[Optional[str]] = mapped_column(Text)
 
     __table_args__ = (
         CheckConstraint("p_return IS NULL OR p_return BETWEEN 0 AND 1"),

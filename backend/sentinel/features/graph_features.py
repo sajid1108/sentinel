@@ -187,6 +187,51 @@ def _discounted_link(ctx: _Context, kind: str, n: str, links: list[Link]) -> Dis
     return None
 
 
+@dataclass(frozen=True)
+class IdentifierView:
+    """One of the query order's identifiers and every other account's use of it, as of t0."""
+    kind: str
+    node: str
+    label: str                   # masked display label from the identifiers table
+    multi_tenant: bool           # flag set before t0 (P7)
+    high_fanout: bool
+    own_reliability: float       # the query account's own edge (age 0 at t0)
+    links: tuple[Link, ...]
+    discount: DiscountedLink | None
+
+
+@dataclass(frozen=True)
+class EgoView:
+    """What the reviewer graph (api/services/graph_view.py) is drawn from: the query order's identifiers,
+    the accounts linked through them, their orders in [t0 - 24 h, t0), and which accounts sit in the
+    reliable component. Point-in-time: only state visible at t0."""
+    identifiers: tuple[IdentifierView, ...]
+    component: frozenset[str]
+    recent_orders: dict[str, tuple[tuple[str, int], ...]]      # account -> ((order_id, placed_at), ...)
+
+
+def ego_view(state: GraphState, q: OrderQuery, t0: int) -> EgoView:
+    ctx = _Context(state, q, t0)
+    views = []
+    for kind, n in ctx.query_nodes:
+        links = tuple(link for link in ctx.links(n) if visible(link.first_seen, t0))
+        views.append(IdentifierView(
+            kind=kind, node=n, label=state.meta(n[4:], kind).display_label, multi_tenant=ctx.multi_tenant(n),
+            high_fanout=ctx.high_fanout(n), own_reliability=ctx.reliability(kind, n, False), links=links,
+            discount=_discounted_link(ctx, kind, n, list(links))))
+    linked = sorted({link.account_id for v in views for link in v.links})
+    recent = {}
+    for a in linked:
+        node = node_id("ACCOUNT", a)
+        if node not in state.graph:
+            continue
+        orders = sorted((o[4:], d["placed_at"]) for o, d in state.graph.adj[node].items()
+                        if o.startswith("ORD:") and in_window(d["placed_at"], t0, 1))
+        if orders:
+            recent[a] = tuple(orders)
+    return EgoView(tuple(views), frozenset(_component(ctx)), recent)
+
+
 def analyse(state: GraphState, q: OrderQuery, t0: int) -> GraphAnalysis:
     ctx = _Context(state, q, t0)
     by_kind: dict[str, tuple[str, list[Link]]] = {kind: (n, ctx.links(n)) for kind, n in ctx.query_nodes}
