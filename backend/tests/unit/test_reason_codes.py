@@ -349,3 +349,59 @@ def test_models_never_name_an_action():
     for path in _module_files():
         text = path.read_text(encoding="utf-8")
         assert not [a for a in ACTION_NAMES if a in text], path
+
+
+# -- 1.2: the redundancy note must be true of the code it sits under ---------
+def test_relationship_note_only_on_codes_whose_predicate_is_all_graph_features(catalog):
+    """Phase 9 brief 1.2. "Redundant with other relationship evidence" is a claim about relationships,
+    so only a code that reads relationship features may make it."""
+    graph = set(definitions.ABUSE_GRAPH_FEATURES)
+    for spec in catalog.values():
+        names = rc.predicate_features(spec)
+        expected = rc.REDUNDANT_NOTE if names and names <= graph else rc.REDUNDANT_NOTE_OTHER
+        assert rc.redundancy_note(spec) == expected, spec.code
+
+
+def test_the_two_notes_differ_and_only_one_says_relationship():
+    assert rc.REDUNDANT_NOTE != rc.REDUNDANT_NOTE_OTHER
+    assert "relationship" in rc.REDUNDANT_NOTE
+    assert "relationship" not in rc.REDUNDANT_NOTE_OTHER
+    assert rc.REDUNDANT_NOTE_OTHER == ("Redundant with other evidence; the score is already explained "
+                                       "by correlated features.")
+
+
+def test_account_claim_code_gets_the_non_relationship_note(catalog):
+    """Demo 3's code: a claim on this account is not evidence about a relationship."""
+    evidence = _evidence(prior_suspicious_claims_180d=1)
+    fired, _ = rc.fired_codes(evidence, {"ABUSE": {"prior_suspicious_claims_180d": 0.0}, "RETURN": {}},
+                              catalog)
+    code = next(f for f in fired if f.code == "ACCOUNT_PRIOR_SUSPICIOUS_CLAIM")
+    assert code.attribution_note == rc.REDUNDANT_NOTE_OTHER
+
+
+def test_established_account_code_gets_the_non_relationship_note(catalog):
+    """Demo 1's mitigating code: account age and order history, no relationship."""
+    evidence = _evidence(account_age_days=1280.0, prior_orders=52, prior_suspicious_claims_180d=0)
+    _, mitigating = rc.fired_codes(evidence, {"ABUSE": {"account_age_days": 0.0, "prior_orders": 0.0},
+                                              "RETURN": {}}, catalog)
+    code = next(m for m in mitigating if m.code == "MITIGATING_ESTABLISHED_ACCOUNT")
+    assert code.attribution_note == rc.REDUNDANT_NOTE_OTHER
+
+
+def test_graph_codes_keep_the_relationship_note(catalog):
+    """The #27 case is unchanged: a device link is relationship evidence."""
+    evidence = _evidence(device_confirmed_abuse_weight=2.235, token_other_accounts_30d=3)
+    fired, _ = rc.fired_codes(evidence, {"ABUSE": {"device_confirmed_abuse_weight": 0.0,
+                                                   "token_other_accounts_30d": 0.18}, "RETURN": {}},
+                              catalog)
+    for name in ("GRAPH_DEVICE_CONFIRMED_LINK", "GRAPH_TOKEN_REUSE"):
+        assert next(f for f in fired if f.code == name).attribution_note == rc.REDUNDANT_NOTE
+
+
+def test_the_firing_rule_and_the_threshold_are_unchanged(catalog):
+    """1.2 changes the note's wording only: a code above the threshold still carries no note at all."""
+    assert rc.REDUNDANT_ATTRIBUTION_PP == 2.0
+    evidence = _evidence(prior_suspicious_claims_180d=1)
+    fired, _ = rc.fired_codes(evidence, {"ABUSE": {"prior_suspicious_claims_180d": 2.0}, "RETURN": {}},
+                              catalog)
+    assert next(f for f in fired if f.code == "ACCOUNT_PRIOR_SUSPICIOUS_CLAIM").attribution_note is None

@@ -24,7 +24,7 @@ const STRENGTH_STYLE: Record<ReasonCode['evidence_strength'], string> = {
 export function StrengthTag({ strength }: { strength: ReasonCode['evidence_strength'] }) {
   return (
     <span
-      className={`shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide ${STRENGTH_STYLE[strength]}`}
+      className={`shrink-0 self-start rounded border px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide ${STRENGTH_STYLE[strength]}`}
     >
       {strength.toLowerCase()}
     </span>

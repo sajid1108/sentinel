@@ -185,11 +185,13 @@ def test_c4_valid_payload_accepted():
 
 
 # ── C5: G3 boundary text never shows the threshold as reached ──────────────
-@pytest.mark.parametrize("p, shown", [(0.6951, "0.695"), (0.6999, "0.699")])
+# The figures are now the page's own format (Phase 9 brief 1.3). At one decimal a score just below the
+# threshold can round onto it, so G3 says "just under" rather than printing the same number twice.
+@pytest.mark.parametrize("p, shown", [(0.6951, "69.5%"), (0.6999, "just under 70.0%")])
 def test_c5_g3_detail_below_threshold(p, shown):
     d = decide(ctx(p, **DEMO_2, signals=DEMO_2_SIGNALS), CFG)
     g3 = _guardrail(d, "G3")
-    assert "scored 0.70" not in g3.detail and f"scored {shown}" in g3.detail
+    assert "this order scored 70.0%" not in g3.detail and f"scored {shown}." in g3.detail
     assert not by_action(d)[Action.BLOCK].feasible
 
 
@@ -215,7 +217,7 @@ def test_c7_demo_2_explanation_mentions_allow_removed_by_g5():
     assert d.policy_explanation == (
         "BLOCK was selected because its expected cost (₹765) is lower than MANUAL_REVIEW (₹4,045), "
         "PREPAID_ONLY (₹7,798) and ALLOW (₹18,701) under policy v1.0. "
-        "ALLOW was also not permitted: G5 removes ALLOW when p_abuse is at least 0.40 "
+        "ALLOW was also not permitted: G5 removes ALLOW when the abuse probability is at least 40.0% "
         "and the order value is at least ₹10,000.")
 
 
@@ -226,4 +228,4 @@ def test_c7_demo_1_explanation():
         "ALLOW was selected because its expected cost (₹119) is lower than PREPAID_ONLY (₹766), "
         "MANUAL_REVIEW (₹905) and BLOCK (₹18,867) under policy v1.0. "
         "BLOCK was also not permitted: G2 requires two corroborating signals; none was found. "
-        "G3 requires p_abuse of at least 0.70; this order scored 0.030.")
+        "G3 requires an abuse probability of at least 70.0%; this order scored 3.0%.")

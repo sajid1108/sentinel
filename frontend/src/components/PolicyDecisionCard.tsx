@@ -4,7 +4,7 @@
  * *current* action, and when an override moved it the card says what the system recommended.
  */
 import type { components } from '../api/types'
-import { STATUS_LABEL, type Action } from '../lib/actions'
+import { ACTION_LABEL, STATUS_LABEL, type Action } from '../lib/actions'
 import { hashPrefix } from '../lib/format'
 import { ActionBadge } from './ActionBadge'
 
@@ -38,7 +38,7 @@ export function PolicyDecisionCard({
           </div>
           {overridden && (
             <p data-testid="system-recommended" className="mt-1.5 text-xs text-slate-400">
-              System recommended: {recommended}
+              System recommended: {ACTION_LABEL[recommended]}
             </p>
           )}
           <p className="mt-1.5 text-xs text-slate-400">{STATUS_LABEL[decision.status] ?? decision.status}</p>

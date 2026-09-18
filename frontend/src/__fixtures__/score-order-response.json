@@ -1,0 +1,274 @@
+{
+  "decision_id": "2e9508e1-82ba-41b9-8d2a-7c6263a77161",
+  "order_id": "ORD-DEMO-001",
+  "scored_at": "2026-09-01T05:00:00Z",
+  "features_as_of": "2026-09-01T04:55:00Z",
+  "scores": {
+    "p_return": 0.6153846153846154,
+    "p_abuse": 4.407411157210499e-05,
+    "p_abuse_without_graph_evidence": 4.407411157210499e-05,
+    "return_model_version": "return-hgb-fs1.0-e3c877bc",
+    "abuse_model_version": "abuse-hgb-fs1.0-446c817f",
+    "feature_set_version": "fs-1.0-0ad43d7f",
+    "p_return_used_for_action": false
+  },
+  "prediction_explanation": "No material abuse evidence was found; the score reflects this account's own history rather than links to other accounts.",
+  "reasons": [
+    {
+      "code": "RETURN_SIZE_BRACKETING",
+      "model": "RETURN",
+      "direction": "INCREASES",
+      "reviewer_text": "Multiple sizes of the same item in the cart.",
+      "evidence": {
+        "variants": 3
+      },
+      "attribution_pp": 31.5385,
+      "evidence_strength": "MODERATE",
+      "attribution_note": null
+    },
+    {
+      "code": "RETURN_HIGH_HISTORY",
+      "model": "RETURN",
+      "direction": "INCREASES",
+      "reviewer_text": "The customer returned 28 of 48 delivered orders. This affects return likelihood, not abuse risk.",
+      "evidence": {
+        "matured_orders": 48,
+        "returns": 28
+      },
+      "attribution_pp": 18.6813,
+      "evidence_strength": "MODERATE",
+      "attribution_note": null
+    },
+    {
+      "code": "MITIGATING_ESTABLISHED_ACCOUNT",
+      "model": "ABUSE",
+      "direction": "DECREASES",
+      "reviewer_text": "Long-standing account with no flagged claims.",
+      "evidence": {
+        "account_age_days": 1280.0,
+        "prior_orders": 52
+      },
+      "attribution_pp": -0.0083,
+      "evidence_strength": "MODERATE",
+      "attribution_note": "Redundant with other evidence; the score is already explained by correlated features."
+    },
+    {
+      "code": "MITIGATING_DISCOUNTED_LINKS",
+      "model": "ABUSE",
+      "direction": "DECREASES",
+      "reviewer_text": "Shared address discounted: household pattern.",
+      "evidence": {
+        "kind": "address",
+        "reason": "household pattern"
+      },
+      "attribution_pp": null,
+      "evidence_strength": "WEAK",
+      "attribution_note": null
+    }
+  ],
+  "graph_summary": {
+    "component_size_reliable_90d": 1,
+    "confirmed_abusive_accounts_in_component": 0,
+    "min_hops_to_confirmed_abuse": null,
+    "linked_orders_24h": 0,
+    "corroborating_signal_count": 0,
+    "signals": [
+      {
+        "signal": "DEVICE",
+        "present": false,
+        "weight": 0.0,
+        "counts_for_corroboration": false,
+        "detail": "Device: confirmed-abuse weight 0.00, 0 other concurrent accounts in 30 d."
+      },
+      {
+        "signal": "PAYMENT_TOKEN",
+        "present": false,
+        "weight": 0.0,
+        "counts_for_corroboration": false,
+        "detail": "Payment token used by 0 other accounts in 30 d."
+      },
+      {
+        "signal": "ADDRESS",
+        "present": false,
+        "weight": 0.0,
+        "counts_for_corroboration": false,
+        "detail": "Confirmed-abuse weight 0.00 on this address (needs 0.30)."
+      },
+      {
+        "signal": "TEMPORAL_BURST",
+        "present": false,
+        "weight": 0.0,
+        "counts_for_corroboration": false,
+        "detail": "0 linked orders in 24 h, 0 same-SKU linked orders in 7 d, via device or token links."
+      },
+      {
+        "signal": "ACCOUNT_CLAIMS",
+        "present": false,
+        "weight": 0.0,
+        "counts_for_corroboration": false,
+        "detail": "0 suspicious claims on this account in 180 d."
+      }
+    ],
+    "discounted_links": [
+      {
+        "identifier_label": "Address ••3486",
+        "kind": "ADDRESS",
+        "reason": "HOUSEHOLD_PATTERN",
+        "weight": 0.1299
+      }
+    ],
+    "weak_evidence_only": false
+  },
+  "policy": {
+    "policy_version": "v1.0",
+    "policy_config_sha256": "e1744f126c99d32123f31768538768841b188f7ed7ac7509c406760f313915f0",
+    "cost_optimal_action": "ALLOW",
+    "selected_action": "ALLOW",
+    "selected_rule": "MIN_EXPECTED_COST",
+    "costs": [
+      {
+        "action": "ALLOW",
+        "expected_cost": {
+          "inr": 0.18,
+          "display": "₹0"
+        },
+        "abusive_branch": {
+          "inr": 0.18,
+          "display": "₹0"
+        },
+        "genuine_branch": {
+          "inr": 0.0,
+          "display": "₹0"
+        },
+        "operational": {
+          "inr": 0.0,
+          "display": "₹0"
+        },
+        "feasible": true,
+        "excluded_by": [],
+        "rank_by_cost": 1
+      },
+      {
+        "action": "PREPAID_ONLY",
+        "expected_cost": {
+          "inr": 750.36,
+          "display": "₹750"
+        },
+        "abusive_branch": {
+          "inr": 0.07,
+          "display": "₹0"
+        },
+        "genuine_branch": {
+          "inr": 750.28,
+          "display": "₹750"
+        },
+        "operational": {
+          "inr": 0.0,
+          "display": "₹0"
+        },
+        "feasible": true,
+        "excluded_by": [],
+        "rank_by_cost": 2
+      },
+      {
+        "action": "MANUAL_REVIEW",
+        "expected_cost": {
+          "inr": 912.09,
+          "display": "₹912"
+        },
+        "abusive_branch": {
+          "inr": 0.04,
+          "display": "₹0"
+        },
+        "genuine_branch": {
+          "inr": 662.06,
+          "display": "₹662"
+        },
+        "operational": {
+          "inr": 250.0,
+          "display": "₹250"
+        },
+        "feasible": true,
+        "excluded_by": [],
+        "rank_by_cost": 3
+      },
+      {
+        "action": "BLOCK",
+        "expected_cost": {
+          "inr": 19818.63,
+          "display": "₹19,819"
+        },
+        "abusive_branch": {
+          "inr": 0.0,
+          "display": "₹0"
+        },
+        "genuine_branch": {
+          "inr": 19818.63,
+          "display": "₹19,819"
+        },
+        "operational": {
+          "inr": 0.0,
+          "display": "₹0"
+        },
+        "feasible": false,
+        "excluded_by": [
+          "G2",
+          "G3"
+        ],
+        "rank_by_cost": 4
+      }
+    ],
+    "guardrails": [
+      {
+        "guardrail_id": "G1",
+        "name": "Return probability excluded",
+        "triggered": false,
+        "effect": "NONE",
+        "removed_actions": [],
+        "detail": "p_return is not an input to expected cost or any guardrail; shown for context only."
+      },
+      {
+        "guardrail_id": "G2",
+        "name": "BLOCK needs corroboration",
+        "triggered": true,
+        "effect": "REMOVED_ACTIONS",
+        "removed_actions": [
+          "BLOCK"
+        ],
+        "detail": "G2 requires two corroborating signals; none was found."
+      },
+      {
+        "guardrail_id": "G3",
+        "name": "BLOCK needs confidence",
+        "triggered": true,
+        "effect": "REMOVED_ACTIONS",
+        "removed_actions": [
+          "BLOCK"
+        ],
+        "detail": "G3 requires an abuse probability of at least 70.0%; this order scored <0.1%."
+      },
+      {
+        "guardrail_id": "G4",
+        "name": "No BLOCK on weak or stale evidence",
+        "triggered": false,
+        "effect": "NONE",
+        "removed_actions": [],
+        "detail": "Evidence is recent and at least one counted signal is strong."
+      },
+      {
+        "guardrail_id": "G5",
+        "name": "No silent ALLOW at high exposure",
+        "triggered": false,
+        "effect": "NONE",
+        "removed_actions": [],
+        "detail": "Exposure is below the G5 backstop."
+      }
+    ],
+    "policy_explanation": "ALLOW was selected because its expected cost (₹0) is lower than PREPAID_ONLY (₹750), MANUAL_REVIEW (₹912) and BLOCK (₹19,819) under policy v1.0. BLOCK was also not permitted: G2 requires two corroborating signals; none was found. G3 requires an abuse probability of at least 70.0%; this order scored <0.1%.",
+    "assumptions_notice": "Monetary values are demonstration assumptions (policy v1.0)."
+  },
+  "status": "AUTO_APPLIED",
+  "audit_event_id": "996b4b40-c996-4393-a7f3-e7db96fef077",
+  "degraded_mode": false,
+  "idempotent_replay": false
+}

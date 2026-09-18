@@ -1,0 +1,81 @@
+[
+  {
+    "order_id": "ORD-DEMO-001",
+    "account_id": "ACC-DEMO-001",
+    "placed_at": "2026-09-01T10:25:00+05:30",
+    "lines": [
+      {
+        "sku_id": "SKU-APPAREL-D01-S",
+        "product_id": "PRD-APPAREL-D01",
+        "variant": "S",
+        "category": "APPAREL",
+        "unit_price_inr": 1666.67,
+        "quantity": 1
+      },
+      {
+        "sku_id": "SKU-APPAREL-D01-M",
+        "product_id": "PRD-APPAREL-D01",
+        "variant": "M",
+        "category": "APPAREL",
+        "unit_price_inr": 1666.67,
+        "quantity": 1
+      },
+      {
+        "sku_id": "SKU-APPAREL-D01-L",
+        "product_id": "PRD-APPAREL-D01",
+        "variant": "L",
+        "category": "APPAREL",
+        "unit_price_inr": 1666.67,
+        "quantity": 1
+      }
+    ],
+    "discount_pct": 10.0,
+    "delivery_speed": "STANDARD",
+    "payment_method": "PREPAID_UPI",
+    "device_id": "39dde3962bc4525fbbd57a04a74a757d",
+    "address_id": "edf0b64f48179cda3e09bbbe045a3486",
+    "payment_token_id": "1b104501d98645dffc5bad7c7fd77187"
+  },
+  {
+    "order_id": "ORD-DEMO-002",
+    "account_id": "ACC-DEMO-002",
+    "placed_at": "2026-09-01T10:25:00+05:30",
+    "lines": [
+      {
+        "sku_id": "SKU-ELECTRONICS-R01-128GB",
+        "product_id": "PRD-ELECTRONICS-R01",
+        "variant": "128GB",
+        "category": "ELECTRONICS",
+        "unit_price_inr": 24000.0,
+        "quantity": 1
+      }
+    ],
+    "discount_pct": 0.0,
+    "delivery_speed": "EXPRESS",
+    "payment_method": "PREPAID_CARD",
+    "device_id": "fc85a0f7222d2081d491323f43f5f5ae",
+    "address_id": "001f1417e00ac98df2bb603831ffe5a9",
+    "payment_token_id": "84e5c13706ec6202fceba4e71ab77d56"
+  },
+  {
+    "order_id": "ORD-DEMO-003",
+    "account_id": "ACC-DEMO-003",
+    "placed_at": "2026-09-01T10:25:00+05:30",
+    "lines": [
+      {
+        "sku_id": "SKU-FOOTWEAR-D01-UK9",
+        "product_id": "PRD-FOOTWEAR-D01",
+        "variant": "UK9",
+        "category": "FOOTWEAR",
+        "unit_price_inr": 18461.54,
+        "quantity": 1
+      }
+    ],
+    "discount_pct": 35.0,
+    "delivery_speed": "STANDARD",
+    "payment_method": "COD",
+    "device_id": "d82549d3977f6bc1487c2f2d7230dc8a",
+    "address_id": "ff50ba2c100d04e349c71c835a96d05f",
+    "payment_token_id": null
+  }
+]

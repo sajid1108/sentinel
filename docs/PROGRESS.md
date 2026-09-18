@@ -3,7 +3,7 @@
 Times are from git commit timestamps (IST). Every builder updates the row for its stage **before** committing.
 
 **Project start:** 2026-09-16 19:17 (first commit)
-**Last update:** 2026-09-18 (phase 8 gate)
+**Last update:** 2026-09-18 (phase 9 gate — Definition of Done)
 
 ## Completed
 
@@ -18,6 +18,8 @@ Times are from git commit timestamps (IST). Every builder updates the row for it
 | 6 (follow-ups) + 7 | 5 + 6 | Phase 5 follow-ups (evidence ordering, plurals, raw return counts, device confirmation counts, latency p95); SQLite seeding (250 backtest-replay decisions), hash-chained audit, `ScoringService` (frozen history, idempotent, G6 degraded), `ReviewService` (override, appeal), `seed-db` / `reset-demo` | `7fb75f0` `d4881da` | 09-18 08:48 | ~37 min build, 1 architect review round (Phase 5) |
 | 7 (follow-ups) + 8 | 6 + 7 | Phase 6 follow-ups (point-in-time discounted links and GraphPayload stored per decision, demo reviewer clock, threadpoolctl declared); API: all internal routes, public checkout with probe logging, metrics, demo presets/reset, deterministic graph view, OpenAPI export and generated `types.ts` | `3dfbf20` `d76f2c1` | 09-18 | session 08:52 → gate; ~1h active build plus a ~1h30m idle gap between turns |
 | 8 (follow-ups) + 9 | 7 + 8 | Phase 7 follow-ups (the reviewer graph now draws every account whose evidence is counted beside it, at any hop; `GET /internal/policy`); order detail page: two separate score cards, expected-cost bars with hatched infeasible actions, relationship graph, evidence vs model attribution, audit timeline with chain verification, baselines, override and appeal dialogs, assumptions panel; vitest suite (105) against payloads recorded from the real backend | `fa43f4b` `556ae6a` | 09-18 | 4h27m session; ~2h15m active build |
+| 9 (follow-ups) + 10 + 11 | 8 + 9 + 10 | Phase 8 follow-ups (neutral abuse meter, a redundancy note that is true of its own code, server-side probability formatting in reviewer text, count-aware plurals, IST timestamps, action and reason labels, strength-tag alignment, `RECENT_24H` moved into the legend); **the MVP**: review queue with URL-bound filters, pagination and the two probabilities as two columns, "Simulate checkout" presets and demo reset, and the Overview's decision activity and synthetic backtest as two separately labelled sections | `b0042e0` `20257ab` | 09-18 | ~5h session |
+| — | — | **Definition of Done met (stage 11): reset → queue → simulate checkout → order detail → override → overview runs end to end in the browser** | | | |
 
 **Elapsed since project start:** ~42 hours wall clock.
 **Actual build time:** roughly 10–11 hours of agent work. The rest is review turnaround and gaps between sessions.
@@ -28,16 +30,16 @@ Estimates revised down from the original plan, since stages 1–5 ran faster tha
 
 | Manual stage | Spec phase | Scope | Build estimate | Review rounds |
 |---|---|---|---|---|
-| 10 | 9 | Frontend queue + simulate checkout | 1–1.5 h | 1 |
-| 11 | 10 | Frontend overview: activity tiles, backtest panel, calibration | 1.5–2 h | 1 |
-| — | — | **Cut line: stages 1–11 are the Definition of Done** | | |
+| ~~10~~ | ~~9~~ | ~~Frontend queue + simulate checkout~~ — **done** in phase 9 | — | 1 pending |
+| ~~11~~ | ~~10~~ | ~~Frontend overview~~ — **done** in phase 9 (activity and backtest; the calibration chart is Phase 11 scope) | — | 1 pending |
+| — | — | **Cut line: stages 1–11 are the Definition of Done — met** | | |
 | 12 | 11 | Backtest depth: sensitivity, cohort friction table (carries a TODO), R3 panel | 0.5–1 h | 0–1 |
 | 13 | 12 | Hardening: demo reset, degraded mode, audit verify in UI, model card (carries a TODO) | 2–3 h | 1 |
 | 14 | — | `docs/DEMO_SCRIPT.md`, two cold-start rehearsals, fallback video | 1–2 h | 0 |
 | 15 | — | Pitch and submission | 1–2 h | 1 |
 
-**To Definition of Done (stage 11):** ~2.5–3.5 h of build (stages 10–11).
-**To full finish (stage 15):** ~7–12 h of build.
+**To Definition of Done (stage 11):** **met.** Stages 10 and 11 landed together in phase 9, in one ~5 h session against an estimate of 2.5–3.5 h of build; the extra went on the eight Phase 8 follow-ups, which the estimate did not cover, and on the browser pass.
+**To full finish (stage 15):** ~4.5–9 h of build (stages 12–15).
 
 ## Notes
 
@@ -48,3 +50,5 @@ Estimates revised down from the original plan, since stages 1–5 ran faster tha
 - If time runs short, hold the cut line at stage 11 and shrink stage 13 to: demo reset, two rehearsals, fallback video.
 - Stage 8's estimate (2–3 h) held at the low end: the API composes the Phase 6 services; the new work was the graph view, the read side and the test suite (67 API tests). The full suite is now ~4–5 min (~820 tests); score-order p95 over HTTP is ~35 ms against a 300 ms budget.
 - Stage 9's estimate (3–5 h) held at the top of the range in wall clock and came in under it in build time: the page composes what Phases 5–8 already produced, and the work that took the longest was not React but honesty plumbing — reading the BLOCK band out of `/internal/policy` instead of typing 0.70, and making the no-hard-coding scan strict enough to catch a planted threshold without flagging a border width. Three real defects were found only by opening a browser (unhatched bars, a graph that did not fit, a dialog that unmounted itself on success), which is the argument for keeping §F in every frontend brief.
+- Stage 10 and 11's estimates (1–1.5 h and 1.5–2 h) held: the queue and the overview are both thin renderings of payloads Phase 7 already shaped, and almost all the thinking went into which of the two action counts each surface shows and saying so on the page (#34). The eight Phase 8 follow-ups were the larger half of the session. The one that took longest was the smallest: matching `format_probability` to the browser's `toFixed(1)` rather than to `format_inr`'s half-up rounding, which a 10,001-point grid test forced into the open.
+- The browser pass again earned its place: the preset labels, the reset timing (6.5 s) and the queue counts reflecting the override are all things only a real click confirms.

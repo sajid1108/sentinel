@@ -11,8 +11,9 @@ import { render } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 
 import OrderDetailPage from '../pages/OrderDetailPage'
-import { ACTION_ORDER } from '../lib/actions'
-import { DEMOS, FIXTURES, moneyDisplays, renderDetail, stubFetch, type FixtureName } from './render'
+import { ACTION_LABEL, ACTION_ORDER, REASON_LABEL } from '../lib/actions'
+import { FLAG_LABEL } from '../components/RelationshipGraph'
+import { DEMOS, FIXTURES, POLICY, moneyDisplays, renderDetail, stubFetch, type FixtureName } from './render'
 
 afterEach(() => {
   cleanup()
@@ -315,9 +316,12 @@ describe('an overridden decision', () => {
   it('says what the system recommended and shows the override in the timeline', async () => {
     const { detail } = await open('overridden')
     expect(detail.current_action).not.toBe(detail.decision.policy.selected_action)
-    expect(screen.getByTestId('system-recommended')).toHaveTextContent(
-      `System recommended: ${detail.decision.policy.selected_action}`,
+    // 1.6: the frontend's own text uses the label, never the enum value.
+    const recommended = screen.getByTestId('system-recommended')
+    expect(recommended).toHaveTextContent(
+      `System recommended: ${ACTION_LABEL[detail.decision.policy.selected_action]}`,
     )
+    expect(recommended.textContent).not.toContain(detail.decision.policy.selected_action)
     const events = within(screen.getByTestId('audit-timeline')).getAllByTestId('audit-event')
     const types = events.map((event) => event.getAttribute('data-event-type'))
     expect(types).toContain('OVERRIDE_APPLIED')
@@ -455,5 +459,122 @@ describe('page states', () => {
     )
     expect(await screen.findByText('Retry')).toBeInTheDocument()
     expect(screen.getByText('Something went wrong.')).toBeInTheDocument()
+  })
+})
+
+// ── Phase 9 Part 1 follow-ups ────────────────────────────────────────────────
+describe('1.1 the abuse meter is neutral', () => {
+  it('fills identically on Demo 1, 2 and 3, whatever the score', async () => {
+    const fills: string[] = []
+    const scores: number[] = []
+    for (const name of DEMOS) {
+      const { detail } = await open(name)
+      fills.push(screen.getByTestId('abuse-meter-fill').getAttribute('style') ?? '')
+      scores.push(detail.decision.scores.p_abuse ?? -1)
+      cleanup()
+    }
+    // The three scores really do straddle the band that used to turn the meter red, so an identical
+    // fill colour across them is evidence the band is gone, not evidence it was never reached. The
+    // threshold is read from the recorded policy payload, never written here.
+    const blockMin = POLICY.sections
+      .find((s) => s.section === 'guardrails')
+      ?.values.find((v) => v.key === 'block_min_p_abuse')?.value
+    expect(typeof blockMin).toBe('number')
+    expect(Math.min(...scores)).toBeLessThan(blockMin as number)
+    expect(Math.max(...scores)).toBeGreaterThanOrEqual(blockMin as number)
+    const colours = fills.map((style) => /background-color:\s*([^;]+)/.exec(style)?.[1]?.trim())
+    expect(colours.every((c) => c !== undefined && c === colours[0])).toBe(true)
+  })
+
+  it.each(DEMOS)('%s paints the abuse meter with no action colour', async (name) => {
+    await open(name)
+    const card = screen.getByTestId('abuse-score-card')
+    const markup = [...card.querySelectorAll('*'), card]
+      .flatMap((el) => [el.getAttribute('class') ?? '', el.getAttribute('style') ?? ''])
+      .join(' ')
+    for (const token of ['--color-block', '--color-review', '--color-prepaid', '--color-allow']) {
+      expect(markup).not.toContain(token)
+    }
+    expect(markup).not.toMatch(/red|amber/i)
+  })
+
+  it('still marks the without-relationship-evidence counterfactual', async () => {
+    await open('demo-2')
+    expect(screen.getByTestId('abuse-meter-ghost')).toBeInTheDocument()
+  })
+})
+
+describe('1.5 timestamps are in the demo’s timezone', () => {
+  it('renders Demo 1’s placed-at as 10:25 IST under TZ=UTC', async () => {
+    expect(Intl.DateTimeFormat().resolvedOptions().timeZone).toBe('UTC')
+    const { detail } = await open('demo-1')
+    // The preset is placed at 2026-09-01T10:25:00+05:30; the browser's zone must not move it.
+    expect(detail.order.placed_at).toContain('04:55')
+    const placed = screen.getByText(/10:25/)
+    expect(placed.textContent).toContain('IST')
+    expect(placed.textContent).not.toContain('4:55')
+  })
+
+  it.each(DEMOS)('%s suffixes every rendered timestamp with IST', async (name) => {
+    await open(name)
+    const times = within(screen.getByTestId('audit-timeline')).getAllByText(/\d{1,2}:\d{2}\s*(am|pm)/i)
+    expect(times.length).toBeGreaterThan(0)
+    for (const time of times) expect(time.textContent).toContain('IST')
+  })
+})
+
+describe('1.6 actions and reasons read as labels', () => {
+  it('writes the override transition with labels, not enum values', async () => {
+    const { detail } = await open('overridden')
+    const override = within(screen.getByTestId('audit-timeline'))
+      .getAllByTestId('audit-event')
+      .find((e) => e.getAttribute('data-event-type') === 'OVERRIDE_APPLIED')
+    expect(override).toBeDefined()
+    const text = override?.textContent ?? ''
+    expect(text).toContain(`${ACTION_LABEL.MANUAL_REVIEW} → ${ACTION_LABEL.PREPAID_ONLY}`)
+    expect(text).not.toContain('MANUAL_REVIEW')
+    expect(text).not.toContain('PREPAID_ONLY')
+    // The override's reason category is humanised too.
+    const category = (detail.audit_events.find((e) => e.event_type === 'OVERRIDE_APPLIED')
+      ?.payload as { override?: { reason_category?: string } })?.override?.reason_category
+    expect(category).toBeDefined()
+    expect(text).toContain(REASON_LABEL[category as string])
+    expect(text).not.toContain(category)
+  })
+
+  it.each(DEMOS)('%s still renders the server’s own sentences verbatim', async (name) => {
+    const { detail } = await open(name)
+    // 1.6 rewrites text the frontend controls. A server sentence is rendered as the server wrote it,
+    // action enum names included, because it is the record.
+    const explanation = detail.decision.policy.policy_explanation
+    expect(screen.getByTestId('policy-explanation')).toHaveTextContent(explanation)
+  })
+})
+
+describe('1.8 order nodes carry no per-node recency badge', () => {
+  it('Demo 2 draws linked orders flagged RECENT_24H and shows no badge for it', async () => {
+    const { detail } = await open('demo-2')
+    const flagged = detail.graph.nodes.filter(
+      (n) => n.kind === 'ORDER' && n.flags.includes('RECENT_24H'),
+    )
+    expect(flagged.length).toBeGreaterThan(0)
+    const orderBadges = screen
+      .getAllByTestId('graph-node')
+      .filter((n) => n.getAttribute('data-node-kind') === 'ORDER')
+      .flatMap((n) => [...n.querySelectorAll('[data-testid="graph-flag"]')].map((b) => b.textContent))
+    expect(orderBadges).not.toContain(FLAG_LABEL.RECENT_24H)
+    // Linked ACCOUNT nodes keep the badge: there it means the account placed an order in the window,
+    // which the legend's order swatch does not say. 1.8 is about ORDER nodes only.
+    const accountBadges = screen
+      .getAllByTestId('graph-node')
+      .filter((n) => n.getAttribute('data-node-kind') === 'ACCOUNT')
+      .flatMap((n) => [...n.querySelectorAll('[data-testid="graph-flag"]')].map((b) => b.textContent))
+    expect(accountBadges).toContain(FLAG_LABEL.RECENT_24H)
+  })
+
+  it('the legend says it once instead', async () => {
+    await open('demo-2')
+    const legend = screen.getByTestId('graph-legend')
+    expect(legend).toHaveTextContent('Order placed in the last 24 h')
   })
 })

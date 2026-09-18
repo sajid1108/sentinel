@@ -23,8 +23,13 @@ CATALOG_FILE = Path(__file__).resolve().parent.parent / "config" / "reason_codes
 
 # A fired code whose own ablation delta is below this says so, instead of vanishing (#27).
 REDUNDANT_ATTRIBUTION_PP = 2.0
+# Two notes, because the sentence has to be true of the code it sits under. A code that reads only
+# relationship features can say the relationship evidence is redundant; one that reads an account or
+# order fact cannot, so it says the weaker thing that is still true (Phase 9 brief 1.2).
 REDUNDANT_NOTE = ("Redundant with other relationship evidence; the score is already explained by "
                   "correlated features.")
+REDUNDANT_NOTE_OTHER = ("Redundant with other evidence; the score is already explained by "
+                        "correlated features.")
 
 # §6.1 component smoothing: ratio = (confirmed + 1) / (size + 10), so the confirmed count is exact.
 COMPONENT_PRIOR_CONFIRMED = 1
@@ -136,6 +141,19 @@ def _evaluate(node: ast.AST, scope: dict):
 
 def fires(spec: CodeSpec, evidence: Evidence) -> bool:
     return bool(_evaluate(ast.parse(spec.predicate, mode="eval"), evidence.predicate_scope()))
+
+
+def predicate_features(spec: CodeSpec) -> frozenset[str]:
+    """The names a code's predicate reads. Not every name is a model feature (see `has_discounted_links`)."""
+    return frozenset(node.id for node in ast.walk(ast.parse(spec.predicate, mode="eval"))
+                     if isinstance(node, ast.Name))
+
+
+def redundancy_note(spec: CodeSpec) -> str:
+    """The note a fired code carries when its own ablation delta is negligible."""
+    names = predicate_features(spec)
+    graph = set(definitions.ABUSE_GRAPH_FEATURES)
+    return REDUNDANT_NOTE if names and names <= graph else REDUNDANT_NOTE_OTHER
 
 
 # -- evidence and text -------------------------------------------------------
@@ -276,7 +294,8 @@ def fired_codes(evidence: Evidence, attributions: dict[str, dict[str, float]],
             continue
         values = code_evidence(spec, evidence)
         pp = _attribution_for(spec, attributions)
-        note = REDUNDANT_NOTE if pp is not None and abs(pp) < REDUNDANT_ATTRIBUTION_PP else None
+        note = (redundancy_note(spec)
+                if pp is not None and abs(pp) < REDUNDANT_ATTRIBUTION_PP else None)
         fired = FiredCode(spec.code, spec.model, spec.direction, render(spec, evidence, values), values,
                           None if pp is None else round(pp, 4), spec.evidence_strength, note)
         (increases if spec.direction == "INCREASES" else decreases).append(fired)

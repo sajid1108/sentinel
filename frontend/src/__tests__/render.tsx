@@ -101,3 +101,78 @@ export function moneyDisplays(value: unknown, found: Set<string> = new Set()): S
   }
   return found
 }
+
+// ── Phase 9: the queue, the presets, the metrics ─────────────────────────────
+import App from '../App'
+import metricsFixture from '../__fixtures__/metrics.json'
+import presetsFixture from '../__fixtures__/presets.json'
+import queueFixture from '../__fixtures__/queue.json'
+import scoreOrderFixture from '../__fixtures__/score-order-response.json'
+import type { MetricsResponse, QueueResponse, ScoreOrderRequest, ScoreOrderResponse } from '../api/client'
+
+export const QUEUE = queueFixture as unknown as QueueResponse
+export const PRESETS = presetsFixture as unknown as ScoreOrderRequest[]
+export const METRICS = metricsFixture as unknown as MetricsResponse
+export const SCORE_RESPONSE = scoreOrderFixture as unknown as ScoreOrderResponse
+
+export type Recorded = { url: string; init?: RequestInit }
+
+/**
+ * A fetch over the recorded Phase 9 payloads. `overrides` replaces the answer for any url a test cares
+ * about; `calls` records every request so a test can assert what was actually sent.
+ */
+export function stubApi(
+  overrides: ((url: string, init?: RequestInit) => { status: number; body: unknown } | null) | null = null,
+) {
+  const calls: Recorded[] = []
+  const fetchStub = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = String(input)
+    calls.push({ url, init })
+    const handled = overrides?.(url, init)
+    const response =
+      handled ??
+      (url.includes('/demo/presets')
+        ? ok(PRESETS)
+        : url.includes('/internal/metrics')
+          ? ok(METRICS)
+          : url.includes('/internal/orders?') || url.endsWith('/internal/orders')
+            ? ok(QUEUE)
+            : url.includes('/internal/score-order')
+              ? ok(SCORE_RESPONSE)
+              : url.includes('/demo/reset')
+                ? ok({ status: 'reset', decisions: QUEUE.total })
+                : url.includes('/internal/policy')
+                  ? ok(POLICY)
+                  : url.includes('/health')
+                    ? ok({
+                        status: 'healthy',
+                        service: 'sentinel',
+                        version: '0.1.0',
+                        policy_version: POLICY.policy_version,
+                        policy_config_sha256: POLICY.policy_config_sha256.slice(0, 8),
+                        demo_clock: '2026-09-01T10:30:00+05:30',
+                      })
+                    : url.includes('/audit-events/verify')
+                      ? ok(auditVerify)
+                      : url.includes('/internal/orders/')
+                        ? ok(FIXTURES['demo-1'])
+                        : { status: 404, body: { detail: 'Not found.' } })
+    return {
+      ok: response.status >= 200 && response.status < 300,
+      status: response.status,
+      statusText: String(response.status),
+      json: async () => response.body,
+    } as Response
+  })
+  vi.stubGlobal('fetch', fetchStub)
+  return { fetchStub, calls }
+}
+
+/** Mounts the whole app at a route, so the nav rail and the synthetic-data notice are present. */
+export function renderApp(path: string) {
+  return render(
+    <MemoryRouter initialEntries={[path]}>
+      <App />
+    </MemoryRouter>,
+  )
+}

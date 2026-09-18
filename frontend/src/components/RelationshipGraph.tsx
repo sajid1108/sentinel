@@ -80,8 +80,11 @@ function SentinelNode({ data }: NodeProps<Node<FlowNodeData>>) {
   const current = node.state === 'CURRENT'
   const colours = stateStyle(node.state)
   const shape = shapeStyle(node.kind, current)
+  // An ORDER node is drawn only because `linked_orders_24h` counted it, so RECENT_24H is true of every
+  // one of them and the legend says it once instead of every satellite carrying the same badge (1.8).
+  const visibleFlags = node.kind === 'ORDER' ? node.flags.filter((f) => f !== 'RECENT_24H') : node.flags
   return (
-    <div className="relative flex flex-col items-center" data-testid="graph-node" data-node-state={node.state}>
+    <div className="relative flex flex-col items-center" data-testid="graph-node" data-node-kind={node.kind} data-node-state={node.state}>
       <div
         title={`${KIND_LABEL[node.kind]} · ${node.label}`}
         style={{
@@ -97,9 +100,9 @@ function SentinelNode({ data }: NodeProps<Node<FlowNodeData>>) {
       >
         {node.label}
       </span>
-      {node.flags.length > 0 && (
+      {visibleFlags.length > 0 && (
         <span className="mt-0.5 flex flex-wrap justify-center gap-0.5">
-          {node.flags.map((flag) => (
+          {visibleFlags.map((flag) => (
             <span
               key={flag}
               data-testid="graph-flag"
@@ -139,8 +142,10 @@ export function GraphLegend() {
           {box({ width: 13, height: 13, borderRadius: 2, transform: 'rotate(45deg)' })}
         </LegendSwatch>
         <LegendSwatch label="Payment token">{box({ width: 22, height: 12, borderRadius: 6 })}</LegendSwatch>
-        <LegendSwatch label="Order">{box({ width: 9, height: 9, borderRadius: 9999 })}</LegendSwatch>
-        <LegendSwatch label="This order’s account">
+        <LegendSwatch label="Order placed in the last 24 h">
+          {box({ width: 9, height: 9, borderRadius: 9999 })}
+        </LegendSwatch>
+        <LegendSwatch label="This order and its account">
           <span
             style={{
               width: 16,

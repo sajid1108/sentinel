@@ -49,7 +49,7 @@
     "clv_basis": "HISTORY"
   },
   "decision": {
-    "decision_id": "0fe19d5c-8450-446c-ab58-205931f17baa",
+    "decision_id": "2e9508e1-82ba-41b9-8d2a-7c6263a77161",
     "order_id": "ORD-DEMO-001",
     "scored_at": "2026-09-01T05:00:00Z",
     "features_as_of": "2026-09-01T04:55:00Z",
@@ -100,7 +100,7 @@
         },
         "attribution_pp": -0.0083,
         "evidence_strength": "MODERATE",
-        "attribution_note": "Redundant with other relationship evidence; the score is already explained by correlated features."
+        "attribution_note": "Redundant with other evidence; the score is already explained by correlated features."
       },
       {
         "code": "MITIGATING_DISCOUNTED_LINKS",
@@ -156,7 +156,7 @@
           "present": false,
           "weight": 0.0,
           "counts_for_corroboration": false,
-          "detail": "0 suspicious claim(s) on this account in 180 d."
+          "detail": "0 suspicious claims on this account in 180 d."
         }
       ],
       "discounted_links": [
@@ -295,7 +295,7 @@
           "removed_actions": [
             "BLOCK"
           ],
-          "detail": "G3 requires p_abuse of at least 0.70; this order scored 0.000."
+          "detail": "G3 requires an abuse probability of at least 70.0%; this order scored <0.1%."
         },
         {
           "guardrail_id": "G4",
@@ -314,11 +314,11 @@
           "detail": "Exposure is below the G5 backstop."
         }
       ],
-      "policy_explanation": "ALLOW was selected because its expected cost (₹0) is lower than PREPAID_ONLY (₹750), MANUAL_REVIEW (₹912) and BLOCK (₹19,819) under policy v1.0. BLOCK was also not permitted: G2 requires two corroborating signals; none was found. G3 requires p_abuse of at least 0.70; this order scored 0.000.",
+      "policy_explanation": "ALLOW was selected because its expected cost (₹0) is lower than PREPAID_ONLY (₹750), MANUAL_REVIEW (₹912) and BLOCK (₹19,819) under policy v1.0. BLOCK was also not permitted: G2 requires two corroborating signals; none was found. G3 requires an abuse probability of at least 70.0%; this order scored <0.1%.",
       "assumptions_notice": "Monetary values are demonstration assumptions (policy v1.0)."
     },
     "status": "AUTO_APPLIED",
-    "audit_event_id": "607c4740-3908-401c-a2fe-0611e43c2621",
+    "audit_event_id": "996b4b40-c996-4393-a7f3-e7db96fef077",
     "degraded_mode": false,
     "idempotent_replay": false
   },
@@ -446,7 +446,7 @@
     {
       "strategy": "FIXED_THRESHOLD",
       "action": "ALLOW",
-      "rule_fired": "p_abuse < 0.05"
+      "rule_fired": "abuse probability < 5.0%"
     },
     {
       "strategy": "RULE_BASED",
@@ -457,7 +457,7 @@
   "audit_events": [
     {
       "seq": 251,
-      "event_id": "607c4740-3908-401c-a2fe-0611e43c2621",
+      "event_id": "996b4b40-c996-4393-a7f3-e7db96fef077",
       "event_type": "DECISION_CREATED",
       "occurred_at": "2026-09-01T05:00:00Z",
       "order_id": "ORD-DEMO-001",
@@ -474,7 +474,7 @@
           "type": "SYSTEM"
         },
         "appeal": null,
-        "audit_event_id": "607c4740-3908-401c-a2fe-0611e43c2621",
+        "audit_event_id": "996b4b40-c996-4393-a7f3-e7db96fef077",
         "candidate_actions": [
           {
             "abusive_branch": {
@@ -569,7 +569,7 @@
           }
         ],
         "cost_optimal_action": "ALLOW",
-        "decision_id": "0fe19d5c-8450-446c-ab58-205931f17baa",
+        "decision_id": "2e9508e1-82ba-41b9-8d2a-7c6263a77161",
         "degraded_mode": false,
         "event_type": "DECISION_CREATED",
         "feature_attributions_pp": {
@@ -637,7 +637,7 @@
             },
             {
               "counts_for_corroboration": false,
-              "detail": "0 suspicious claim(s) on this account in 180 d.",
+              "detail": "0 suspicious claims on this account in 180 d.",
               "present": false,
               "signal": "ACCOUNT_CLAIMS",
               "weight": 0.0
@@ -665,7 +665,7 @@
             "triggered": true
           },
           {
-            "detail": "G3 requires p_abuse of at least 0.70; this order scored 0.000.",
+            "detail": "G3 requires an abuse probability of at least 70.0%; this order scored <0.1%.",
             "effect": "REMOVED_ACTIONS",
             "guardrail_id": "G3",
             "name": "BLOCK needs confidence",
@@ -708,7 +708,7 @@
         "p_abuse_without_graph_evidence": 4.4e-05,
         "p_return": 0.615385,
         "policy_config_sha256": "e1744f126c99d32123f31768538768841b188f7ed7ac7509c406760f313915f0",
-        "policy_explanation": "ALLOW was selected because its expected cost (₹0) is lower than PREPAID_ONLY (₹750), MANUAL_REVIEW (₹912) and BLOCK (₹19,819) under policy v1.0. BLOCK was also not permitted: G2 requires two corroborating signals; none was found. G3 requires p_abuse of at least 0.70; this order scored 0.000.",
+        "policy_explanation": "ALLOW was selected because its expected cost (₹0) is lower than PREPAID_ONLY (₹750), MANUAL_REVIEW (₹912) and BLOCK (₹19,819) under policy v1.0. BLOCK was also not permitted: G2 requires two corroborating signals; none was found. G3 requires an abuse probability of at least 70.0%; this order scored <0.1%.",
         "policy_rule": "MIN_EXPECTED_COST",
         "policy_version": "v1.0",
         "prediction_explanation": "No material abuse evidence was found; the score reflects this account's own history rather than links to other accounts.",
@@ -722,8 +722,8 @@
         "schema_version": "audit-1.0",
         "selected_action": "ALLOW"
       },
-      "prev_hash": "1434eeb4b4d2f9fbd207be3af09e24472f9a774b10a4705b55395b5fe7ebdcb7",
-      "event_hash": "21f1ea0d65b4638f05c4baeda0240bb68b684423be011b2aacbdeff195461d0e"
+      "prev_hash": "adb81ddfe392d1006f1f7d2a9cd64e639e495b5ddbf532b18ca14e7d542c0a06",
+      "event_hash": "34ff0e7546efcb0961cc971b7545ec508009f57fe0be16905c9c18c6ef738efd"
     }
   ],
   "current_action": "ALLOW",

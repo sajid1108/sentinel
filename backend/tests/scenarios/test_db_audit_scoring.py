@@ -786,3 +786,53 @@ def test_demo_graphs_draw_every_counted_linked_order(service, engine):
     demo2 = json.loads(_rows(engine, "SELECT graph_payload_json FROM decisions "
                                      "WHERE order_id = 'ORD-DEMO-002'")[0]["graph_payload_json"])
     assert demo2["linked_orders_24h_shown"] == 4 and demo2["confirmed_peers_shown"] == 3
+
+
+# ── Phase 9 brief 1.8: ORDER nodes are drawn only for the 24-hour window ─────
+def test_every_order_node_in_every_stored_graph_is_recent(seeded):
+    """The legend can only say "Order placed in the last 24 h" if that is true of every ORDER node.
+
+    An ORDER node exists in the payload because `linked_orders_24h` counted it (#32, #35), so the
+    RECENT_24H flag is the graph builder restating what put the node there. This test is the licence
+    for dropping the per-node badge: if it ever fails, the legend is wrong and the badge is load-bearing.
+    """
+    decisions = _seeded_decisions(seeded)
+    assert len(decisions) == 250
+    linked = current = 0
+    for d in decisions:
+        if d["graph_payload_json"] is None:
+            continue
+        for node in json.loads(d["graph_payload_json"])["nodes"]:
+            if node["kind"] != "ORDER":
+                continue
+            if node["state"] == "CURRENT":
+                # The order under review, drawn at the centre. It is the subject of the page, not
+                # evidence about it, it is always this decision's own order, and it carries no flag at
+                # all - so it never had a badge to drop and the legend's linked-order swatch is not
+                # describing it. Measured over the seeded world: 250 of 250.
+                current += 1
+                assert node["id"] == f"ORD:{d['order_id']}"
+                assert node["flags"] == [], (d["order_id"], node["flags"])
+                continue
+            linked += 1
+            assert "RECENT_24H" in node["flags"], (d["order_id"], node["id"], node["flags"])
+    assert linked > 0, "no linked ORDER node was drawn at all, so the check proves nothing"
+    assert current == 250
+
+
+def test_every_order_node_in_the_three_demo_graphs_is_recent(service, engine):
+    """The same check on the payloads the demo actually shows (Demo 2 draws four of them)."""
+    for oid in _requests():
+        service.score(_requests()[oid], "DEMO")
+    drawn = 0
+    for oid in _requests():
+        row = _rows(engine, "SELECT graph_payload_json FROM decisions WHERE order_id = ?", oid)[0]
+        for node in json.loads(row["graph_payload_json"])["nodes"]:
+            if node["kind"] != "ORDER":
+                continue
+            drawn += 1
+            # The order being scored is the ORDER node at the centre and is not a linked order.
+            if node["state"] == "CURRENT":
+                continue
+            assert "RECENT_24H" in node["flags"], (oid, node["id"], node["flags"])
+    assert drawn > 0

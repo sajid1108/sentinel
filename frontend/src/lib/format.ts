@@ -39,15 +39,31 @@ export function formatPoints(pp: number): string {
   return `${sign}${magnitude} pp`
 }
 
+/**
+ * Every time on this dashboard is in the demo's own timezone, not the laptop's.
+ *
+ * `DEMO_CLOCK` is 2026-09-01T10:30+05:30, and the whole synthetic world is timestamped against that
+ * offset. Rendering in the browser's zone made the rehearsal machine's clock settings load-bearing for
+ * what a judge reads: an order placed at 10:25 IST showed as 4:55 am in a UTC container (Phase 8 open
+ * question 3). The zone is named, and the suffix says which one it is.
+ */
+const DEMO_TIME_ZONE = 'Asia/Kolkata'
+const DEMO_TIME_ZONE_LABEL = 'IST'
+
 export function formatTimestamp(iso: string): string {
-  return new Date(iso).toLocaleString('en-IN', {
+  const text = new Date(iso).toLocaleString('en-IN', {
     dateStyle: 'medium',
     timeStyle: 'short',
+    timeZone: DEMO_TIME_ZONE,
   })
+  return `${text} ${DEMO_TIME_ZONE_LABEL}`
 }
 
 export function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-IN', { dateStyle: 'medium' })
+  return new Date(iso).toLocaleDateString('en-IN', {
+    dateStyle: 'medium',
+    timeZone: DEMO_TIME_ZONE,
+  })
 }
 
 /** A hash prefix for display: the first n characters, as the audit timeline and decision card show them. */
@@ -59,4 +75,12 @@ export function hashPrefix(hash: string, n: number): string {
 export function humanise(key: string): string {
   const words = key.replace(/_inr$/, '').replace(/_/g, ' ').trim()
   return words.charAt(0).toUpperCase() + words.slice(1)
+}
+
+/**
+ * A count that is not a probability and not money: reviews per 1,000 orders. One decimal, as the
+ * backtest table shows every rate (§D2).
+ */
+export function formatOneDecimal(value: number): string {
+  return value.toFixed(1)
 }
