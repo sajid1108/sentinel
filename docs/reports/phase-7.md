@@ -16,7 +16,7 @@ Both commits are green on the full suite (slow included) and pushed. Phase 8 is 
 | Commit | What |
 |---|---|
 | `3dfbf20` | `phase 6: follow-ups` (Part 1) |
-| *(this commit)* | `phase 7: api` (Part 2). Its hash is recorded by the follow-up docs commit, never by amending |
+| `d76f2c1` | `phase 7: api` (Part 2) |
 
 Progress lines printed during the session (elapsed from `date` at each checkpoint):
 
@@ -1972,3 +1972,16 @@ SHA-256 equality. No comparison or bound was loosened. It passes in the failing 
 The full suite is green (820 passed, slow included) and `npm run build` passes, both before the Part 2 commit. `git status -sb` and
 `git log --oneline -5` immediately after the Part 2 commit, and its hash, are recorded by the follow-up docs commit,
 never by amending.
+
+Part 2 committed as `d76f2c1` and pushed. State immediately after that commit:
+
+```
+## main...origin/main
+```
+```
+d76f2c1 phase 7: api
+3dfbf20 phase 6: follow-ups
+e4a47e5 docs: record the actual phase 6 commit hash in the report and progress log
+d4881da phase 6: db, audit and scoring service
+7fb75f0 phase 5: follow-ups
+```
