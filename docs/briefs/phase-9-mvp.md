@@ -6,7 +6,13 @@ Issued by the Architect after reviewing `docs/reports/phase-8.md`, the branch di
 
 **Goal:** after this phase, the whole demo runs end to end in the browser. Reset → Queue → "Simulate checkout" → order detail, for all three demos, plus an Overview that shows the synthetic backtest honestly. That is the Definition of Done (§12 cut line). The design pass comes after, so **don't polish**. Build it correct, consistent and complete.
 
-Read before writing code: `docs/ARCHITECTURE.md` §4 (`QueueFilters`, `QueueItem`, `QueueResponse`, `MetricsResponse`, `StrategyBacktest`), §11 (demo script), §11b; `docs/DEVIATIONS.md` #14, #27, #34, #35–#37; `docs/reports/phase-8.md`; `DESIGN.md` §2 and §7 (the four correctness rules in `BUILDER_HEADER.md` are part of the gate).
+Read before writing code (exclusive list, per `BUILDER_HEADER.md`):
+- `docs/ARCHITECTURE.md` §4 (`QueueFilters`, `QueueItem`, `QueueResponse`, `MetricsResponse`, `StrategyBacktest`), §9.3, §11, §11b and §12
+- `docs/DEVIATIONS.md` #14, #27, #34, #35, #36 and #37
+- `docs/reports/phase-8.md` §4 and §7
+- `DESIGN.md` §2 and §7
+
+The four correctness rules in `BUILDER_HEADER.md` are part of the gate.
 
 Usage note: iterate with `pytest -m "not slow"`, `npm test` and `npm run build`. Run the full suite only before each commit.
 
