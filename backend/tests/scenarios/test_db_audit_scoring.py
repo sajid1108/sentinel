@@ -15,6 +15,7 @@ import pytest
 
 from sentinel.api.schemas import Action, AppealRequest, OverrideRequest, ScoreOrderRequest
 from sentinel.api.services.errors import Conflict, NotFound, RequestRejected
+from sentinel.api.services.graph_view import identifier_node_id
 from sentinel.api.services.review import G2_WARNING, ReviewService
 from sentinel.api.services.scoring import ScoringService, load_history, load_models
 from sentinel.audit.service import verify_chain
@@ -25,6 +26,7 @@ from sentinel.db.seed import SEEDED_DECISIONS, DemoModeOff, reset_demo, seed_dat
 from sentinel.evaluation.backtest import ACTIONS, sentinel_actions
 from sentinel.evaluation.demos import score_demos
 from sentinel.features.builder import WORLD_TABLES, FeatureBuilder, build_tables
+from sentinel.features.graph_state import NODE_PREFIX, node_id
 from sentinel.models import predict
 from sentinel.policy.config import load_policy_config
 from sentinel.settings import DEMO_CLOCK
@@ -584,7 +586,7 @@ def _seeded_decisions(seeded) -> list[dict]:
     engine = get_engine(seeded[0])
     try:
         return _rows(engine, "SELECT d.order_id, d.features_as_of, d.discounted_links_json, d.graph_payload_json, "
-                             "d.reasons_json, d.graph_summary_json, o.account_id FROM decisions d "
+                             "d.reasons_json, d.graph_summary_json, o.account_id, o.device_id FROM decisions d "
                              "JOIN orders o USING (order_id)")
     finally:
         engine.dispose()
@@ -625,17 +627,27 @@ def test_every_seeded_decision_has_links_and_a_point_in_time_graph(seeded):
 
 
 def test_seeded_graphs_contain_nothing_first_seen_at_or_after_t0(seeded):
-    """Every linked account, linked order and linked edge in a seeded graph existed strictly before t0."""
+    """Every linked account, linked order, identifier and edge in a seeded graph existed strictly before t0.
+
+    Since #35 a graph can also draw identifiers that are not the order's own - the hop that reaches an
+    account two hops out, or a token the account used on an earlier order - so every identifier node is
+    resolved against the identifiers table and every edge that is not one of the order's own must be
+    backed by an order placed before t0.
+    """
     from sentinel.api.services.graph_view import identifier_node_id
     engine = get_engine(seeded[0])
+    column_of = {kind: col for kind, _, col in IDENTIFIER_COLUMNS}
     try:
         with read_connection(engine) as conn:
+            known = {identifier_node_id(r["kind"], f"{NODE_PREFIX[r['kind']]}:{r['identifier_id']}"):
+                     (r["kind"], r["identifier_id"])
+                     for r in conn.execute("SELECT identifier_id, kind FROM identifiers")}
             for d in _seeded_decisions(seeded):
                 t0 = d["features_as_of"]
                 graph = json.loads(d["graph_payload_json"])
                 order = conn.execute("SELECT * FROM orders WHERE order_id = ?", (d["order_id"],)).fetchone()
-                idents = {identifier_node_id(kind, f"{prefix}:{order[col]}"): col
-                          for kind, prefix, col in IDENTIFIER_COLUMNS if order[col] is not None}
+                own = {identifier_node_id(kind, f"{prefix}:{order[col]}")
+                       for kind, prefix, col in IDENTIFIER_COLUMNS if order[col] is not None}
                 current = {f"ACC:{d['account_id']}", f"ORD:{d['order_id']}"}
                 for node in graph["nodes"]:
                     if node["id"] in current:
@@ -651,13 +663,17 @@ def test_seeded_graphs_contain_nothing_first_seen_at_or_after_t0(seeded):
                                               (node["id"][4:],)).fetchone()[0]
                         assert placed < t0 and "RECENT_24H" in node["flags"]
                     else:
-                        assert node["id"] in idents    # only the order's own identifiers are drawn
+                        kind, _ = known[node["id"]]     # resolves to a real identifier of the same kind
+                        assert kind == node["kind"], (d["order_id"], node["id"])
                 for edge in graph["edges"]:
-                    if edge["source"] in current or edge["kind"] == "PLACED_BY":
-                        continue                       # own edges are at t0; order nodes checked above
-                    col = idents[edge["target"]]
+                    if edge["kind"] == "PLACED_BY":
+                        continue                       # order nodes are checked above
+                    if edge["source"] in current and edge["target"] in own:
+                        continue                       # the order's own edges are at t0 by construction
+                    kind, identifier_id = known[edge["target"]]
+                    col = column_of[kind]
                     n = conn.execute(f"SELECT COUNT(*) FROM orders WHERE account_id = ? AND {col} = ? "
-                                     "AND placed_at < ?", (edge["source"][4:], order[col], t0)).fetchone()[0]
+                                     "AND placed_at < ?", (edge["source"][4:], identifier_id, t0)).fetchone()[0]
                     assert n >= 1, (d["order_id"], edge["id"])
     finally:
         engine.dispose()
@@ -694,3 +710,79 @@ def test_captured_graph_evidence_is_immutable(engine, column):
     with read_connection(engine) as conn:
         with pytest.raises(sqlite3.IntegrityError, match="immutable"):
             conn.execute(f"UPDATE decisions SET {column} = '[]' WHERE rowid = 1")
+
+
+# ── Phase 8 brief 1.1: the graph agrees with the numbers printed beside it ────
+def _device_confirmed_nodes(graph: dict, device_node: str) -> set[str]:
+    """Confirmed-abuse account nodes reachable through THIS order's device, read from the payload only.
+    The account's earlier devices and tokens can also appear (they carry real links), so the device node is
+    identified from the order's own device id rather than by adjacency to the current account."""
+    confirmed = {n["id"] for n in graph["nodes"] if n["kind"] == "ACCOUNT" and n["state"] == "CONFIRMED_ABUSE"}
+    return {e["source"] for e in graph["edges"] if e["target"] == device_node and e["source"] in confirmed}
+
+
+def _payload_counts(graph: dict, device_node: str, order_id: str) -> tuple[int, int]:
+    linked_orders = [n for n in graph["nodes"] if n["kind"] == "ORDER" and n["id"] != f"ORD:{order_id}"]
+    return len(linked_orders), len(_device_confirmed_nodes(graph, device_node))
+
+
+def test_every_seeded_graph_draws_every_counted_linked_order_and_confirmed_device_peer(seeded, world, cfg):
+    """1.1: for every seeded decision, the 24 h order nodes equal linked_orders_24h and the confirmed
+    accounts reachable through the device equal device_confirmed_peer_count. Recomputed from one
+    chronological replay, exactly as seeding captured them."""
+    from sentinel.api.services.graph_view import build_graph_payload
+    from sentinel.features.graph_features import analyse
+    from sentinel.features.graph_state import from_micros
+
+    rows = {d["order_id"]: d for d in _seeded_decisions(seeded)}
+    builder = FeatureBuilder({t: world[t] for t in WORLD_TABLES}, cfg)
+    seen = with_orders = with_peers = 0
+    for q, t0 in builder.iter_points_in_time(list(rows)):
+        analysis = analyse(builder.state, q, t0)
+        payload = build_graph_payload(builder.ego_view(q, t0), q, t0, from_micros(t0))
+        graph = payload.model_dump(mode="json")
+        device = identifier_node_id("DEVICE", node_id("DEVICE", dict(q.identifiers)["DEVICE"]))
+        orders_shown, peers_shown = _payload_counts(graph, device, q.order_id)
+        assert payload.linked_orders_24h_shown == orders_shown, q.order_id
+        assert payload.confirmed_peers_shown == peers_shown, q.order_id
+        linked = int(analysis.features["linked_orders_24h"])
+        peers = int(analysis.evidence["device_confirmed_peer_count"])
+        assert int(json.loads(rows[q.order_id]["graph_summary_json"])["linked_orders_24h"]) == linked
+        if payload.truncated:                            # the *_shown fields then state what is drawn
+            assert orders_shown <= linked and peers_shown <= peers
+        else:
+            assert orders_shown == linked, q.order_id
+            assert peers_shown == peers, q.order_id
+        seen += 1
+        with_orders += linked > 0
+        with_peers += peers > 0
+    assert seen == SEEDED_DECISIONS
+    assert with_orders >= 1 and with_peers >= 1          # the assertion is not vacuous
+
+
+def test_stored_seeded_graphs_report_the_counts_they_draw(seeded):
+    """The payloads on disk (regenerated by seed-db) carry the same agreement."""
+    for d in _seeded_decisions(seeded):
+        graph = json.loads(d["graph_payload_json"])
+        device = identifier_node_id("DEVICE", node_id("DEVICE", d["device_id"]))
+        orders_shown, peers_shown = _payload_counts(graph, device, d["order_id"])
+        assert graph["linked_orders_24h_shown"] == orders_shown
+        assert graph["confirmed_peers_shown"] == peers_shown
+        if not graph["truncated"]:
+            assert graph["linked_orders_24h_shown"] == json.loads(d["graph_summary_json"])["linked_orders_24h"]
+
+
+def test_demo_graphs_draw_every_counted_linked_order(service, engine):
+    """Demo 2 shows all four of its linked 24 h orders, the fourth through a two-hop member (#24)."""
+    for order_id, request in _requests().items():
+        response = service.score(request, "DEMO")
+        row = _rows(engine, "SELECT graph_payload_json FROM decisions WHERE order_id = ?", order_id)[0]
+        graph = json.loads(row["graph_payload_json"])
+        device = identifier_node_id("DEVICE", node_id("DEVICE", request.device_id))
+        orders_shown, peers_shown = _payload_counts(graph, device, order_id)
+        assert not graph["truncated"]
+        assert graph["linked_orders_24h_shown"] == orders_shown == response.graph_summary.linked_orders_24h
+        assert graph["confirmed_peers_shown"] == peers_shown
+    demo2 = json.loads(_rows(engine, "SELECT graph_payload_json FROM decisions "
+                                     "WHERE order_id = 'ORD-DEMO-002'")[0]["graph_payload_json"])
+    assert demo2["linked_orders_24h_shown"] == 4 and demo2["confirmed_peers_shown"] == 3

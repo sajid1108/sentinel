@@ -20,7 +20,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from sentinel.api.routers import (demo, health, internal_audit, internal_metrics, internal_orders,
-                                  internal_scoring, public_checkout)
+                                  internal_policy, internal_scoring, public_checkout)
 from sentinel.api.services.errors import Conflict, NotFound, RequestRejected, ServiceError
 from sentinel.api.services.runtime import AppServices
 from sentinel.settings import ARTIFACTS_DIR, DATA_DIR, DB_PATH, DEMO_MODE
@@ -77,7 +77,7 @@ def create_app(db_path: Path = DB_PATH, *, demo_mode: bool = DEMO_MODE, artifact
                   version="0.1.0", lifespan=lifespan)
     app.include_router(health.router)
     for router in (internal_scoring.router, internal_orders.router, internal_audit.router,
-                   internal_metrics.router, demo.router):
+                   internal_metrics.router, internal_policy.router, demo.router):
         app.include_router(router, prefix=INTERNAL_PREFIX)
     app.include_router(public_checkout.router, prefix=PUBLIC_PREFIX)
     app.add_exception_handler(ServiceError, service_error_handler)
