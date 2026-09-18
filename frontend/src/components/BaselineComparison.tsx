@@ -12,7 +12,7 @@ const STRATEGY_LABEL: Record<components['schemas']['BaselineOutcome']['strategy'
   RULE_BASED: 'Rule based',
 }
 
-export const BASELINE_CAPTION = 'For comparison only. Sentinel\u2019s action is the one above.'
+export const BASELINE_CAPTION = 'For comparison only. AegisShift\u2019s action is the one above.'
 
 export function BaselineComparison({
   baselines,

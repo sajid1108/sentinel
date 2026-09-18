@@ -26,7 +26,7 @@ export default function App() {
     <div className="flex min-h-screen bg-slate-950 text-slate-300">
       <nav className="flex w-56 shrink-0 flex-col border-r border-slate-800 bg-slate-900">
         <div className="border-b border-slate-800 p-4">
-          <h1 className="text-lg font-bold tracking-tight text-slate-100">SENTINEL</h1>
+          <h1 className="text-lg font-bold tracking-tight text-slate-100">AEGISSHIFT</h1>
           <p className="mt-0.5 text-xs text-slate-500">Return Abuse Detection</p>
         </div>
         <div className="flex-1 space-y-1 p-3">

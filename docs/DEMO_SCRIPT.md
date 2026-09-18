@@ -25,11 +25,11 @@
 
 | Time | Screen | Do | Say |
 |---|---|---|---|
-| 0:00 | Overview | Point at the notice line | "Sentinel is a return-abuse risk manager. Everything you'll see runs on a synthetic world with fixed seeds, and every page says so." |
-| 0:15 | Overview → backtest table | Point at the Sentinel and Fixed threshold rows | "We'll show you where we lose. A tuned threshold is cheaper than us on cost. We chose to pay that premium so that we block 3.3 times fewer genuine customers. It's a trade, not a win." |
+| 0:00 | Overview | Point at the notice line | "AegisShift is a return-abuse risk manager. Everything you'll see runs on a synthetic world with fixed seeds, and every page says so." |
+| 0:15 | Overview → backtest table | Point at the AegisShift and Fixed threshold rows | "We'll show you where we lose. A tuned threshold is cheaper than us on cost. We chose to pay that premium so that we block 3.3 times fewer genuine customers. It's a trade, not a win." |
 | 0:40 | Queue | Click **ORD-DEMO-001** in Simulate checkout | "A checkout comes in. The real models score it and the real policy decides it." |
 | 0:50 | Demo 1 detail | Point at the two score cards | "Two numbers, never combined. This customer returns 61 % of the time, shown in blue, and that is not used for the decision. Abuse probability is under 0.1 %." |
-| 1:05 | Demo 1 baselines | Point at Rule based: **Block** | "A typical merchant rule would block this loyal, 3½-year customer. Sentinel allows the order." |
+| 1:05 | Demo 1 baselines | Point at Rule based: **Block** | "A typical merchant rule would block this loyal, 3½-year customer. AegisShift allows the order." |
 | 1:15 | Queue → **ORD-DEMO-002** | Click | "Now a 5-day-old account buying a ₹24,000 phone." |
 | 1:25 | Demo 2 abuse card | Point at 95.1 % and the ghost marker | "95 % abuse probability. Without the relationship evidence it would score 9.9 % and pass." |
 | 1:40 | Demo 2 graph | Point at the red nodes | "Its device was used by three accounts later confirmed for abuse. Its card was shared with three others. Linked accounts placed four orders in the last day. No single account looks suspicious; the ring only shows up across accounts." |
@@ -76,13 +76,13 @@
 
 | # | Shot | Voice-over |
 |---|---|---|
-| 1 | Landing page hero, "A prediction is not a decision." (0:00–0:10) | "E-commerce merchants lose money to return abuse, and most of them fight it by punishing customers who simply return a lot. Sentinel separates the two." |
+| 1 | Landing page hero, "A prediction is not a decision." (0:00–0:10) | "E-commerce merchants lose money to return abuse, and most of them fight it by punishing customers who simply return a lot. AegisShift separates the two." |
 | 2 | Landing page, Demo 1 mock-up (0:10–0:20) | "Two models: the chance of a return, and the chance of abuse. They're never combined, and return probability can't choose the action." |
-| 3 | App → Queue → click ORD-DEMO-001 (0:20–0:40) | "A loyal customer who returns 61 % of orders. Abuse risk is under 0.1 %. Sentinel allows the order; a typical rule would have blocked it." |
+| 3 | App → Queue → click ORD-DEMO-001 (0:20–0:40) | "A loyal customer who returns 61 % of orders. Abuse risk is under 0.1 %. AegisShift allows the order; a typical rule would have blocked it." |
 | 4 | ORD-DEMO-002, graph, slow zoom on the red nodes (0:40–1:10) | "A new account buying a phone. Its device was used by three confirmed abusers, and its card by three other accounts. Without that relationship evidence it would score 9.9 % and pass. With it: 95 %." |
 | 5 | Demo 2 cost bars (1:10–1:25) | "Every action is priced in rupees. Block is cheapest, and it is allowed only because independent signals agree." |
 | 6 | ORD-DEMO-003 cost bars, BLOCK hatched G3 (1:25–1:45) | "The uncertain case: 69 %. Review is the cheapest action, so the order goes to a person instead of being refused." |
 | 7 | Override dialog → apply → audit timeline (1:45–2:10) | "The reviewer switches it to prepaid. A new event is hash-chained, the original recommendation is preserved, and the chain verifies." |
 | 8 | Overview backtest table (2:10–2:35) | "On synthetic data, realized cost is 69 % below doing nothing. A tuned threshold is cheaper still. We pay that premium to block 3.3 times fewer genuine customers, and we say so." |
 | 9 | Landing page "What we disclose" → footer notice (2:35–2:55) | "New accounts carry more friction; that's in our model card. All data is synthetic. Real deployment needs a merchant's own data and a prospective trial." |
-| 10 | Landing hero again (2:55–3:00) | "Sentinel. Models predict, policy decides, and every decision is explained and recorded." |
+| 10 | Landing hero again (2:55–3:00) | "AegisShift. Models predict, policy decides, and every decision is explained and recorded." |

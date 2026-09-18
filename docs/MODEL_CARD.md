@@ -1,4 +1,4 @@
-# Model card: Sentinel return and abuse models
+# Model card: AegisShift return and abuse models
 
 > Synthetic data is used to validate the architecture, policy behaviour, auditability, and coordinated-pattern detection. Real deployment would require merchant-specific historical data and prospective validation.
 
@@ -76,7 +76,7 @@
 
 ## 5. Fairness: the new-account disparity
 
-**Sentinel places far more friction on new accounts than on anyone else. This is a measured property of the system, not a small-sample artefact.**
+**AegisShift places far more friction on new accounts than on anyone else. This is a measured property of the system, not a small-sample artefact.**
 
 | Cohort (TEST, under policy v1.0) | Customer friction rate | Genuine block rate |
 |---|---|---|
@@ -98,7 +98,7 @@
 ## 6. Known limitations
 
 1. **Synthetic data.** The figures validate the architecture and the policy's behaviour, not real-world effectiveness.
-2. **Selective labels.** In production, blocked orders produce no outcome, and Sentinel's own flags steer investigations. A randomised holdout would be needed; it is out of scope.
+2. **Selective labels.** In production, blocked orders produce no outcome, and AegisShift's own flags steer investigations. A randomised holdout would be needed; it is out of scope.
 3. **Investigation-coverage bias.** Confirmed abuse clusters where investigators look.
 4. **Redundant graph evidence.** The confirmed-neighbour features are individually predictive but get zero splits in the full model, because correlated features identify the same rows first. Reason codes are therefore **evidence statements**: they fire when the fact is true and say when their own contribution is small.
 5. **Cost assumptions.** Every monetary value is a demonstration assumption (policy v1.0). The tuned fixed-threshold baseline has a lower realized cost (₹1,60,112 vs ₹1,95,313 per 1,000 orders). The difference is the guardrails' price for avoiding wrongful blocks: about ₹9,211 per block avoided, 2.05× the policy's own modelled false-block cost.

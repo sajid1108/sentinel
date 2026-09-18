@@ -35,7 +35,7 @@ type Strategy = Backtest['strategy']
 const STRATEGY_ORDER: readonly Strategy[] = ['SENTINEL', 'FIXED_THRESHOLD', 'RULE_BASED', 'ALLOW_ALL']
 
 const STRATEGY_LABEL: Record<Strategy, string> = {
-  SENTINEL: 'Sentinel',
+  SENTINEL: 'AegisShift',
   FIXED_THRESHOLD: 'Fixed threshold',
   RULE_BASED: 'Rule based',
   ALLOW_ALL: 'Allow all',
