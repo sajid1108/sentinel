@@ -17,7 +17,7 @@ Both commits are green on the full suite (slow included) and pushed. Phase 9 is 
 | Commit | What |
 |---|---|
 | `fa43f4b` | `phase 7: follow-ups` (Part 1) |
-| *(this commit)* | `phase 8: order detail` (Part 2) |
+| `556ae6a` | `phase 8: order detail` (Part 2) |
 
 Progress lines printed during the session:
 
@@ -230,5 +230,21 @@ by the notice and shows the full 64-character fingerprint.
 Full backend suite green including slow (**826 passed, 1 skipped**), `npm run build` and `npm test`
 (**105 passed**) all before the Part 2 commit. `seed-db` re-run. `git status -sb` and `git log --oneline -5`
 immediately after the commit are recorded by the follow-up docs commit, never by amending.
+
+`git status -sb` and `git log --oneline -5` immediately after the Part 2 commit:
+
+```
+## claude/phase-8-order-detail-jj8aik...origin/claude/phase-8-order-detail-jj8aik
+```
+```
+556ae6a phase 8: order detail
+fa43f4b phase 7: follow-ups
+59daa4b docs: phase 8 brief and builder session rules
+5824e2c docs: record the actual phase 7 commit hash in the report and progress log
+d76f2c1 phase 7: api
+```
+
+*(This session works on `claude/phase-8-order-detail-jj8aik`, not `main`, as the operator instructed; the
+builder header's "work on `main`" is superseded for this session only.)*
 
 Stopping here. Phase 9 is not started.
