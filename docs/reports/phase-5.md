@@ -183,7 +183,7 @@ Mitigating:
 ## main...origin/main
 ```
 ```
-b8f1c6a phase 5: explanations
+c5ff8f7 phase 5: explanations
 91a4837 docs: tighten demo 3 band; refresh operating manual
 53158b2 phase 4: follow-ups
 1c2259c phase 4: models and evaluation

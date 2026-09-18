@@ -14,7 +14,7 @@ Times are from git commit timestamps (IST). Every builder updates the row for it
 | 3 | 2 | Synthetic generator, labels, demo accounts, rings, hard negatives | `5208112` `530656e` | 09-17 19:49 | ~52 min |
 | 4 | 3 | Feature builder, graph, point-in-time leakage suite | `58e977d` `7e1e525` | 09-17 20:15 | ~26 min |
 | 5 | 4 | Models, calibration, evaluation, backtest, guardrail pricing | `1c2259c` `53158b2` `91a4837` | 09-18 01:59 | longest stage; 3 architect decision rounds |
-| 6 | 5 | Explanations: reference vector, ablation attributions, evidence-based reason codes, prediction explanation | `b8f1c6a` | 09-18 04:25 | ~2h10m build, 0 review rounds so far |
+| 6 | 5 | Explanations: reference vector, ablation attributions, evidence-based reason codes, prediction explanation | `c5ff8f7` | 09-18 04:25 | ~2h10m build, 0 review rounds so far |
 
 **Elapsed since project start:** ~33 hours wall clock.
 **Actual build time:** roughly 7–8 hours of agent work. The rest is review turnaround and gaps between sessions.
