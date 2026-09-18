@@ -1,8 +1,10 @@
 import hmac
-
-from fastapi import Header, HTTPException
 from datetime import datetime
-from sentinel.settings import INTERNAL_API_KEY, DEMO_CLOCK
+
+from fastapi import Header, HTTPException, Request
+
+from sentinel.api.services.runtime import AppServices
+from sentinel.settings import DEMO_CLOCK, INTERNAL_API_KEY
 
 
 def verify_internal_key(x_internal_key: str | None = Header(default=None)) -> None:
@@ -17,3 +19,8 @@ def get_reviewer_id(x_reviewer_id: str = Header(default="reviewer-placeholder-01
 
 def get_demo_clock() -> datetime:
     return DEMO_CLOCK
+
+
+def get_services(request: Request) -> AppServices:
+    """The services the lifespan built (and demo reset rebuilds)."""
+    return request.app.state.services

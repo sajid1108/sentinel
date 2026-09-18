@@ -1,0 +1,2855 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Sentinel",
+    "description": "Return Abuse Detection with Cost-Weighted Decisioning",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Health Check",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/internal/score-order": {
+      "post": {
+        "tags": [
+          "internal"
+        ],
+        "summary": "Score Order",
+        "operationId": "score_order_api_v1_internal_score_order_post",
+        "parameters": [
+          {
+            "name": "x-internal-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Internal-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScoreOrderRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScoreOrderResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/internal/orders": {
+      "get": {
+        "tags": [
+          "internal"
+        ],
+        "summary": "List Orders",
+        "operationId": "list_orders_api_v1_internal_orders_get",
+        "parameters": [
+          {
+            "name": "action",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Action"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Action"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "AUTO_APPLIED",
+                    "PENDING_REVIEW",
+                    "OVERRIDDEN",
+                    "APPEAL_OPEN"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "DEMO",
+                    "BACKTEST_REPLAY",
+                    "LIVE"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Source"
+            }
+          },
+          {
+            "name": "min_p_abuse",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "maximum": 1.0,
+                  "minimum": 0.0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Min P Abuse"
+            }
+          },
+          {
+            "name": "min_value_inr",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Min Value Inr"
+            }
+          },
+          {
+            "name": "graph_evidence",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "ANY",
+                "STRONG",
+                "WEAK_ONLY",
+                "NONE"
+              ],
+              "type": "string",
+              "default": "ANY",
+              "title": "Graph Evidence"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "scored_at_desc",
+                "p_abuse_desc",
+                "value_desc",
+                "exposure_desc"
+              ],
+              "type": "string",
+              "default": "scored_at_desc",
+              "title": "Sort"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "x-internal-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Internal-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueueResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/internal/orders/{order_id}": {
+      "get": {
+        "tags": [
+          "internal"
+        ],
+        "summary": "Order Detail",
+        "operationId": "order_detail_api_v1_internal_orders__order_id__get",
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Order Id"
+            }
+          },
+          {
+            "name": "x-internal-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Internal-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderDetailResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/internal/orders/{order_id}/override": {
+      "post": {
+        "tags": [
+          "internal"
+        ],
+        "summary": "Override",
+        "operationId": "override_api_v1_internal_orders__order_id__override_post",
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Order Id"
+            }
+          },
+          {
+            "name": "x-internal-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Internal-Key"
+            }
+          },
+          {
+            "name": "x-reviewer-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "reviewer-placeholder-01",
+              "title": "X-Reviewer-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OverrideRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OverrideResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/internal/orders/{order_id}/appeal": {
+      "post": {
+        "tags": [
+          "internal"
+        ],
+        "summary": "Appeal",
+        "description": "Placeholder lifecycle (§14.2): opens an appeal and returns its APPEAL_OPENED audit event.",
+        "operationId": "appeal_api_v1_internal_orders__order_id__appeal_post",
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Order Id"
+            }
+          },
+          {
+            "name": "x-internal-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Internal-Key"
+            }
+          },
+          {
+            "name": "x-reviewer-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "reviewer-placeholder-01",
+              "title": "X-Reviewer-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppealRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditEventOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/internal/audit-events": {
+      "get": {
+        "tags": [
+          "internal"
+        ],
+        "summary": "List Audit Events",
+        "operationId": "list_audit_events_api_v1_internal_audit_events_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "order_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Order Id"
+            }
+          },
+          {
+            "name": "x-internal-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Internal-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditEventsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/internal/audit-events/verify": {
+      "get": {
+        "tags": [
+          "internal"
+        ],
+        "summary": "Verify Audit Chain",
+        "operationId": "verify_audit_chain_api_v1_internal_audit_events_verify_get",
+        "parameters": [
+          {
+            "name": "x-internal-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Internal-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditVerifyResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/internal/metrics": {
+      "get": {
+        "tags": [
+          "internal"
+        ],
+        "summary": "Get Metrics",
+        "operationId": "get_metrics_api_v1_internal_metrics_get",
+        "parameters": [
+          {
+            "name": "x-internal-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Internal-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetricsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/internal/demo/presets": {
+      "get": {
+        "tags": [
+          "demo"
+        ],
+        "summary": "Presets",
+        "description": "The three §11 demo requests, as seed-db wrote them beside the database.",
+        "operationId": "presets_api_v1_internal_demo_presets_get",
+        "parameters": [
+          {
+            "name": "x-internal-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Internal-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ScoreOrderRequest"
+                  },
+                  "title": "Response Presets Api V1 Internal Demo Presets Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/internal/demo/reset": {
+      "post": {
+        "tags": [
+          "demo"
+        ],
+        "summary": "Reset",
+        "operationId": "reset_api_v1_internal_demo_reset_post",
+        "parameters": [
+          {
+            "name": "x-internal-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Internal-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoResetResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/public/checkout/decision": {
+      "post": {
+        "tags": [
+          "public"
+        ],
+        "summary": "Checkout Decision",
+        "operationId": "checkout_decision_api_v1_public_checkout_decision_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckoutRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckoutOutcome"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Action": {
+        "type": "string",
+        "enum": [
+          "ALLOW",
+          "PREPAID_ONLY",
+          "MANUAL_REVIEW",
+          "BLOCK"
+        ],
+        "title": "Action"
+      },
+      "ActionCost": {
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/Action"
+          },
+          "expected_cost": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "abusive_branch": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "genuine_branch": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "operational": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "feasible": {
+            "type": "boolean",
+            "title": "Feasible"
+          },
+          "excluded_by": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Excluded By"
+          },
+          "rank_by_cost": {
+            "type": "integer",
+            "title": "Rank By Cost"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "action",
+          "expected_cost",
+          "abusive_branch",
+          "genuine_branch",
+          "operational",
+          "feasible",
+          "excluded_by",
+          "rank_by_cost"
+        ],
+        "title": "ActionCost"
+      },
+      "AppealRequest": {
+        "properties": {
+          "channel": {
+            "type": "string",
+            "enum": [
+              "CUSTOMER_SUPPORT",
+              "EMAIL"
+            ],
+            "title": "Channel"
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 10,
+            "title": "Note"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "channel",
+          "note"
+        ],
+        "title": "AppealRequest"
+      },
+      "AuditEventOut": {
+        "properties": {
+          "seq": {
+            "type": "integer",
+            "title": "Seq"
+          },
+          "event_id": {
+            "type": "string",
+            "title": "Event Id"
+          },
+          "event_type": {
+            "type": "string",
+            "enum": [
+              "DECISION_CREATED",
+              "OVERRIDE_APPLIED",
+              "APPEAL_OPENED"
+            ],
+            "title": "Event Type"
+          },
+          "occurred_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Occurred At"
+          },
+          "order_id": {
+            "type": "string",
+            "title": "Order Id"
+          },
+          "actor_type": {
+            "type": "string",
+            "enum": [
+              "SYSTEM",
+              "REVIEWER"
+            ],
+            "title": "Actor Type"
+          },
+          "actor_id": {
+            "type": "string",
+            "title": "Actor Id"
+          },
+          "previous_action": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Action"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "new_action": {
+            "$ref": "#/components/schemas/Action"
+          },
+          "policy_version": {
+            "type": "string",
+            "title": "Policy Version"
+          },
+          "return_model_version": {
+            "type": "string",
+            "title": "Return Model Version"
+          },
+          "abuse_model_version": {
+            "type": "string",
+            "title": "Abuse Model Version"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Payload"
+          },
+          "prev_hash": {
+            "type": "string",
+            "title": "Prev Hash"
+          },
+          "event_hash": {
+            "type": "string",
+            "title": "Event Hash"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "seq",
+          "event_id",
+          "event_type",
+          "occurred_at",
+          "order_id",
+          "actor_type",
+          "actor_id",
+          "previous_action",
+          "new_action",
+          "policy_version",
+          "return_model_version",
+          "abuse_model_version",
+          "payload",
+          "prev_hash",
+          "event_hash"
+        ],
+        "title": "AuditEventOut"
+      },
+      "AuditEventsResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AuditEventOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "AuditEventsResponse"
+      },
+      "AuditVerifyResponse": {
+        "properties": {
+          "valid": {
+            "type": "boolean",
+            "title": "Valid"
+          },
+          "events_checked": {
+            "type": "integer",
+            "title": "Events Checked"
+          },
+          "first_broken_seq": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Broken Seq"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "valid",
+          "events_checked",
+          "first_broken_seq"
+        ],
+        "title": "AuditVerifyResponse"
+      },
+      "BaselineOutcome": {
+        "properties": {
+          "strategy": {
+            "type": "string",
+            "enum": [
+              "FIXED_THRESHOLD",
+              "RULE_BASED"
+            ],
+            "title": "Strategy"
+          },
+          "action": {
+            "$ref": "#/components/schemas/Action"
+          },
+          "rule_fired": {
+            "type": "string",
+            "title": "Rule Fired"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "strategy",
+          "action",
+          "rule_fired"
+        ],
+        "title": "BaselineOutcome"
+      },
+      "CalibrationPoint": {
+        "properties": {
+          "bin_mean_predicted": {
+            "type": "number",
+            "title": "Bin Mean Predicted"
+          },
+          "observed_rate": {
+            "type": "number",
+            "title": "Observed Rate"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "bin_mean_predicted",
+          "observed_rate",
+          "count"
+        ],
+        "title": "CalibrationPoint"
+      },
+      "CheckoutOutcome": {
+        "properties": {
+          "order_id": {
+            "type": "string",
+            "title": "Order Id"
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "CONFIRMED",
+              "PREPAID_PAYMENT_REQUIRED",
+              "UNABLE_TO_PROCESS"
+            ],
+            "title": "Outcome"
+          },
+          "customer_message": {
+            "type": "string",
+            "title": "Customer Message"
+          },
+          "support_reference": {
+            "type": "string",
+            "title": "Support Reference"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "order_id",
+          "outcome",
+          "customer_message",
+          "support_reference"
+        ],
+        "title": "CheckoutOutcome"
+      },
+      "CheckoutRequest": {
+        "properties": {
+          "order_id": {
+            "type": "string",
+            "pattern": "^ORD-[A-Z0-9-]{3,40}$",
+            "title": "Order Id"
+          },
+          "account_id": {
+            "type": "string",
+            "pattern": "^ACC-[A-Z0-9-]{3,40}$",
+            "title": "Account Id"
+          },
+          "placed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Placed At"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/OrderLineIn"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "minItems": 1,
+            "title": "Lines"
+          },
+          "discount_pct": {
+            "type": "number",
+            "maximum": 90.0,
+            "minimum": 0.0,
+            "title": "Discount Pct"
+          },
+          "delivery_speed": {
+            "type": "string",
+            "enum": [
+              "STANDARD",
+              "EXPRESS"
+            ],
+            "title": "Delivery Speed"
+          },
+          "payment_method": {
+            "type": "string",
+            "enum": [
+              "PREPAID_CARD",
+              "PREPAID_UPI",
+              "COD"
+            ],
+            "title": "Payment Method"
+          },
+          "device_id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "title": "Device Id"
+          },
+          "address_id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "title": "Address Id"
+          },
+          "payment_token_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Token Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "order_id",
+          "account_id",
+          "placed_at",
+          "lines",
+          "discount_pct",
+          "delivery_speed",
+          "payment_method",
+          "device_id",
+          "address_id"
+        ],
+        "title": "CheckoutRequest",
+        "description": "Public checkout payload. Validation is identical to ScoreOrderRequest by construction."
+      },
+      "CustomerSummary": {
+        "properties": {
+          "account_id": {
+            "type": "string",
+            "title": "Account Id"
+          },
+          "account_age_days": {
+            "type": "integer",
+            "title": "Account Age Days"
+          },
+          "prior_orders": {
+            "type": "integer",
+            "title": "Prior Orders"
+          },
+          "matured_return_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Matured Return Rate"
+          },
+          "prior_suspicious_claims_180d": {
+            "type": "integer",
+            "title": "Prior Suspicious Claims 180D"
+          },
+          "clv_used_by_policy": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "clv_basis": {
+            "type": "string",
+            "enum": [
+              "HISTORY",
+              "NEW_CUSTOMER_FLOOR",
+              "CAPPED"
+            ],
+            "title": "Clv Basis"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "account_id",
+          "account_age_days",
+          "prior_orders",
+          "matured_return_rate",
+          "prior_suspicious_claims_180d",
+          "clv_used_by_policy",
+          "clv_basis"
+        ],
+        "title": "CustomerSummary"
+      },
+      "DecisionActivity": {
+        "properties": {
+          "orders_evaluated": {
+            "type": "integer",
+            "title": "Orders Evaluated"
+          },
+          "action_distribution": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "propertyNames": {
+              "$ref": "#/components/schemas/Action"
+            },
+            "type": "object",
+            "title": "Action Distribution"
+          },
+          "friction_orders": {
+            "type": "integer",
+            "title": "Friction Orders"
+          },
+          "manual_review_volume": {
+            "type": "integer",
+            "title": "Manual Review Volume"
+          },
+          "override_rate": {
+            "type": "number",
+            "title": "Override Rate"
+          },
+          "model_estimated_cost_avoided": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "explanation_coverage": {
+            "type": "number",
+            "title": "Explanation Coverage"
+          },
+          "version_traceability": {
+            "type": "number",
+            "title": "Version Traceability"
+          },
+          "weak_evidence_decisions": {
+            "type": "integer",
+            "title": "Weak Evidence Decisions"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "orders_evaluated",
+          "action_distribution",
+          "friction_orders",
+          "manual_review_volume",
+          "override_rate",
+          "model_estimated_cost_avoided",
+          "explanation_coverage",
+          "version_traceability",
+          "weak_evidence_decisions"
+        ],
+        "title": "DecisionActivity"
+      },
+      "DemoResetResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "decisions": {
+            "type": "integer",
+            "title": "Decisions"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "status",
+          "decisions"
+        ],
+        "title": "DemoResetResponse"
+      },
+      "DiscountedLink": {
+        "properties": {
+          "identifier_label": {
+            "type": "string",
+            "title": "Identifier Label"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "DEVICE",
+              "ADDRESS",
+              "PAYMENT_TOKEN"
+            ],
+            "title": "Kind"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "MULTI_TENANT_ADDRESS",
+              "SEQUENTIAL_DEVICE_USE",
+              "STALE_RELATIONSHIP",
+              "HIGH_FANOUT_IDENTIFIER",
+              "HOUSEHOLD_PATTERN"
+            ],
+            "title": "Reason"
+          },
+          "weight": {
+            "type": "number",
+            "title": "Weight"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "identifier_label",
+          "kind",
+          "reason",
+          "weight"
+        ],
+        "title": "DiscountedLink"
+      },
+      "EvidenceSignal": {
+        "properties": {
+          "signal": {
+            "type": "string",
+            "enum": [
+              "DEVICE",
+              "PAYMENT_TOKEN",
+              "ADDRESS",
+              "TEMPORAL_BURST",
+              "ACCOUNT_CLAIMS"
+            ],
+            "title": "Signal"
+          },
+          "present": {
+            "type": "boolean",
+            "title": "Present"
+          },
+          "weight": {
+            "type": "number",
+            "title": "Weight"
+          },
+          "counts_for_corroboration": {
+            "type": "boolean",
+            "title": "Counts For Corroboration"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "signal",
+          "present",
+          "weight",
+          "counts_for_corroboration",
+          "detail"
+        ],
+        "title": "EvidenceSignal"
+      },
+      "GraphEdge": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "USED_DEVICE",
+              "USED_TOKEN",
+              "SHIPPED_TO",
+              "PLACED_BY"
+            ],
+            "title": "Kind"
+          },
+          "age_days": {
+            "type": "number",
+            "title": "Age Days"
+          },
+          "reliability": {
+            "type": "number",
+            "title": "Reliability"
+          },
+          "decayed_weight": {
+            "type": "number",
+            "title": "Decayed Weight"
+          },
+          "counted_as_evidence": {
+            "type": "boolean",
+            "title": "Counted As Evidence"
+          },
+          "discount_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Discount Reason"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "source",
+          "target",
+          "kind",
+          "age_days",
+          "reliability",
+          "decayed_weight",
+          "counted_as_evidence",
+          "discount_reason"
+        ],
+        "title": "GraphEdge"
+      },
+      "GraphEvidenceSummary": {
+        "properties": {
+          "component_size_reliable_90d": {
+            "type": "integer",
+            "title": "Component Size Reliable 90D"
+          },
+          "confirmed_abusive_accounts_in_component": {
+            "type": "integer",
+            "title": "Confirmed Abusive Accounts In Component"
+          },
+          "min_hops_to_confirmed_abuse": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Hops To Confirmed Abuse"
+          },
+          "linked_orders_24h": {
+            "type": "integer",
+            "title": "Linked Orders 24H"
+          },
+          "corroborating_signal_count": {
+            "type": "integer",
+            "title": "Corroborating Signal Count"
+          },
+          "signals": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceSignal"
+            },
+            "type": "array",
+            "title": "Signals"
+          },
+          "discounted_links": {
+            "items": {
+              "$ref": "#/components/schemas/DiscountedLink"
+            },
+            "type": "array",
+            "title": "Discounted Links"
+          },
+          "weak_evidence_only": {
+            "type": "boolean",
+            "title": "Weak Evidence Only"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "component_size_reliable_90d",
+          "confirmed_abusive_accounts_in_component",
+          "min_hops_to_confirmed_abuse",
+          "linked_orders_24h",
+          "corroborating_signal_count",
+          "signals",
+          "discounted_links",
+          "weak_evidence_only"
+        ],
+        "title": "GraphEvidenceSummary"
+      },
+      "GraphNode": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "ACCOUNT",
+              "ORDER",
+              "DEVICE",
+              "ADDRESS",
+              "PAYMENT_TOKEN"
+            ],
+            "title": "Kind"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "CURRENT",
+              "CONFIRMED_ABUSE",
+              "LINKED",
+              "NEUTRAL"
+            ],
+            "title": "State"
+          },
+          "flags": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "MULTI_TENANT",
+                "SEQUENTIAL_DEVICE",
+                "HIGH_FANOUT",
+                "RECENT_24H"
+              ]
+            },
+            "type": "array",
+            "title": "Flags"
+          },
+          "x": {
+            "type": "number",
+            "title": "X"
+          },
+          "y": {
+            "type": "number",
+            "title": "Y"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "label",
+          "state",
+          "flags",
+          "x",
+          "y"
+        ],
+        "title": "GraphNode"
+      },
+      "GraphPayload": {
+        "properties": {
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/GraphNode"
+            },
+            "type": "array",
+            "title": "Nodes"
+          },
+          "edges": {
+            "items": {
+              "$ref": "#/components/schemas/GraphEdge"
+            },
+            "type": "array",
+            "title": "Edges"
+          },
+          "truncated": {
+            "type": "boolean",
+            "title": "Truncated"
+          },
+          "hidden_node_count": {
+            "type": "integer",
+            "title": "Hidden Node Count"
+          },
+          "as_of": {
+            "type": "string",
+            "format": "date-time",
+            "title": "As Of"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "nodes",
+          "edges",
+          "truncated",
+          "hidden_node_count",
+          "as_of"
+        ],
+        "title": "GraphPayload"
+      },
+      "GuardrailResult": {
+        "properties": {
+          "guardrail_id": {
+            "type": "string",
+            "enum": [
+              "G1",
+              "G2",
+              "G3",
+              "G4",
+              "G5",
+              "G6"
+            ],
+            "title": "Guardrail Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "triggered": {
+            "type": "boolean",
+            "title": "Triggered"
+          },
+          "effect": {
+            "type": "string",
+            "enum": [
+              "NONE",
+              "REMOVED_ACTIONS",
+              "FALLBACK"
+            ],
+            "title": "Effect"
+          },
+          "removed_actions": {
+            "items": {
+              "$ref": "#/components/schemas/Action"
+            },
+            "type": "array",
+            "title": "Removed Actions"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "guardrail_id",
+          "name",
+          "triggered",
+          "effect",
+          "removed_actions",
+          "detail"
+        ],
+        "title": "GuardrailResult"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "service": {
+            "type": "string",
+            "title": "Service"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "policy_version": {
+            "type": "string",
+            "title": "Policy Version"
+          },
+          "policy_config_sha256": {
+            "type": "string",
+            "title": "Policy Config Sha256"
+          },
+          "demo_clock": {
+            "type": "string",
+            "title": "Demo Clock"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "status",
+          "service",
+          "version",
+          "policy_version",
+          "policy_config_sha256",
+          "demo_clock"
+        ],
+        "title": "HealthResponse",
+        "description": "#7: policy version, config hash prefix and the demo clock. No money, scores or thresholds."
+      },
+      "MetricsResponse": {
+        "properties": {
+          "activity": {
+            "$ref": "#/components/schemas/DecisionActivity"
+          },
+          "backtest": {
+            "items": {
+              "$ref": "#/components/schemas/StrategyBacktest"
+            },
+            "type": "array",
+            "title": "Backtest"
+          },
+          "models": {
+            "items": {
+              "$ref": "#/components/schemas/ModelEvaluation"
+            },
+            "type": "array",
+            "title": "Models"
+          },
+          "cold_start_ring_recall": {
+            "type": "number",
+            "title": "Cold Start Ring Recall"
+          },
+          "sensitivity": {
+            "items": {
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Sensitivity"
+          },
+          "drift_monitoring": {
+            "type": "string",
+            "const": "PLACEHOLDER_NOT_COMPUTED",
+            "title": "Drift Monitoring"
+          },
+          "data_notice": {
+            "type": "string",
+            "const": "Synthetic data is used to validate the architecture, policy behaviour, auditability, and coordinated-pattern detection. Real deployment would require merchant-specific historical data and prospective validation.",
+            "title": "Data Notice"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "activity",
+          "backtest",
+          "models",
+          "cold_start_ring_recall",
+          "sensitivity",
+          "drift_monitoring",
+          "data_notice"
+        ],
+        "title": "MetricsResponse"
+      },
+      "ModelEvaluation": {
+        "properties": {
+          "model": {
+            "type": "string",
+            "enum": [
+              "RETURN",
+              "ABUSE"
+            ],
+            "title": "Model"
+          },
+          "model_version": {
+            "type": "string",
+            "title": "Model Version"
+          },
+          "pr_auc": {
+            "type": "number",
+            "title": "Pr Auc"
+          },
+          "pr_auc_ci95": {
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Pr Auc Ci95"
+          },
+          "brier": {
+            "type": "number",
+            "title": "Brier"
+          },
+          "ece_10bin_quantile": {
+            "type": "number",
+            "title": "Ece 10Bin Quantile"
+          },
+          "calibration_curve": {
+            "items": {
+              "$ref": "#/components/schemas/CalibrationPoint"
+            },
+            "type": "array",
+            "title": "Calibration Curve"
+          },
+          "by_value_band": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "type": "number"
+              },
+              "type": "object"
+            },
+            "type": "object",
+            "title": "By Value Band"
+          },
+          "by_cohort": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "type": "number"
+              },
+              "type": "object"
+            },
+            "type": "object",
+            "title": "By Cohort"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "model",
+          "model_version",
+          "pr_auc",
+          "pr_auc_ci95",
+          "brier",
+          "ece_10bin_quantile",
+          "calibration_curve",
+          "by_value_band",
+          "by_cohort"
+        ],
+        "title": "ModelEvaluation"
+      },
+      "Money": {
+        "properties": {
+          "inr": {
+            "type": "number",
+            "title": "Inr"
+          },
+          "display": {
+            "type": "string",
+            "title": "Display"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "inr",
+          "display"
+        ],
+        "title": "Money"
+      },
+      "OrderDetailResponse": {
+        "properties": {
+          "order": {
+            "$ref": "#/components/schemas/OrderSummary"
+          },
+          "customer": {
+            "$ref": "#/components/schemas/CustomerSummary"
+          },
+          "decision": {
+            "$ref": "#/components/schemas/ScoreOrderResponse"
+          },
+          "graph": {
+            "$ref": "#/components/schemas/GraphPayload"
+          },
+          "baselines": {
+            "items": {
+              "$ref": "#/components/schemas/BaselineOutcome"
+            },
+            "type": "array",
+            "title": "Baselines"
+          },
+          "audit_events": {
+            "items": {
+              "$ref": "#/components/schemas/AuditEventOut"
+            },
+            "type": "array",
+            "title": "Audit Events"
+          },
+          "current_action": {
+            "$ref": "#/components/schemas/Action"
+          },
+          "appeal_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Appeal Reference"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "order",
+          "customer",
+          "decision",
+          "graph",
+          "baselines",
+          "audit_events",
+          "current_action",
+          "appeal_reference"
+        ],
+        "title": "OrderDetailResponse"
+      },
+      "OrderLineIn": {
+        "properties": {
+          "sku_id": {
+            "type": "string",
+            "title": "Sku Id"
+          },
+          "product_id": {
+            "type": "string",
+            "title": "Product Id"
+          },
+          "variant": {
+            "type": "string",
+            "title": "Variant"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "APPAREL",
+              "FOOTWEAR",
+              "ELECTRONICS",
+              "BEAUTY",
+              "HOME",
+              "ACCESSORIES"
+            ],
+            "title": "Category"
+          },
+          "unit_price_inr": {
+            "type": "number",
+            "maximum": 500000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Unit Price Inr"
+          },
+          "quantity": {
+            "type": "integer",
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Quantity"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "sku_id",
+          "product_id",
+          "variant",
+          "category",
+          "unit_price_inr",
+          "quantity"
+        ],
+        "title": "OrderLineIn"
+      },
+      "OrderSummary": {
+        "properties": {
+          "order_id": {
+            "type": "string",
+            "title": "Order Id"
+          },
+          "placed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Placed At"
+          },
+          "order_value": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "discount_pct": {
+            "type": "number",
+            "title": "Discount Pct"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/OrderLineIn"
+            },
+            "type": "array",
+            "title": "Lines"
+          },
+          "payment_method": {
+            "type": "string",
+            "enum": [
+              "PREPAID_CARD",
+              "PREPAID_UPI",
+              "COD"
+            ],
+            "title": "Payment Method"
+          },
+          "delivery_speed": {
+            "type": "string",
+            "enum": [
+              "STANDARD",
+              "EXPRESS"
+            ],
+            "title": "Delivery Speed"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "order_id",
+          "placed_at",
+          "order_value",
+          "discount_pct",
+          "lines",
+          "payment_method",
+          "delivery_speed"
+        ],
+        "title": "OrderSummary"
+      },
+      "OverrideRequest": {
+        "properties": {
+          "new_action": {
+            "$ref": "#/components/schemas/Action"
+          },
+          "reason_category": {
+            "type": "string",
+            "enum": [
+              "CUSTOMER_VERIFIED",
+              "INDEPENDENT_EVIDENCE_OF_ABUSE",
+              "FALSE_POSITIVE_SHARED_IDENTIFIER",
+              "POLICY_EXCEPTION",
+              "OTHER"
+            ],
+            "title": "Reason Category"
+          },
+          "reason_text": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 15,
+            "title": "Reason Text"
+          },
+          "expected_current_action": {
+            "$ref": "#/components/schemas/Action"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "new_action",
+          "reason_category",
+          "reason_text",
+          "expected_current_action"
+        ],
+        "title": "OverrideRequest"
+      },
+      "OverrideResponse": {
+        "properties": {
+          "order_id": {
+            "type": "string",
+            "title": "Order Id"
+          },
+          "decision_id": {
+            "type": "string",
+            "title": "Decision Id"
+          },
+          "original_recommendation": {
+            "$ref": "#/components/schemas/Action"
+          },
+          "previous_action": {
+            "$ref": "#/components/schemas/Action"
+          },
+          "new_action": {
+            "$ref": "#/components/schemas/Action"
+          },
+          "reviewer_id": {
+            "type": "string",
+            "title": "Reviewer Id"
+          },
+          "overridden_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Overridden At"
+          },
+          "audit_event_id": {
+            "type": "string",
+            "title": "Audit Event Id"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "order_id",
+          "decision_id",
+          "original_recommendation",
+          "previous_action",
+          "new_action",
+          "reviewer_id",
+          "overridden_at",
+          "audit_event_id",
+          "warnings"
+        ],
+        "title": "OverrideResponse"
+      },
+      "PolicyDecision": {
+        "properties": {
+          "policy_version": {
+            "type": "string",
+            "title": "Policy Version"
+          },
+          "policy_config_sha256": {
+            "type": "string",
+            "title": "Policy Config Sha256"
+          },
+          "cost_optimal_action": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Action"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "selected_action": {
+            "$ref": "#/components/schemas/Action"
+          },
+          "selected_rule": {
+            "type": "string",
+            "enum": [
+              "MIN_EXPECTED_COST",
+              "MIN_EXPECTED_COST_WITHIN_GUARDRAILS",
+              "DEGRADED_MODE_FALLBACK"
+            ],
+            "title": "Selected Rule"
+          },
+          "costs": {
+            "items": {
+              "$ref": "#/components/schemas/ActionCost"
+            },
+            "type": "array",
+            "title": "Costs"
+          },
+          "guardrails": {
+            "items": {
+              "$ref": "#/components/schemas/GuardrailResult"
+            },
+            "type": "array",
+            "title": "Guardrails"
+          },
+          "policy_explanation": {
+            "type": "string",
+            "title": "Policy Explanation"
+          },
+          "assumptions_notice": {
+            "type": "string",
+            "const": "Monetary values are demonstration assumptions (policy v1.0).",
+            "title": "Assumptions Notice"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "policy_version",
+          "policy_config_sha256",
+          "cost_optimal_action",
+          "selected_action",
+          "selected_rule",
+          "costs",
+          "guardrails",
+          "policy_explanation",
+          "assumptions_notice"
+        ],
+        "title": "PolicyDecision"
+      },
+      "QueueItem": {
+        "properties": {
+          "order_id": {
+            "type": "string",
+            "title": "Order Id"
+          },
+          "decision_id": {
+            "type": "string",
+            "title": "Decision Id"
+          },
+          "scored_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Scored At"
+          },
+          "order_value": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "p_return": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P Return"
+          },
+          "p_abuse": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P Abuse"
+          },
+          "recommended_action": {
+            "$ref": "#/components/schemas/Action"
+          },
+          "current_action": {
+            "$ref": "#/components/schemas/Action"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "AUTO_APPLIED",
+              "PENDING_REVIEW",
+              "OVERRIDDEN",
+              "APPEAL_OPEN"
+            ],
+            "title": "Status"
+          },
+          "graph_risk_summary": {
+            "type": "string",
+            "title": "Graph Risk Summary"
+          },
+          "corroborating_signal_count": {
+            "type": "integer",
+            "title": "Corroborating Signal Count"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "DEMO",
+              "BACKTEST_REPLAY",
+              "LIVE"
+            ],
+            "title": "Source"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "order_id",
+          "decision_id",
+          "scored_at",
+          "order_value",
+          "p_return",
+          "p_abuse",
+          "recommended_action",
+          "current_action",
+          "status",
+          "graph_risk_summary",
+          "corroborating_signal_count",
+          "source"
+        ],
+        "title": "QueueItem"
+      },
+      "QueueResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/QueueItem"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "counts_by_action": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "propertyNames": {
+              "$ref": "#/components/schemas/Action"
+            },
+            "type": "object",
+            "title": "Counts By Action"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "counts_by_action"
+        ],
+        "title": "QueueResponse"
+      },
+      "ReasonCode": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "model": {
+            "type": "string",
+            "enum": [
+              "RETURN",
+              "ABUSE"
+            ],
+            "title": "Model"
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "INCREASES",
+              "DECREASES"
+            ],
+            "title": "Direction"
+          },
+          "reviewer_text": {
+            "type": "string",
+            "title": "Reviewer Text"
+          },
+          "evidence": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Evidence"
+          },
+          "attribution_pp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attribution Pp"
+          },
+          "evidence_strength": {
+            "type": "string",
+            "enum": [
+              "STRONG",
+              "MODERATE",
+              "WEAK"
+            ],
+            "title": "Evidence Strength"
+          },
+          "attribution_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attribution Note"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "model",
+          "direction",
+          "reviewer_text",
+          "evidence",
+          "attribution_pp",
+          "evidence_strength"
+        ],
+        "title": "ReasonCode"
+      },
+      "ScoreOrderRequest": {
+        "properties": {
+          "order_id": {
+            "type": "string",
+            "pattern": "^ORD-[A-Z0-9-]{3,40}$",
+            "title": "Order Id"
+          },
+          "account_id": {
+            "type": "string",
+            "pattern": "^ACC-[A-Z0-9-]{3,40}$",
+            "title": "Account Id"
+          },
+          "placed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Placed At"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/OrderLineIn"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "minItems": 1,
+            "title": "Lines"
+          },
+          "discount_pct": {
+            "type": "number",
+            "maximum": 90.0,
+            "minimum": 0.0,
+            "title": "Discount Pct"
+          },
+          "delivery_speed": {
+            "type": "string",
+            "enum": [
+              "STANDARD",
+              "EXPRESS"
+            ],
+            "title": "Delivery Speed"
+          },
+          "payment_method": {
+            "type": "string",
+            "enum": [
+              "PREPAID_CARD",
+              "PREPAID_UPI",
+              "COD"
+            ],
+            "title": "Payment Method"
+          },
+          "device_id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "title": "Device Id"
+          },
+          "address_id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "title": "Address Id"
+          },
+          "payment_token_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Token Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "order_id",
+          "account_id",
+          "placed_at",
+          "lines",
+          "discount_pct",
+          "delivery_speed",
+          "payment_method",
+          "device_id",
+          "address_id"
+        ],
+        "title": "ScoreOrderRequest",
+        "description": "Internal order representation at t0 = after payment-method selection, before confirmation."
+      },
+      "ScoreOrderResponse": {
+        "properties": {
+          "decision_id": {
+            "type": "string",
+            "title": "Decision Id"
+          },
+          "order_id": {
+            "type": "string",
+            "title": "Order Id"
+          },
+          "scored_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Scored At"
+          },
+          "features_as_of": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Features As Of"
+          },
+          "scores": {
+            "$ref": "#/components/schemas/Scores"
+          },
+          "prediction_explanation": {
+            "type": "string",
+            "title": "Prediction Explanation"
+          },
+          "reasons": {
+            "items": {
+              "$ref": "#/components/schemas/ReasonCode"
+            },
+            "type": "array",
+            "title": "Reasons"
+          },
+          "graph_summary": {
+            "$ref": "#/components/schemas/GraphEvidenceSummary"
+          },
+          "policy": {
+            "$ref": "#/components/schemas/PolicyDecision"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "AUTO_APPLIED",
+              "PENDING_REVIEW",
+              "OVERRIDDEN",
+              "APPEAL_OPEN"
+            ],
+            "title": "Status"
+          },
+          "audit_event_id": {
+            "type": "string",
+            "title": "Audit Event Id"
+          },
+          "degraded_mode": {
+            "type": "boolean",
+            "title": "Degraded Mode"
+          },
+          "idempotent_replay": {
+            "type": "boolean",
+            "title": "Idempotent Replay"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "decision_id",
+          "order_id",
+          "scored_at",
+          "features_as_of",
+          "scores",
+          "prediction_explanation",
+          "reasons",
+          "graph_summary",
+          "policy",
+          "status",
+          "audit_event_id",
+          "degraded_mode",
+          "idempotent_replay"
+        ],
+        "title": "ScoreOrderResponse"
+      },
+      "Scores": {
+        "properties": {
+          "p_return": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P Return"
+          },
+          "p_abuse": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P Abuse"
+          },
+          "p_abuse_without_graph_evidence": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P Abuse Without Graph Evidence"
+          },
+          "return_model_version": {
+            "type": "string",
+            "title": "Return Model Version"
+          },
+          "abuse_model_version": {
+            "type": "string",
+            "title": "Abuse Model Version"
+          },
+          "feature_set_version": {
+            "type": "string",
+            "title": "Feature Set Version"
+          },
+          "p_return_used_for_action": {
+            "type": "boolean",
+            "const": false,
+            "title": "P Return Used For Action",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "p_return",
+          "p_abuse",
+          "p_abuse_without_graph_evidence",
+          "return_model_version",
+          "abuse_model_version",
+          "feature_set_version"
+        ],
+        "title": "Scores"
+      },
+      "StrategyBacktest": {
+        "properties": {
+          "strategy": {
+            "type": "string",
+            "enum": [
+              "SENTINEL",
+              "FIXED_THRESHOLD",
+              "RULE_BASED",
+              "ALLOW_ALL"
+            ],
+            "title": "Strategy"
+          },
+          "realized_cost_per_1000": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "abuse_loss_prevented": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "genuine_block_rate": {
+            "type": "number",
+            "title": "Genuine Block Rate"
+          },
+          "customer_friction_rate": {
+            "type": "number",
+            "title": "Customer Friction Rate"
+          },
+          "manual_reviews_per_1000": {
+            "type": "number",
+            "title": "Manual Reviews Per 1000"
+          },
+          "cost_per_detected_abuse": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "revenue_preserved": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "precision_block": {
+            "type": "number",
+            "title": "Precision Block"
+          },
+          "recall_intercepted": {
+            "type": "number",
+            "title": "Recall Intercepted"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "strategy",
+          "realized_cost_per_1000",
+          "abuse_loss_prevented",
+          "genuine_block_rate",
+          "customer_friction_rate",
+          "manual_reviews_per_1000",
+          "cost_per_detected_abuse",
+          "revenue_preserved",
+          "precision_block",
+          "recall_intercepted"
+        ],
+        "title": "StrategyBacktest"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

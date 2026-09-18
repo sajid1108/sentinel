@@ -30,14 +30,14 @@ import pandas as pd
 
 from sentinel.api.schemas import (Action, DiscountedLink, EvidenceSignal, GraphEvidenceSummary, GraphPayload,
                                   PolicyDecision, ReasonCode, ScoreOrderRequest, ScoreOrderResponse, Scores)
-from sentinel.api.services.errors import Conflict, RequestRejected
+from sentinel.api.services.errors import Conflict, RequestRejected, UnknownAccount
 from sentinel.api.services.graph_view import build_graph_payload
 from sentinel.audit.chain import canonical_json
 from sentinel.audit.schemas import AuditActor, AuditEventPayload, AuditModelVersions
 from sentinel.audit.service import AppendedEvent, append_event, event_payload
 from sentinel.db.models import immediate_transaction, parse_utc, read_connection, utc_iso
 from sentinel.features.builder import FeatureBuilder, query_from_request
-from sentinel.features.graph_state import to_micros, visible
+from sentinel.features.graph_state import from_micros, to_micros, visible
 from sentinel.features.tabular_features import (OrderQuery, matured_return_counts, n_variants_same_product,
                                                 order_value_inr, primary_category)
 from sentinel.models import registry
@@ -384,7 +384,7 @@ class ScoringService:
             if replay is not None:
                 return replay
             if conn.execute("SELECT 1 FROM accounts WHERE account_id = ?", (request.account_id,)).fetchone() is None:
-                raise RequestRejected(f"unknown account {request.account_id}")
+                raise UnknownAccount(f"unknown account {request.account_id}")
 
         query = query_from_request(request)
         assessment, graph_payload = self._assess(request, query)
@@ -435,7 +435,8 @@ class ScoringService:
             evidence = b.evidence_values(request, t0)
             matured = matured_return_counts(b.state, request.account_id, to_micros(t0))
             clv = b.clv_inr(request.account_id, t0)
-            graph_payload = build_graph_payload(b.ego_view(query, to_micros(t0)), query, to_micros(t0), t0)
+            graph_payload = build_graph_payload(b.ego_view(query, to_micros(t0)), query, to_micros(t0),
+                                                from_micros(to_micros(t0)))       # as_of in UTC, like every record
         except Exception as exc:                                   # G6: never crash the request
             return degraded_assessment(value, self.cfg, DEMO_CLOCK,
                                        f"feature building failed ({type(exc).__name__})"), None

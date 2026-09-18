@@ -136,14 +136,42 @@ def test_training_twice_gives_identical_artifacts(offline, tmp_path):
     assert shas[0] == shas[1]
 
 
-def test_committed_artifacts_reproduce_on_the_same_cpu_count(offline, tmp_path):
+_REPRODUCE = """
+import json, sys
+from pathlib import Path
+from sentinel.data.generator import generate
+from sentinel.evaluation.splits import offline_data
+from sentinel.features.builder import WORLD_TABLES, build_tables
+from sentinel.models import registry
+from sentinel.models.train import train_all
+from sentinel.settings import DEMO_CLOCK
+world = generate()
+features, policy = build_tables({t: world[t] for t in WORLD_TABLES})
+off = offline_data(features, policy, world["order_labels"], world["orders"], world["sim_ground_truth"])
+fresh = registry.save_bundles({n: r.bundle for n, r in train_all(off.frame, DEMO_CLOCK).items()}, Path(sys.argv[1]))
+print(json.dumps({n: e["sha256"] for n, e in fresh["models"].items()}))
+"""
+
+
+def test_committed_artifacts_reproduce_on_the_same_cpu_count(tmp_path):
+    """Trained in a fresh interpreter, as `cli train` does. In-process, the pickle bytes of a new bundle depend on
+    what the process loaded before (a committed bundle loaded earlier changes them; the model does not change:
+    predictions are identical), so the byte-level hash is only comparable from a clean process (#34)."""
+    import json
+    import subprocess
+    import sys
+    from pathlib import Path
+
     reg = registry.load_registry()
     if reg.get("cpu_count") != os.cpu_count():
         pytest.skip("different cpu_count; committed hash not comparable")
-    results = train_all(offline.frame, DEMO_CLOCK)
-    fresh = registry.save_bundles({n: r.bundle for n, r in results.items()}, tmp_path)
-    assert {n: e["sha256"] for n, e in fresh["models"].items()} == \
-        {n: e["sha256"] for n, e in reg["models"].items()}, "committed artifacts do not reproduce from the seeded world"
+    backend = Path(__file__).resolve().parents[2]
+    res = subprocess.run([sys.executable, "-c", _REPRODUCE, str(tmp_path)], capture_output=True, cwd=backend,
+                         text=True, encoding="utf-8")
+    assert res.returncode == 0, res.stderr
+    fresh = json.loads(res.stdout.strip().splitlines()[-1])
+    assert fresh == {n: e["sha256"] for n, e in reg["models"].items()}, \
+        "committed artifacts do not reproduce from the seeded world"
 
 
 # ── model sanity (§13.3) ─────────────────────────────────────────────────────

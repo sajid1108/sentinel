@@ -350,9 +350,11 @@ def test_placed_at_before_the_end_of_the_frozen_history_is_rejected(service):
         service.score(request, "LIVE")
 
 
-def test_unknown_account_is_rejected(service):
+def test_unknown_account_is_not_found(service):
+    """Architect decision 1.3 (Phase 7): an unknown account is NotFound (-> 404), never scored."""
+    from sentinel.api.services.errors import UnknownAccount
     request = _requests()["ORD-DEMO-001"].model_copy(update={"order_id": "ORD-NEW-001", "account_id": "ACC-NOBODY"})
-    with pytest.raises(RequestRejected, match="unknown account"):
+    with pytest.raises(UnknownAccount, match="unknown account"):
         service.score(request, "LIVE")
 
 

@@ -1,5 +1,6 @@
 import argparse
 import sys
+from pathlib import Path
 
 
 def cmd_generate(args):
@@ -251,6 +252,22 @@ def cmd_reset_demo(args):
     _print_seed_report(report)
 
 
+OPENAPI_PATH = Path(__file__).resolve().parents[2] / "frontend" / "src" / "api" / "openapi.json"
+
+
+def openapi_json() -> str:
+    """The app's OpenAPI document as committed for the frontend: stable key order, UTF-8, trailing newline."""
+    import json
+
+    from sentinel.api.main import create_app
+    return json.dumps(create_app().openapi(), indent=2, ensure_ascii=False) + "\n"
+
+
+def cmd_export_openapi(args):
+    OPENAPI_PATH.write_text(openapi_json(), encoding="utf-8", newline="\n")
+    print(f"wrote {OPENAPI_PATH}")
+
+
 def main():
     # B10: Fix Windows console encoding for ₹ symbol
     for stream in (sys.stdout, sys.stderr):
@@ -279,6 +296,7 @@ def main():
     serve_p.add_argument("--reload", action="store_true")
 
     sub.add_parser("reset-demo", help="Delete the demo database and seed it again (DEMO_MODE only)")
+    sub.add_parser("export-openapi", help="Write the API's OpenAPI document to frontend/src/api/openapi.json")
 
     args = parser.parse_args()
     cmd_map = {
@@ -292,6 +310,7 @@ def main():
         "seed-db": cmd_seed_db,
         "serve": cmd_serve,
         "reset-demo": cmd_reset_demo,
+        "export-openapi": cmd_export_openapi,
     }
     cmd_map[args.command](args)
 

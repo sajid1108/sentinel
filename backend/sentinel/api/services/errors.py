@@ -15,3 +15,7 @@ class Conflict(ServiceError):
 
 class NotFound(ServiceError):
     """No decision exists for this order."""
+
+
+class UnknownAccount(NotFound):
+    """The account does not exist; accounts cannot be created live (#31, architect decision 1.3 -> 404)."""

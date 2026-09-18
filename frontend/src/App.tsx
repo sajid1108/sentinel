@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Routes, Route, NavLink } from 'react-router-dom'
-import type { HealthResponse } from './api/types'
+import type { components } from './api/types'
+
+type HealthResponse = components['schemas']['HealthResponse']
 
 function SyntheticDataBanner() {
   return (

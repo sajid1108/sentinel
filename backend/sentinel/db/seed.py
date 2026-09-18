@@ -25,6 +25,7 @@ import pandas as pd
 
 from sentinel.api.schemas import Action, DiscountedLink, GraphPayload
 from sentinel.api.services.graph_view import build_graph_payload
+from sentinel.api.services.runtime import EVALUATION_FILE, presets_path
 from sentinel.api.services.scoring import (Assessment, Models, assess, load_models, seeded_decision_id,
                                            seeded_event_id, write_decision)
 from sentinel.data.archetypes import SIM_START
@@ -42,7 +43,6 @@ from sentinel.settings import ARTIFACTS_DIR, CONFIG_DIR, DATA_DIR, DB_PATH, DEMO
 SEEDED_DECISIONS = 250
 TEST = "TEST"
 POLICY_FILE = CONFIG_DIR / "policy_v1_0.toml"
-EVALUATION_FILE = Path("reports") / "evaluation.json"
 _UTC_FORMAT = "%Y-%m-%dT%H:%M:%S.%f+00:00"             # identical to db.models.utc_iso
 
 
@@ -205,6 +205,15 @@ def replay_assessment(row: dict, models: Models, cfg: PolicyConfig,
     return result
 
 
+def write_demo_presets(db_path: Path) -> None:
+    """The three §11 demo requests, validated, as JSON beside the database. Offline code writes them so the API
+    never imports data/ (the demo builders live next to the generator's archetypes)."""
+    from sentinel.api.schemas import ScoreOrderRequest
+    from sentinel.data.demo_orders import demo_requests
+    presets = [ScoreOrderRequest.model_validate(p).model_dump(mode="json") for p in demo_requests()]
+    presets_path(db_path).write_text(json.dumps(presets, indent=2, ensure_ascii=False) + chr(10), encoding="utf-8")
+
+
 def seed_database(db_path: Path = DB_PATH, data_dir: Path = DATA_DIR, artifacts_dir: Path = ARTIFACTS_DIR,
                   policy_config: PolicyConfig | None = None) -> SeedReport:
     start = time.perf_counter()
@@ -242,6 +251,7 @@ def seed_database(db_path: Path = DB_PATH, data_dir: Path = DATA_DIR, artifacts_
             conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
     finally:
         engine.dispose()                                  # release the file (Windows) before anyone deletes it
+    write_demo_presets(db_path)
     return SeedReport(Path(db_path), time.perf_counter() - start, world_rows, selection.test_orders,
                       selection.non_allow, selection.allow_filled,
                       {a.value: by_action.get(a.value, 0) for a in Action}, by_source, list(selection.notes))

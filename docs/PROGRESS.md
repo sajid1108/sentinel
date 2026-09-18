@@ -3,7 +3,7 @@
 Times are from git commit timestamps (IST). Every builder updates the row for its stage **before** committing.
 
 **Project start:** 2026-09-16 19:17 (first commit)
-**Last update:** 2026-09-18 08:48
+**Last update:** 2026-09-18 (phase 7 gate)
 
 ## Completed
 
@@ -16,6 +16,7 @@ Times are from git commit timestamps (IST). Every builder updates the row for it
 | 5 | 4 | Models, calibration, evaluation, backtest, guardrail pricing | `1c2259c` `53158b2` `91a4837` | 09-18 01:59 | longest stage; 3 architect decision rounds |
 | 6 | 5 | Explanations: reference vector, ablation attributions, evidence-based reason codes, prediction explanation | `c5ff8f7` | 09-18 04:25 | ~2h10m build |
 | 6 (follow-ups) + 7 | 5 + 6 | Phase 5 follow-ups (evidence ordering, plurals, raw return counts, device confirmation counts, latency p95); SQLite seeding (250 backtest-replay decisions), hash-chained audit, `ScoringService` (frozen history, idempotent, G6 degraded), `ReviewService` (override, appeal), `seed-db` / `reset-demo` | `7fb75f0` `d4881da` | 09-18 08:48 | ~37 min build, 1 architect review round (Phase 5) |
+| 7 (follow-ups) + 8 | 6 + 7 | Phase 6 follow-ups (point-in-time discounted links and GraphPayload stored per decision, demo reviewer clock, threadpoolctl declared); API: all internal routes, public checkout with probe logging, metrics, demo presets/reset, deterministic graph view, OpenAPI export and generated `types.ts` | `3dfbf20` + phase 7 commit (hash in the report) | 09-18 | session 08:52 → gate; ~1h active build plus a ~1h30m idle gap between turns |
 
 **Elapsed since project start:** ~37.5 hours wall clock.
 **Actual build time:** roughly 8–9 hours of agent work. The rest is review turnaround and gaps between sessions.
@@ -26,7 +27,6 @@ Estimates revised down from the original plan, since stages 1–5 ran faster tha
 
 | Manual stage | Spec phase | Scope | Build estimate | Review rounds |
 |---|---|---|---|---|
-| 8 | 7 | API: all routes, internal key, idempotency, override, public checkout | 2–3 h | 1 |
 | 9 | 8 | Frontend order detail: scores, cost bars, graph, reasons, audit, override | 3–5 h | 1–2 |
 | 10 | 9 | Frontend queue + simulate checkout | 1–1.5 h | 1 |
 | 11 | 10 | Frontend overview: activity tiles, backtest panel, calibration | 1.5–2 h | 1 |
@@ -36,8 +36,8 @@ Estimates revised down from the original plan, since stages 1–5 ran faster tha
 | 14 | — | `docs/DEMO_SCRIPT.md`, two cold-start rehearsals, fallback video | 1–2 h | 0 |
 | 15 | — | Pitch and submission | 1–2 h | 1 |
 
-**To Definition of Done (stage 11):** ~7.5–12.5 h of build (stages 8–11).
-**To full finish (stage 15):** ~12–20 h of build.
+**To Definition of Done (stage 11):** ~5.5–8.5 h of build (stages 9–11).
+**To full finish (stage 15):** ~10–17 h of build.
 
 ## Notes
 
@@ -46,3 +46,4 @@ Estimates revised down from the original plan, since stages 1–5 ran faster tha
 - Stage 7's estimate (2–3 h) came in well under: ~37 min including the Phase 5 follow-ups, because Phases 3–5 had already built the pieces the scoring service composes. `seed-db` takes ~7 s; the full suite is now ~3.5 min (740 tests).
 - Stage 5's estimate (1.5–2.5 h) held: ~2h10m, most of it spent on two catalog gaps the brief could not have known about (#28, #29) and on getting attribution latency from 84 ms to 16 ms.
 - If time runs short, hold the cut line at stage 11 and shrink stage 13 to: demo reset, two rehearsals, fallback video.
+- Stage 8's estimate (2–3 h) held at the low end: the API composes the Phase 6 services; the new work was the graph view, the read side and the test suite (67 API tests). The full suite is now ~4–5 min (~820 tests); score-order p95 over HTTP is ~35 ms against a 300 ms budget.
