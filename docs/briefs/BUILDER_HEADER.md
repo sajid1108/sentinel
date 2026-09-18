@@ -11,7 +11,7 @@
 ## Before writing code
 
 1. Read `october_master_architecture.md`, then `docs/ARCHITECTURE.md` and `docs/DEVIATIONS.md` in full. Never summarise them into another file.
-2. Read `docs/PROGRESS.md`, the most recent `docs/reports/phase-N.md`, and the README build status.
+2. Read `docs/PROGRESS.md`, the most recent `docs/reports/phase-N.md`, and the README build status. **If the brief touches `frontend/`, read `DESIGN.md` at the repo root in full; its §11 checklist is part of the gate.**
 3. Run `git status -sb` and `git log --oneline -5`. Work on `main`. Branch `phase-4-wip` is a checkpoint: never merge or delete it.
 4. Baseline: `pytest -m "not slow"` in `backend/`; if the brief touches the frontend, also `npm ci && npm run build` in `frontend/`.
 
