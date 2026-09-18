@@ -12,7 +12,7 @@ Elapsed is wall clock from the session's first command (`date -u`, 10:37:25Z) to
 | Commit | What |
 |---|---|
 | `b0042e0` | `phase 8: follow-ups` (Part 1) |
-| `PART2_SHA` | `phase 9: mvp` (Part 2) |
+| `20257ab` | `phase 9: mvp` (Part 2) |
 
 Progress lines printed during the session:
 
@@ -231,7 +231,17 @@ Full backend suite green including slow (**858 passed, 1 skipped**), `npm test` 
 `npm run build` all before the Part 2 commit. `seed-db` re-run; the affected fixtures re-recorded from the
 real backend.
 
-`git status -sb` and `git log --oneline -5` immediately after the Part 2 commit are recorded by the follow-up
-docs commit, never by amending.
+`git status -sb` and `git log --oneline -5` immediately after the Part 2 commit:
+
+```
+## claude/phase-9-mvp-builder-tekgws...origin/claude/phase-9-mvp-builder-tekgws
+```
+```
+20257ab phase 9: mvp
+b0042e0 phase 8: follow-ups
+e36493e docs: phase 9 brief (phase 8 follow-ups + MVP)
+c6d3925 merge phase 8: order detail (reviewed)
+5340cd8 docs: correct the phase 8 elapsed times to the commit timestamps
+```
 
 Stopping here. The design pass and Phase 11 are not started.
