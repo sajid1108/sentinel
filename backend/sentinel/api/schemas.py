@@ -273,6 +273,11 @@ class GraphPayload(Contract):
     truncated: bool
     hidden_node_count: int
     as_of: AwareDatetime
+    # What the drawn graph actually accounts for, so the UI never prints a count the picture contradicts
+    # (Phase 8 brief 1.1, #35). Equal to graph_summary.linked_orders_24h and device_confirmed_peer_count
+    # unless the node cap truncated the graph.
+    linked_orders_24h_shown: int
+    confirmed_peers_shown: int
 
 
 class BaselineOutcome(Contract):
@@ -407,6 +412,26 @@ class MetricsResponse(Contract):
         "and coordinated-pattern detection. Real deployment would require merchant-specific "
         "historical data and prospective validation."
     ]
+
+
+# GET /internal/policy — the demonstration assumptions panel (Phase 8 brief 1.2, #35)
+class PolicyAssumptionValue(Contract):
+    """One key of policy_v1_0.toml, exactly as the policy engine loaded it."""
+    key: str
+    value: float | str
+    money: Money | None                                    # set for every *_inr key, formatted server-side
+
+
+class PolicyAssumptionSection(Contract):
+    section: str
+    values: list[PolicyAssumptionValue]
+
+
+class PolicyAssumptionsResponse(Contract):
+    policy_version: str
+    policy_config_sha256: str
+    notice: str
+    sections: list[PolicyAssumptionSection]
 
 
 # PUBLIC: POST /checkout/decision

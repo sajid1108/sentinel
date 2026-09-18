@@ -121,7 +121,7 @@ def test_no_cors_and_health_needs_no_key(shared):
 INTERNAL_ROUTES = [
     ("POST", "/score-order"), ("GET", "/orders"), ("GET", "/orders/ORD-DEMO-001"),
     ("POST", "/orders/ORD-DEMO-001/override"), ("POST", "/orders/ORD-DEMO-001/appeal"),
-    ("GET", "/audit-events"), ("GET", "/audit-events/verify"), ("GET", "/metrics"),
+    ("GET", "/audit-events"), ("GET", "/audit-events/verify"), ("GET", "/metrics"), ("GET", "/policy"),
     ("GET", "/demo/presets"), ("POST", "/demo/reset"),
 ]
 
@@ -592,3 +592,42 @@ def test_committed_openapi_equals_a_fresh_export():
     from sentinel.cli import OPENAPI_PATH, openapi_json
     assert OPENAPI_PATH.read_text(encoding="utf-8") == openapi_json(), \
         "frontend/src/api/openapi.json is stale: run `python -m sentinel.cli export-openapi` then `npm run gen:types`"
+
+
+# ── policy assumptions (Phase 8 brief 1.2) ───────────────────────────────────
+def test_policy_endpoint_returns_the_loaded_config_with_server_formatted_money(shared):
+    """Every section and key of policy_v1_0.toml, exactly as the policy engine loaded it, so the UI's
+    "Demonstration assumptions" panel never hard-codes a number."""
+    from dataclasses import fields
+
+    from sentinel.money import make_money
+    from sentinel.policy.config import SECTIONS, load_policy_config
+
+    c, _ = shared
+    body = c.get(f"{I}/policy", headers=KEY).json()
+    cfg = load_policy_config()
+    assert body["policy_version"] == cfg.policy.version
+    assert body["policy_config_sha256"] == cfg.config_sha256
+    assert body["notice"] == cfg.policy.notice
+    assert [s["section"] for s in body["sections"]] == list(SECTIONS)
+    checked_money = 0
+    for section in body["sections"]:
+        loaded = getattr(cfg, section["section"])
+        assert [v["key"] for v in section["values"]] == [f.name for f in fields(type(loaded))]
+        for value in section["values"]:
+            expected = getattr(loaded, value["key"])
+            assert value["value"] == expected, (section["section"], value["key"])
+            if value["key"].endswith("_inr"):
+                assert value["money"] == make_money(expected).model_dump(mode="json")
+                checked_money += 1
+            else:
+                assert value["money"] is None
+    assert checked_money >= 8                     # every *_inr key carries a server-formatted Money
+
+
+def test_policy_endpoint_exposes_the_guardrail_thresholds_the_ui_must_not_invent(shared):
+    c, _ = shared
+    guardrails = {v["key"]: v["value"] for s in c.get(f"{I}/policy", headers=KEY).json()["sections"]
+                  if s["section"] == "guardrails" for v in s["values"]}
+    assert set(guardrails) == {"block_min_p_abuse", "block_min_corroborating_signals", "high_exposure_value_inr",
+                               "high_exposure_min_p_abuse", "degraded_review_min_value_inr"}

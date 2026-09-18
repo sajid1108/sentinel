@@ -48,6 +48,8 @@ class Reached:
     depth: int                   # account hops from the query account
     kinds: frozenset[str]        # identifier kinds on the BFS path
     bottleneck: float            # smallest edge weight on the BFS path
+    via_account: str | None = None   # the account this one was first reached from
+    via_ident: str | None = None     # the identifier node that link goes through
 
 
 @dataclass
@@ -155,7 +157,8 @@ def _component(ctx: _Context) -> dict[str, Reached]:
                 if len(reached) >= BFS_MAX_ACCOUNTS:
                     return reached
                 reached[link.account_id] = Reached(here.depth + 1, here.kinds | {kind},
-                                                   min(here.bottleneck, w_a, link.weight))
+                                                   min(here.bottleneck, w_a, link.weight),
+                                                   via_account=a, via_ident=n)
                 queue.append(link.account_id)
     return reached
 
@@ -201,13 +204,61 @@ class IdentifierView:
 
 
 @dataclass(frozen=True)
+class PathEdge:
+    """One account's use of one identifier on a reliable path from the query account to an account the
+    reviewer graph must draw (Phase 8 brief 1.1). Only hops beyond the query order's own identifiers
+    appear here; the query order's identifiers are already in `EgoView.identifiers`."""
+    account_id: str
+    kind: str
+    ident_node: str
+    ident_label: str
+    multi_tenant: bool
+    high_fanout: bool
+    last_seen: int
+    reliability: float
+    weight: float
+    confirmed: bool              # the account holding this edge, confirmed before t0
+    discount_reason: str | None  # None when the edge counts as evidence
+
+
+@dataclass(frozen=True)
 class EgoView:
     """What the reviewer graph (api/services/graph_view.py) is drawn from: the query order's identifiers,
-    the accounts linked through them, their orders in [t0 - 24 h, t0), and which accounts sit in the
-    reliable component. Point-in-time: only state visible at t0."""
+    the accounts linked through them, the orders of reliable-component accounts in [t0 - 24 h, t0), and
+    which accounts sit in the reliable component. Point-in-time: only state visible at t0.
+
+    `must_draw`, `path_edges` and `depth_of` carry the accounts whose evidence is counted next to the
+    graph — every account behind `linked_orders_24h` and every account behind `device_confirmed_peer_count` —
+    together with the identifier hops that connect them, even two account hops out (Phase 8 brief 1.1)."""
     identifiers: tuple[IdentifierView, ...]
     component: frozenset[str]
     recent_orders: dict[str, tuple[tuple[str, int], ...]]      # account -> ((order_id, placed_at), ...)
+    depth_of: dict[str, int]                                   # component account -> account hops from the query
+    parent_of: dict[str, tuple[str, str]]                      # account -> (account it was reached from, identifier)
+    path_edges: tuple[PathEdge, ...]
+    must_draw: frozenset[str]                                  # accounts that outrank unrelated ones under the cap
+    confirmed_device_peers: frozenset[str]                     # counted in device_confirmed_peer_count
+
+
+def _path_edge(ctx: _Context, account_id: str, ident_node: str) -> PathEdge:
+    """One endpoint of a reliable component hop. The BFS never crosses a sequential device link, a
+    multi-tenant or high-fanout address, or a stale edge, so these edges count as evidence; the same
+    precedence is applied here rather than assumed."""
+    kind = KIND_OF_PREFIX[ident_node[:3]]
+    last_seen = ctx.edges_of(account_id)[ident_node][1]
+    reliability = ctx.reliability(kind, ident_node, False)
+    weight = decayed_weight(reliability, kind, last_seen, ctx.t0)
+    if ctx.high_fanout(ident_node):
+        reason = "HIGH_FANOUT_IDENTIFIER"
+    elif ctx.multi_tenant(ident_node):
+        reason = "MULTI_TENANT_ADDRESS"
+    elif not ctx.reliable(kind, ident_node, last_seen, weight):
+        reason = "STALE_RELATIONSHIP"
+    else:
+        reason = None
+    return PathEdge(account_id, kind, ident_node, ctx.state.meta(ident_node[4:], kind).display_label,
+                    ctx.multi_tenant(ident_node), ctx.high_fanout(ident_node), last_seen, reliability, weight,
+                    ctx.confirmed(account_id), reason)
 
 
 def ego_view(state: GraphState, q: OrderQuery, t0: int) -> EgoView:
@@ -219,9 +270,14 @@ def ego_view(state: GraphState, q: OrderQuery, t0: int) -> EgoView:
             kind=kind, node=n, label=state.meta(n[4:], kind).display_label, multi_tenant=ctx.multi_tenant(n),
             high_fanout=ctx.high_fanout(n), own_reliability=ctx.reliability(kind, n, False), links=links,
             discount=_discounted_link(ctx, kind, n, list(links))))
-    linked = sorted({link.account_id for v in views for link in v.links})
-    recent = {}
-    for a in linked:
+    component = _component(ctx)
+
+    # Every order counted in linked_orders_24h: reliable-component accounts other than the query account
+    # (the same set `analyse` counts), not only the directly linked ones.
+    recent: dict[str, tuple[tuple[str, int], ...]] = {}
+    for a in sorted(component):
+        if a == ctx.account:
+            continue
         node = node_id("ACCOUNT", a)
         if node not in state.graph:
             continue
@@ -229,7 +285,37 @@ def ego_view(state: GraphState, q: OrderQuery, t0: int) -> EgoView:
                         if o.startswith("ORD:") and in_window(d["placed_at"], t0, 1))
         if orders:
             recent[a] = tuple(orders)
-    return EgoView(tuple(views), frozenset(_component(ctx)), recent)
+
+    device_links = [link for v in views if v.kind == "DEVICE" for link in v.links]
+    confirmed_peers = frozenset(link.account_id for link in device_links if link.confirmed)
+
+    # Walk each required account back to the query account, collecting the hops the graph must draw. A hop
+    # through one of the query order's own identifiers is already drawn from `identifiers`; any other hop -
+    # an account reached two hops out, or one sharing a token this account used on an earlier order - needs
+    # its identifier node and both endpoints' edges.
+    query_idents = {n for _, n in ctx.query_nodes}
+    must_draw = (set(recent) | set(confirmed_peers)) - {ctx.account}
+    path_edges: dict[tuple[str, str], PathEdge] = {}
+    pending = sorted(a for a in must_draw if a in component)
+    while pending:
+        a = pending.pop()
+        parent, ident = component[a].via_account, component[a].via_ident
+        if parent is None or ident is None:
+            continue
+        if ident not in query_idents:
+            for holder in (parent, a):
+                if (holder, ident) not in path_edges:
+                    path_edges[(holder, ident)] = _path_edge(ctx, holder, ident)
+        if parent != ctx.account and parent not in must_draw:
+            must_draw.add(parent)
+            pending.append(parent)
+
+    return EgoView(tuple(views), frozenset(component), recent,
+                   {a: r.depth for a, r in component.items()},
+                   {a: (r.via_account, r.via_ident) for a, r in component.items()
+                    if r.via_account is not None and r.via_ident is not None},
+                   tuple(sorted(path_edges.values(), key=lambda e: (e.ident_node, e.account_id))),
+                   frozenset(must_draw), confirmed_peers)
 
 
 def analyse(state: GraphState, q: OrderQuery, t0: int) -> GraphAnalysis:

@@ -74,7 +74,8 @@ class PolicyConfig:
     config_sha256: str
 
 
-_SECTIONS = {
+# The config sections in file order: the loader's key check and GET /internal/policy both read it.
+SECTIONS = {
     "policy": PolicyMeta,
     "economics": Economics,
     "clv": CLVConfig,
@@ -89,9 +90,9 @@ _SECTIONS = {
 def _check_keys(data: dict) -> list[str]:
     """Missing or unknown sections/keys are errors: config keys are part of the frozen contract."""
     errors = []
-    for section in sorted(set(data) - set(_SECTIONS)):
+    for section in sorted(set(data) - set(SECTIONS)):
         errors.append(f"unknown section [{section}]")
-    for section, cls in _SECTIONS.items():
+    for section, cls in SECTIONS.items():
         if section not in data:
             errors.append(f"missing section [{section}]")
             continue
@@ -118,7 +119,7 @@ def load_policy_config(path: Path | None = None) -> PolicyConfig:
     guardrails = dict(data["guardrails"])
     guardrails["block_min_corroborating_signals"] = int(guardrails["block_min_corroborating_signals"])
     cfg = PolicyConfig(
-        **{name: cls(**data[name]) for name, cls in _SECTIONS.items() if name != "guardrails"},
+        **{name: cls(**data[name]) for name, cls in SECTIONS.items() if name != "guardrails"},
         guardrails=GuardrailsConfig(**guardrails),
         config_sha256=config_sha256,
     )

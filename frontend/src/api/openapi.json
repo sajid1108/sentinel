@@ -684,6 +684,55 @@
         }
       }
     },
+    "/api/v1/internal/policy": {
+      "get": {
+        "tags": [
+          "internal"
+        ],
+        "summary": "Get Policy",
+        "operationId": "get_policy_api_v1_internal_policy_get",
+        "parameters": [
+          {
+            "name": "x-internal-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Internal-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyAssumptionsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/internal/demo/presets": {
       "get": {
         "tags": [
@@ -1677,6 +1726,14 @@
             "type": "string",
             "format": "date-time",
             "title": "As Of"
+          },
+          "linked_orders_24h_shown": {
+            "type": "integer",
+            "title": "Linked Orders 24H Shown"
+          },
+          "confirmed_peers_shown": {
+            "type": "integer",
+            "title": "Confirmed Peers Shown"
           }
         },
         "additionalProperties": false,
@@ -1686,7 +1743,9 @@
           "edges",
           "truncated",
           "hidden_node_count",
-          "as_of"
+          "as_of",
+          "linked_orders_24h_shown",
+          "confirmed_peers_shown"
         ],
         "title": "GraphPayload"
       },
@@ -2218,6 +2277,98 @@
           "warnings"
         ],
         "title": "OverrideResponse"
+      },
+      "PolicyAssumptionSection": {
+        "properties": {
+          "section": {
+            "type": "string",
+            "title": "Section"
+          },
+          "values": {
+            "items": {
+              "$ref": "#/components/schemas/PolicyAssumptionValue"
+            },
+            "type": "array",
+            "title": "Values"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "section",
+          "values"
+        ],
+        "title": "PolicyAssumptionSection"
+      },
+      "PolicyAssumptionValue": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Value"
+          },
+          "money": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Money"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "key",
+          "value",
+          "money"
+        ],
+        "title": "PolicyAssumptionValue",
+        "description": "One key of policy_v1_0.toml, exactly as the policy engine loaded it."
+      },
+      "PolicyAssumptionsResponse": {
+        "properties": {
+          "policy_version": {
+            "type": "string",
+            "title": "Policy Version"
+          },
+          "policy_config_sha256": {
+            "type": "string",
+            "title": "Policy Config Sha256"
+          },
+          "notice": {
+            "type": "string",
+            "title": "Notice"
+          },
+          "sections": {
+            "items": {
+              "$ref": "#/components/schemas/PolicyAssumptionSection"
+            },
+            "type": "array",
+            "title": "Sections"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "policy_version",
+          "policy_config_sha256",
+          "notice",
+          "sections"
+        ],
+        "title": "PolicyAssumptionsResponse"
       },
       "PolicyDecision": {
         "properties": {
