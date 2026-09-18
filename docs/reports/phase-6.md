@@ -13,7 +13,7 @@ Both commits green on the full suite (slow included), pushed. Phase 7 not starte
 | Commit | What |
 |---|---|
 | `7fb75f0` | `phase 5: follow-ups` (Part 1) |
-| `see §10` | `phase 6: db, audit and scoring service` (Part 2) |
+| `d4881da` | `phase 6: db, audit and scoring service` (Part 2) |
 
 ---
 
@@ -37,7 +37,7 @@ Both commits green on the full suite (slow included), pushed. Phase 7 not starte
 | `docs/DEVIATIONS.md` | #27 and #28 updated; #28 TODO closed |
 | `docs/briefs/phase-6-db-audit-scoring.md` | brief tracked |
 
-**Part 2 — `see §10`**
+**Part 2 — `d4881da`**
 
 | File | Change |
 |---|---|
@@ -1310,4 +1310,15 @@ Demo 3, MANUAL_REVIEW → PREPAID_ONLY, `CUSTOMER_VERIFIED` (the §11 live step)
 
 Full suite green (740 passed, slow included) before the Part 2 commit. `git status -sb` and `git log --oneline -5` after the commit, and the Part 2 hash, are recorded by the follow-up commit below, never by amending.
 
-*(Filled in by the follow-up commit.)*
+Part 2 committed as `d4881da` and pushed. State immediately after that commit:
+
+```
+## main...origin/main
+```
+```
+d4881da phase 6: db, audit and scoring service
+7fb75f0 phase 5: follow-ups
+59237c0 docs: record the actual phase 5 commit hash in the report and progress log
+c5ff8f7 phase 5: explanations
+91a4837 docs: tighten demo 3 band; refresh operating manual
+```

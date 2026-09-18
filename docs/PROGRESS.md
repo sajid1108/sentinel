@@ -15,7 +15,7 @@ Times are from git commit timestamps (IST). Every builder updates the row for it
 | 4 | 3 | Feature builder, graph, point-in-time leakage suite | `58e977d` `7e1e525` | 09-17 20:15 | ~26 min |
 | 5 | 4 | Models, calibration, evaluation, backtest, guardrail pricing | `1c2259c` `53158b2` `91a4837` | 09-18 01:59 | longest stage; 3 architect decision rounds |
 | 6 | 5 | Explanations: reference vector, ablation attributions, evidence-based reason codes, prediction explanation | `c5ff8f7` | 09-18 04:25 | ~2h10m build |
-| 6 (follow-ups) + 7 | 5 + 6 | Phase 5 follow-ups (evidence ordering, plurals, raw return counts, device confirmation counts, latency p95); SQLite seeding (250 backtest-replay decisions), hash-chained audit, `ScoringService` (frozen history, idempotent, G6 degraded), `ReviewService` (override, appeal), `seed-db` / `reset-demo` | `7fb75f0` + Part 2 (see report) | 09-18 08:48 | ~37 min build, 1 architect review round (Phase 5) |
+| 6 (follow-ups) + 7 | 5 + 6 | Phase 5 follow-ups (evidence ordering, plurals, raw return counts, device confirmation counts, latency p95); SQLite seeding (250 backtest-replay decisions), hash-chained audit, `ScoringService` (frozen history, idempotent, G6 degraded), `ReviewService` (override, appeal), `seed-db` / `reset-demo` | `7fb75f0` `d4881da` | 09-18 08:48 | ~37 min build, 1 architect review round (Phase 5) |
 
 **Elapsed since project start:** ~37.5 hours wall clock.
 **Actual build time:** roughly 8–9 hours of agent work. The rest is review turnaround and gaps between sessions.
