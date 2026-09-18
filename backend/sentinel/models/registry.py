@@ -18,11 +18,16 @@ from sentinel.settings import ARTIFACTS_DIR
 
 MODEL_NAMES = ("return", "abuse")
 REGISTRY_FILE = "model_registry.json"
+REFERENCE_FILE = "models/reference_medians.json"
 MODEL_VERSION_PREFIX = "hgb-fs1.0"
 
 
 class ArtifactError(RuntimeError):
     """A model artifact is missing, altered, unregistered or built with another sklearn version."""
+
+
+class ReferenceError(ArtifactError):
+    """The attribution reference vector is missing, altered, or built for other models or features."""
 
 
 def artifact_path(name: str, artifacts_dir: Path = ARTIFACTS_DIR) -> Path:
@@ -104,3 +109,49 @@ def load_bundle(name: str, artifacts_dir: Path = ARTIFACTS_DIR) -> dict:
     if bundle.get("name") != name:
         raise ArtifactError(f"artifact at {path} holds model {bundle.get('name')!r}, not {name!r}")
     return {**bundle, "model_version": entry["model_version"], "sha256": actual}
+
+
+# ── attribution reference vector (§6.5, phase 5) ─────────────────────────────
+# The per-feature "typical genuine order" that ablation attributions compare against. Built once by
+# `cli build-reference` from genuine CALIBRATION rows and committed; never recomputed at request time.
+def reference_path(artifacts_dir: Path = ARTIFACTS_DIR) -> Path:
+    return Path(artifacts_dir) / REFERENCE_FILE
+
+
+def _reference_digest(payload: dict) -> str:
+    """SHA-256 over the payload without its own sha256 field, canonically encoded."""
+    body = {k: v for k, v in payload.items() if k != "sha256"}
+    return hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
+
+
+def save_reference(values: dict, feature_set_version: str, model_versions: dict[str, str], rows: int,
+                   artifacts_dir: Path = ARTIFACTS_DIR) -> dict:
+    payload = {"values": values, "feature_set_version": feature_set_version,
+               "model_versions": dict(model_versions), "rows": int(rows),
+               "split": "CALIBRATION", "label_filter": "abuse_label == 0"}
+    payload["sha256"] = _reference_digest(payload)
+    path = reference_path(artifacts_dir)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return payload
+
+
+def load_reference(bundles: dict[str, dict], artifacts_dir: Path = ARTIFACTS_DIR) -> dict:
+    """Verified load. The reference must be untampered and built for exactly these bundles."""
+    path = reference_path(artifacts_dir)
+    if not path.exists():
+        raise ReferenceError(f"reference vector not found at {path}; run `python -m sentinel.cli build-reference`")
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    actual = _reference_digest(payload)
+    if actual != payload.get("sha256"):
+        raise ReferenceError(f"SHA-256 mismatch for {path}: file records {payload.get('sha256')}, content is "
+                             f"{actual}. The reference was altered; refusing to load.")
+    for name, bundle in bundles.items():
+        if bundle["feature_set_version"] != payload["feature_set_version"]:
+            raise ReferenceError(f"reference vector was built for feature set {payload['feature_set_version']}, "
+                                 f"model {name!r} uses {bundle['feature_set_version']}; rebuild the reference")
+        recorded = payload["model_versions"].get(name)
+        if recorded != bundle.get("model_version"):
+            raise ReferenceError(f"reference vector was built against {name} model {recorded}, loaded model is "
+                                 f"{bundle.get('model_version')}; rebuild the reference")
+    return payload

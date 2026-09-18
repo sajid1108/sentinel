@@ -10,3 +10,6 @@ frontend/dist/
 *.db-wal
 *.db-shm
 .DS_Store
+
+# October desktop — local canvas state
+.october/

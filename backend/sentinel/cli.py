@@ -104,6 +104,40 @@ def _load_bundles():
         sys.exit(str(exc))
 
 
+def cmd_build_reference(args):
+    """Per-feature reference vector for ablation attributions: the typical genuine CALIBRATION order (§6.5).
+
+    Numeric features use the median, categoricals the most frequent value. Built from labelled rows here,
+    offline, and committed; models/ never sees a label."""
+    from sentinel.features import definitions
+    from sentinel.models import registry
+    from sentinel.models.train import CALIBRATION
+    from sentinel.evaluation.splits import load_offline_data
+
+    print("Building attribution reference vector...")
+    bundles = _load_bundles()
+    frame = load_offline_data().frame
+    rows = frame[(frame["split"] == CALIBRATION) & (frame["abuse_label"] == 0)]
+    if rows.empty:
+        raise SystemExit("no genuine CALIBRATION rows; run generate and build-features first")
+
+    values = {}
+    for name in definitions.all_features():
+        column = rows[name]
+        if name in definitions.CATEGORICAL_FEATURES:
+            values[name] = str(column.mode().iloc[0])
+        else:
+            values[name] = float(column.astype("float64").median())
+
+    versions = {n: b["model_version"] for n, b in bundles.items()}
+    payload = registry.save_reference(values, definitions.FEATURE_SET_VERSION, versions, len(rows))
+    print(f"  {len(rows)} genuine CALIBRATION rows, {len(values)} features, "
+          f"feature set {payload['feature_set_version']}")
+    print(f"  models {', '.join(f'{k}={v}' for k, v in sorted(versions.items()))}")
+    print(f"  sha256 {payload['sha256']}")
+    print(f"  wrote {registry.reference_path()}")
+
+
 def cmd_evaluate(args):
     import json
     import time
@@ -210,6 +244,7 @@ def main():
     sub.add_parser("build-features", help="Build point-in-time features into data/features.parquet")
     train_p = sub.add_parser("train", help="Train and register the return and abuse models")
     train_p.add_argument("--force", action="store_true", help="overwrite existing artifacts")
+    sub.add_parser("build-reference", help="Build the attribution reference vector into artifacts/models/")
     sub.add_parser("evaluate", help="Evaluate models and backtest strategies into artifacts/reports/evaluation.json")
     sub.add_parser("score-demos", help="Score the three demo orders through the committed models and policy")
     sub.add_parser("seed-db", help="[Phase 6] Seed the demo database")
@@ -227,6 +262,7 @@ def main():
         "world-stats": cmd_world_stats,
         "build-features": cmd_build_features,
         "train": cmd_train,
+        "build-reference": cmd_build_reference,
         "evaluate": cmd_evaluate,
         "score-demos": cmd_score_demos,
         "seed-db": cmd_seed_db,

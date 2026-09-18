@@ -1,0 +1,37 @@
+{
+  "feature_set_version": "fs-1.0-0ad43d7f",
+  "label_filter": "abuse_label == 0",
+  "model_versions": {
+    "abuse": "abuse-hgb-fs1.0-446c817f",
+    "return": "return-hgb-fs1.0-e3c877bc"
+  },
+  "rows": 1204,
+  "sha256": "e6ae3bede33df38cb814f1481485d7c137b74ce514b783233cefe703bcaf1032",
+  "split": "CALIBRATION",
+  "values": {
+    "account_age_days": 866.8352430555556,
+    "address_other_accounts_weighted_30d": 0.0,
+    "component_abuse_ratio_smoothed": 0.09090909090909091,
+    "component_recent_claims_30d": 0.0,
+    "component_size_reliable_90d": 1.0,
+    "confirmed_abuse_proximity": 0.0,
+    "delivery_speed": "STANDARD",
+    "device_confirmed_abuse_weight": 0.0,
+    "device_other_accounts_30d": 0.0,
+    "discount_pct": 6.0,
+    "identifier_reuse_velocity_7d": 0.0,
+    "linked_orders_24h": 0.0,
+    "linked_same_sku_7d": 0.0,
+    "matured_return_rate_smoothed": 0.2,
+    "n_items": 1.0,
+    "n_variants_same_product": 1.0,
+    "new_device_for_account": 0.0,
+    "order_value_inr": 2545.74,
+    "payment_method_cod": 0.0,
+    "primary_category": "APPAREL",
+    "prior_orders": 2.0,
+    "prior_returns_90d": 0.0,
+    "prior_suspicious_claims_180d": 0.0,
+    "token_other_accounts_30d": 0.0
+  }
+}

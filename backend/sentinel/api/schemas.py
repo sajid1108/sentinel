@@ -80,6 +80,9 @@ class ReasonCode(Contract):
     evidence: dict[str, float | int | str]
     attribution_pp: float | None
     evidence_strength: Literal["STRONG", "MODERATE", "WEAK"]
+    # Set when a fired code's own ablation delta is negligible: the evidence is real but a correlated
+    # feature already carries it in the score. Optional, so existing payloads stay valid (#27).
+    attribution_note: str | None = None
 
 
 class EvidenceSignal(Contract):
