@@ -64,6 +64,62 @@ def test_p4_neighbour_counts_only_if_confirmed_before_t0(confirmed_at, counted):
     assert f["confirmed_abuse_proximity"] == (0.5 if counted else 0.0)
 
 
+# ── Device confirmation evidence (1.6, #28): counts and age, point-in-time, never features ──
+def _confirmed_device_world(confirmations):
+    """One query account sharing a device with one peer per confirmation time in `confirmations`."""
+    w = MiniWorld()
+    device = w.ident("DEVICE", "shared")
+    for i, confirmed_at in enumerate(confirmations):
+        w.order(f"ORD-BAD-{i}", f"ACC-BAD-{i}", T0 - 20 * DAY, device=device)
+        w.event(f"ORD-BAD-{i}", "DELIVERED", T0 - 17 * DAY)
+        w.event(f"ORD-BAD-{i}", "QC_FLAGGED", T0 - 15 * DAY)
+        w.event(f"ORD-BAD-{i}", "ABUSE_CONFIRMED", confirmed_at)
+    now = w.order("ORD-NOW", "ACC-NOW", T0, device=device)
+    return w, now
+
+
+def test_device_confirmation_evidence_counts_peers_and_the_latest_confirmation():
+    w, now = _confirmed_device_world([T0 - 10 * DAY, T0 - 4 * DAY - 6 * HOUR, T0 - 7 * DAY])
+    evidence = builder_at(w, T0).evidence_values(w.request(now))
+    assert evidence["device_confirmed_peer_count"] == 3
+    assert evidence["device_most_recent_confirmation_days"] == pytest.approx(4.25)
+
+
+@pytest.mark.parametrize("confirmed_at", [T0, T0 + DAY])
+def test_device_confirmation_evidence_ignores_confirmations_at_or_after_t0(confirmed_at):
+    """P3/P4 hold for the evidence too: a confirmation at t0 or later is invisible."""
+    w, now = _confirmed_device_world([T0 - 10 * DAY, confirmed_at])
+    evidence = builder_at(w, T0).evidence_values(w.request(now))
+    assert evidence["device_confirmed_peer_count"] == 1
+    assert evidence["device_most_recent_confirmation_days"] == pytest.approx(10.0)
+
+
+def test_device_confirmation_evidence_is_empty_without_confirmed_peers():
+    w, now = _confirmed_device_world([T0 + DAY])
+    evidence = builder_at(w, T0).evidence_values(w.request(now))
+    assert evidence == {"device_confirmed_peer_count": 0, "device_most_recent_confirmation_days": None}
+
+
+def test_device_confirmation_evidence_matches_offline_policy_inputs():
+    """One code path: the serving value equals the value written beside the offline policy inputs."""
+    from sentinel.features.builder import EVIDENCE_COLUMNS, FeatureBuilder
+    w, now = _confirmed_device_world([T0 - 10 * DAY, T0 - 3 * DAY])
+    serving = builder_at(w, T0).evidence_values(w.request(now))
+    offline = next(r.policy_inputs for r in FeatureBuilder(w.tables()).iter_order_features(policy_inputs=True)
+                   if r.order_id == "ORD-NOW")
+    assert {c: offline[c] for c in EVIDENCE_COLUMNS} == serving
+
+
+def test_device_confirmation_evidence_is_not_a_model_feature():
+    from sentinel.features import definitions
+    from sentinel.features.builder import EVIDENCE_COLUMNS, POLICY_INPUT_COLUMNS
+    for column in EVIDENCE_COLUMNS:
+        assert column not in definitions.ABUSE_FEATURES
+        assert column not in definitions.RETURN_FEATURES
+        assert column not in definitions.all_features()
+        assert column not in POLICY_INPUT_COLUMNS
+
+
 # ── Self-confirmation is account history, not graph evidence (deviation #24) ─
 def _self_confirmed_world(with_neighbour: bool):
     w = MiniWorld()

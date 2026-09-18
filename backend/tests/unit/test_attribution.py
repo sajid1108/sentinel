@@ -12,10 +12,11 @@ from sentinel.models import registry
 from sentinel.models.attribution import ablation, attributions, group_attribution
 from sentinel.models.reason_codes import GROUPS
 
-# Both models plus the group call, per order. Asserted on the median of a warmed loop: a single timing
-# on a shared CI box measures scheduler noise, not the code.
+# Both models plus the group call, per order. Asserted on the median and the p95 of a warmed loop: a single
+# timing on a shared machine measures scheduler noise, not the code; p95 bounds the per-request tail.
 LATENCY_BUDGET_MS = 20.0
-LATENCY_RUNS = 40
+LATENCY_P95_BUDGET_MS = 40.0
+LATENCY_RUNS = 60
 
 
 @pytest.fixture(scope="module")
@@ -142,7 +143,10 @@ def test_attribution_latency_budget(bundles, reference, row):
         timings.append((time.perf_counter() - start) * 1000)
     timings.sort()
     median = timings[len(timings) // 2]
+    p95 = timings[int(0.95 * (len(timings) - 1))]
+    assert len(timings) >= 50
     assert median < LATENCY_BUDGET_MS, f"median {median:.2f} ms over budget {LATENCY_BUDGET_MS} ms"
+    assert p95 < LATENCY_P95_BUDGET_MS, f"p95 {p95:.2f} ms over budget {LATENCY_P95_BUDGET_MS} ms"
 
 
 def test_one_predict_per_model(bundles, reference, row, monkeypatch):

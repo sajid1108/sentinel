@@ -1,15 +1,15 @@
 [meta]
-version = "rc-1.0"
+version = "rc-1.1"
 
 [codes.GRAPH_DEVICE_CONFIRMED_LINK]
 model = "ABUSE"
 direction = "INCREASES"
 predicate = "device_confirmed_abuse_weight >= 0.3"
-template = "This device was used by {n} accounts later confirmed for return abuse, most recently {days} days ago."
-# The §6.5 template above needs two values the point-in-time feature set does not carry: how many of the
-# device's peers were confirmed, and how long ago the most recent confirmation was. The features hold only
-# the decayed confirmed-abuse weight. Until a later phase supplies them (deviation #28) this code renders
-# template_unconfirmed_counts, which states only what is known. The code still fires either way: firing is
+template = "This device was used by {n} {n:account|accounts} later confirmed for return abuse, most recently {days} {days:day|days} ago."
+# The §6.5 template above needs two values the model features do not carry: how many of the device's peers
+# were confirmed, and how long ago the most recent confirmation was. The FeatureBuilder supplies both as
+# evidence-only values (deviation #28); {days} is whole days elapsed. If either is missing the code renders
+# template_unconfirmed_counts, which states only what is known. The code fires either way: firing is
 # predicate-driven (#27).
 template_unconfirmed_counts = "This device is linked to other accounts since confirmed for return abuse."
 min_attribution_pp = 2.0
@@ -19,7 +19,7 @@ evidence_strength = "STRONG"
 model = "ABUSE"
 direction = "INCREASES"
 predicate = "device_other_accounts_30d >= 3"
-template = "This device was used by {n} other accounts in the last 30 days."
+template = "This device was used by {n} other {n:account|accounts} in the last 30 days."
 min_attribution_pp = 2.0
 evidence_strength = "MODERATE"
 
@@ -27,7 +27,7 @@ evidence_strength = "MODERATE"
 model = "ABUSE"
 direction = "INCREASES"
 predicate = "token_other_accounts_30d >= 2"
-template = "The payment method was used by {n} other accounts in the last 30 days."
+template = "The payment method was used by {n} other {n:account|accounts} in the last 30 days."
 min_attribution_pp = 2.0
 evidence_strength = "STRONG"
 
@@ -35,7 +35,7 @@ evidence_strength = "STRONG"
 model = "ABUSE"
 direction = "INCREASES"
 predicate = "component_abuse_ratio_smoothed >= 0.25 and component_size_reliable_90d >= 4"
-template = "This account belongs to a group of {size} linked accounts, {k} of them confirmed abusive."
+template = "This account belongs to a group of {size} linked {size:account|accounts}, {k} of them confirmed abusive."
 min_attribution_pp = 2.0
 evidence_strength = "STRONG"
 
@@ -43,7 +43,7 @@ evidence_strength = "STRONG"
 model = "ABUSE"
 direction = "INCREASES"
 predicate = "linked_orders_24h >= 3"
-template = "{n} linked accounts placed orders in the last 24 hours."
+template = "Linked accounts placed {n} {n:order|orders} in the last 24 hours."
 min_attribution_pp = 2.0
 evidence_strength = "MODERATE"
 
@@ -51,7 +51,7 @@ evidence_strength = "MODERATE"
 model = "ABUSE"
 direction = "INCREASES"
 predicate = "linked_same_sku_7d >= 2"
-template = "Linked accounts ordered the same item {n} times this week."
+template = "Linked accounts ordered the same item {n} {n:time|times} this week."
 min_attribution_pp = 2.0
 evidence_strength = "MODERATE"
 
@@ -59,7 +59,7 @@ evidence_strength = "MODERATE"
 model = "ABUSE"
 direction = "INCREASES"
 predicate = "prior_suspicious_claims_180d >= 1"
-template = "The account had {n} return or delivery claim(s) flagged in the last 6 months."
+template = "The account had {n} flagged return or delivery {n:claim|claims} in the last 6 months."
 min_attribution_pp = 2.0
 evidence_strength = "MODERATE"
 
@@ -99,6 +99,9 @@ evidence_strength = "MODERATE"
 model = "RETURN"
 direction = "INCREASES"
 predicate = "matured_return_rate_smoothed >= 0.4"
-template = "The customer returns often ({rate}%). This affects return likelihood, not abuse risk."
+template = "The customer returned {returns} of {matured} delivered {matured:order|orders}. This affects return likelihood, not abuse risk."
+# Rendered from the raw matured counts, not the smoothed rate the predicate uses (the smoothed rate is a model
+# input and overstates a short history). Without the counts only the counts-free sentence is shown.
+template_without_counts = "The customer returns often. This affects return likelihood, not abuse risk."
 min_attribution_pp = 2.0
 evidence_strength = "MODERATE"

@@ -112,6 +112,7 @@ class AccountState:
     created_at: int | None
     orders: list[OrderRecord] = field(default_factory=list)    # placement order
     confirmed_at: int | None = None                             # first ABUSE_CONFIRMED on any order (P4)
+    confirmation_times: list[int] = field(default_factory=list)  # every ABUSE_CONFIRMED, ascending (evidence only)
     flag_times: list[int] = field(default_factory=list)         # CLAIM_FILED / QC_FLAGGED, ascending
     return_times: list[int] = field(default_factory=list)       # RETURN / EXCHANGE_REQUESTED, ascending
 
@@ -219,5 +220,6 @@ class GraphState:
         elif event_type in FLAGGED_CLAIM_EVENTS:
             acc.flag_times.append(occurred_at)
         elif event_type == "ABUSE_CONFIRMED":
+            acc.confirmation_times.append(occurred_at)
             if acc.confirmed_at is None:
                 acc.confirmed_at = occurred_at

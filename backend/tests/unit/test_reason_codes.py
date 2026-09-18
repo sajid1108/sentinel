@@ -13,7 +13,7 @@ from sentinel.features import definitions
 from sentinel.models import reason_codes as rc
 from sentinel.models.explain import (DOMINANCE_MIN_PP, NO_EVIDENCE_GROUP, PREDICTION_TEMPLATES,
                                      dominant_group, explanation_group, prediction_explanation,
-                                     sort_reasons)
+                                     sort_by_attribution, sort_reasons)
 
 
 @pytest.fixture(scope="module")
@@ -159,12 +159,101 @@ def test_device_code_without_counts_uses_the_counts_free_wording(catalog):
     assert code.reviewer_text == catalog["GRAPH_DEVICE_CONFIRMED_LINK"].template_unconfirmed_counts
 
 
-def test_device_code_uses_the_documented_wording_once_counts_exist(catalog):
+def _device_code(catalog, accounts, days):
     evidence = rc.Evidence(features={**_zero_features(), "device_confirmed_abuse_weight": 1.0},
-                           device_confirmed_accounts=3, device_last_confirmed_days=5.0)
+                           device_confirmed_accounts=accounts, device_last_confirmed_days=days)
     fired, _ = rc.fired_codes(evidence, {"ABUSE": {}, "RETURN": {}}, catalog)
-    text = next(f for f in fired if f.code == "GRAPH_DEVICE_CONFIRMED_LINK").reviewer_text
-    assert text == "This device was used by 3 accounts later confirmed for return abuse, most recently 5.0 days ago."
+    return next(f for f in fired if f.code == "GRAPH_DEVICE_CONFIRMED_LINK")
+
+
+def test_device_code_uses_the_documented_wording_once_counts_exist(catalog):
+    text = _device_code(catalog, 3, 5.0).reviewer_text
+    assert text == "This device was used by 3 accounts later confirmed for return abuse, most recently 5 days ago."
+
+
+def test_device_code_days_are_whole_days_elapsed(catalog):
+    """3.75 days reads "3 days ago": never rounded up to a day that has not yet passed."""
+    code = _device_code(catalog, 3, 3.75)
+    assert code.reviewer_text.endswith("most recently 3 days ago.")
+    assert code.evidence["days_since_confirmation"] == 3
+
+
+def test_device_code_singular_forms(catalog):
+    text = _device_code(catalog, 1, 1.2).reviewer_text
+    assert text == "This device was used by 1 account later confirmed for return abuse, most recently 1 day ago."
+
+
+def test_device_code_with_only_one_value_falls_back(catalog):
+    code = _device_code(catalog, 3, None)
+    assert code.reviewer_text == catalog["GRAPH_DEVICE_CONFIRMED_LINK"].template_unconfirmed_counts
+
+
+# -- count-aware rendering ----------------------------------------------------
+def test_fill_chooses_singular_only_for_exactly_one():
+    template = "{n} {n:claim|claims}"
+    assert [rc.fill(template, {"n": n}) for n in (0, 1, 2)] == ["0 claims", "1 claim", "2 claims"]
+
+
+def test_fill_rejects_an_unknown_plural_name():
+    with pytest.raises(rc.CatalogError, match="missing_name"):
+        rc.fill("{missing_name:a|b}", {"n": 1})
+
+
+def test_no_template_uses_a_parenthesised_plural(catalog):
+    for spec in catalog.values():
+        for text in (spec.template, spec.template_unconfirmed_counts, spec.template_without_counts):
+            assert "(s)" not in (text or ""), spec.code
+
+
+@pytest.mark.parametrize("code,feature,value,expected", [
+    ("ACCOUNT_PRIOR_SUSPICIOUS_CLAIM", "prior_suspicious_claims_180d", 1,
+     "The account had 1 flagged return or delivery claim in the last 6 months."),
+    ("ACCOUNT_PRIOR_SUSPICIOUS_CLAIM", "prior_suspicious_claims_180d", 2,
+     "The account had 2 flagged return or delivery claims in the last 6 months."),
+    ("GRAPH_TOKEN_REUSE", "token_other_accounts_30d", 2,
+     "The payment method was used by 2 other accounts in the last 30 days."),
+    ("GRAPH_DEVICE_SHARED", "device_other_accounts_30d", 3,
+     "This device was used by 3 other accounts in the last 30 days."),
+    ("TEMPORAL_BURST", "linked_orders_24h", 4, "Linked accounts placed 4 orders in the last 24 hours."),
+    ("SAME_SKU_COORDINATION", "linked_same_sku_7d", 2, "Linked accounts ordered the same item 2 times this week."),
+])
+def test_count_templates_render_plain_english(catalog, code, feature, value, expected):
+    fired, _ = rc.fired_codes(_evidence(**{feature: value}), {"ABUSE": {}, "RETURN": {}}, catalog)
+    assert next(f for f in fired if f.code == code).reviewer_text == expected
+
+
+def test_temporal_burst_counts_orders_not_accounts(catalog):
+    """1.2: linked_orders_24h counts orders, so the sentence must say orders."""
+    fired, _ = rc.fired_codes(_evidence(linked_orders_24h=4), {"ABUSE": {}, "RETURN": {}}, catalog)
+    text = next(f for f in fired if f.code == "TEMPORAL_BURST").reviewer_text
+    assert "4 orders" in text and "linked accounts placed orders" not in text.lower()
+
+
+def _return_history(catalog, **counts):
+    evidence = rc.Evidence(features={**_zero_features(), "matured_return_rate_smoothed": 0.5}, **counts)
+    fired, _ = rc.fired_codes(evidence, {"ABUSE": {}, "RETURN": {}}, catalog)
+    return next(f for f in fired if f.code == "RETURN_HIGH_HISTORY")
+
+
+def test_return_history_renders_the_raw_matured_counts(catalog):
+    code = _return_history(catalog, matured_returns=28, matured_orders=48)
+    assert code.reviewer_text == ("The customer returned 28 of 48 delivered orders. "
+                                  "This affects return likelihood, not abuse risk.")
+    assert code.evidence == {"returns": 28, "matured_orders": 48}
+
+
+def test_return_history_without_counts_states_no_number(catalog):
+    code = _return_history(catalog)
+    assert code.reviewer_text == catalog["RETURN_HIGH_HISTORY"].template_without_counts
+    assert not any(ch.isdigit() for ch in code.reviewer_text)
+
+
+def test_return_history_still_fires_on_the_smoothed_rate(catalog):
+    """Only the text changed: a smoothed rate under 0.4 never fires, whatever the raw counts say."""
+    evidence = rc.Evidence(features={**_zero_features(), "matured_return_rate_smoothed": 0.39},
+                           matured_returns=9, matured_orders=10)
+    fired, _ = rc.fired_codes(evidence, {"ABUSE": {}, "RETURN": {}}, catalog)
+    assert "RETURN_HIGH_HISTORY" not in {f.code for f in fired}
 
 
 def test_fired_codes_satisfy_the_api_contract(catalog):
@@ -204,12 +293,34 @@ def test_prediction_explanation_is_one_of_the_templates():
     assert text == PREDICTION_TEMPLATES["graph"]
 
 
-def test_reasons_sort_by_absolute_attribution_then_catalog_order(catalog):
+def test_reasons_sort_by_evidence_strength_first(catalog):
+    """1.1: a WEAK code never outranks STRONG or MODERATE evidence, however large its attribution."""
+    codes = [rc.FiredCode("W", "ABUSE", "INCREASES", "", {}, 94.0, "WEAK"),
+             rc.FiredCode("M", "ABUSE", "INCREASES", "", {}, 4.0, "MODERATE"),
+             rc.FiredCode("S", "ABUSE", "INCREASES", "", {}, 0.0, "STRONG")]
+    assert [c.code for c in sort_reasons(codes, list(catalog))] == ["S", "M", "W"]
+
+
+def test_reasons_within_a_strength_sort_by_absolute_attribution_then_catalog_order(catalog):
     order = list(catalog)
     codes = [rc.FiredCode("A", "ABUSE", "INCREASES", "", {}, 1.0, "WEAK"),
              rc.FiredCode("B", "ABUSE", "INCREASES", "", {}, -30.0, "WEAK"),
              rc.FiredCode("C", "ABUSE", "INCREASES", "", {}, None, "WEAK")]
     assert [c.code for c in sort_reasons(codes, order)] == ["B", "A", "C"]
+
+
+def test_strength_and_attribution_ties_fall_back_to_catalog_order(catalog):
+    first, second = list(catalog)[:2]
+    codes = [rc.FiredCode(second, "ABUSE", "INCREASES", "", {}, 5.0, "STRONG"),
+             rc.FiredCode(first, "ABUSE", "INCREASES", "", {}, -5.0, "STRONG")]
+    assert [c.code for c in sort_reasons(codes, list(catalog))] == [first, second]
+
+
+def test_attribution_view_sorts_by_magnitude_only(catalog):
+    codes = [rc.FiredCode("S", "ABUSE", "INCREASES", "", {}, 0.0, "STRONG"),
+             rc.FiredCode("W", "ABUSE", "INCREASES", "", {}, 94.0, "WEAK"),
+             rc.FiredCode("M", "ABUSE", "INCREASES", "", {}, -4.0, "MODERATE")]
+    assert [c.code for c in sort_by_attribution(codes, list(catalog))] == ["W", "M", "S"]
 
 
 # -- purity ------------------------------------------------------------------

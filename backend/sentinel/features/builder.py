@@ -39,6 +39,9 @@ _END = float("inf")
 SIGNAL_INPUT_COLUMNS: tuple[str, ...] = tuple(f.name for f in fields(SignalInputs))
 POLICY_INPUT_COLUMNS: tuple[str, ...] = (*SIGNAL_INPUT_COLUMNS, "clv_inr", "graph_state_as_of", "matured_return_rate",
                                          "matured_returns", "payment_method", "order_value_inr")
+# Evidence-only values for reviewer text (#28), written beside the policy inputs. Neither a model feature
+# nor a policy input: definitions.py never lists them and nothing in policy/ reads them.
+EVIDENCE_COLUMNS: tuple[str, ...] = ("device_confirmed_peer_count", "device_most_recent_confirmation_days")
 
 
 @dataclass(frozen=True)
@@ -202,8 +205,14 @@ class FeatureBuilder:
                "matured_return_rate": returns / matured if matured else None,
                "matured_returns": returns,
                "payment_method": q.payment_method,
-               "order_value_inr": order_value_inr(q)}
-        return {name: row[name] for name in POLICY_INPUT_COLUMNS}
+               "order_value_inr": order_value_inr(q),
+               **self._analysis(q, t0)[1].evidence}
+        return {name: row[name] for name in (*POLICY_INPUT_COLUMNS, *EVIDENCE_COLUMNS)}
+
+    def evidence_values(self, request: ScoreOrderRequest, t0: datetime | None = None) -> dict:
+        """Reviewer evidence for the query order (EVIDENCE_COLUMNS). Never a model feature (#28)."""
+        t = self._check_t0(t0, request)
+        return dict(self._analysis(query_from_request(request), t)[1].evidence)
 
     def discounted_links(self, request: ScoreOrderRequest, t0: datetime | None = None) -> list[DiscountedLink]:
         t = self._check_t0(t0, request)
@@ -222,7 +231,7 @@ def _utc(values) -> pd.Series:
 def build_tables(world, policy_config: PolicyConfig | None = None) -> tuple[pd.DataFrame, pd.DataFrame]:
     """One replay, two tables with one row per historical order:
     features (order_id, split, t0, feature_set_version, every feature) and
-    policy inputs (order_id, split, t0, POLICY_INPUT_COLUMNS)."""
+    policy inputs (order_id, split, t0, POLICY_INPUT_COLUMNS, then the evidence-only EVIDENCE_COLUMNS)."""
     feature_rows, policy_rows = [], []
     for row in FeatureBuilder(world, policy_config).iter_order_features(policy_inputs=True):
         feature_rows.append({"order_id": row.order_id, "split": row.split, "t0": row.t0,
@@ -231,10 +240,11 @@ def build_tables(world, policy_config: PolicyConfig | None = None) -> tuple[pd.D
     features = pd.DataFrame(feature_rows,
                             columns=["order_id", "split", "t0", "feature_set_version", *definitions.all_features()])
     features["t0"] = _utc(features["t0"])
-    policy = pd.DataFrame(policy_rows, columns=["order_id", "split", "t0", *POLICY_INPUT_COLUMNS])
+    policy = pd.DataFrame(policy_rows, columns=["order_id", "split", "t0", *POLICY_INPUT_COLUMNS, *EVIDENCE_COLUMNS])
     for column in ("t0", "graph_state_as_of"):
         policy[column] = _utc(policy[column])
     policy["matured_return_rate"] = policy["matured_return_rate"].astype("float64")
+    policy["device_most_recent_confirmation_days"] = policy["device_most_recent_confirmation_days"].astype("float64")
     return features, policy
 
 

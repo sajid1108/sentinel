@@ -56,6 +56,7 @@ class GraphAnalysis:
     signal_fields: dict = field(default_factory=dict)
     discounted: list[DiscountedLink] = field(default_factory=list)
     component: dict[str, Reached] = field(default_factory=dict)
+    evidence: dict = field(default_factory=dict)      # reviewer evidence only, never model features (#28)
 
 
 class _Context:
@@ -195,6 +196,11 @@ def analyse(state: GraphState, q: OrderQuery, t0: int) -> GraphAnalysis:
     device_other = len({link.account_id for link in device_links
                         if not link.sequential and in_window(link.last_seen, t0, 30)})
     device_confirmed_weight = sum(link.weight for link in device_links if link.confirmed)
+    # Evidence for the reviewer text, not features: how many other accounts on this device were confirmed
+    # before t0, and how long ago the most recent of those confirmations was (#28).
+    confirmed_peers = {link.account_id for link in device_links if link.confirmed}
+    latest_confirmation = max((t for a in confirmed_peers for t in state.accounts[a].confirmation_times
+                               if visible(t, t0)), default=None)
 
     # payment token (COD: the account's prior tokens)
     if "PAYMENT_TOKEN" in by_kind:
@@ -272,4 +278,9 @@ def analyse(state: GraphState, q: OrderQuery, t0: int) -> GraphAnalysis:
     }
     discounted = [d for kind in ("DEVICE", "ADDRESS", "PAYMENT_TOKEN") if kind in by_kind
                   for d in [_discounted_link(ctx, kind, *by_kind[kind])] if d is not None]
-    return GraphAnalysis(features, signal_fields, discounted, component)
+    evidence = {
+        "device_confirmed_peer_count": len(confirmed_peers),
+        "device_most_recent_confirmation_days":
+            None if latest_confirmation is None else (t0 - latest_confirmation) / MICROS_PER_DAY,
+    }
+    return GraphAnalysis(features, signal_fields, discounted, component, evidence)

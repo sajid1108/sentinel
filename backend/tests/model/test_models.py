@@ -11,7 +11,7 @@ from sentinel.evaluation import backtest as B
 from sentinel.evaluation.cohorts import HARD_NEGATIVE_ARCHETYPES
 from sentinel.evaluation.report import run_evaluation
 from sentinel.evaluation.splits import offline_data
-from sentinel.features.builder import POLICY_INPUT_COLUMNS, WORLD_TABLES, build_tables
+from sentinel.features.builder import EVIDENCE_COLUMNS, POLICY_INPUT_COLUMNS, WORLD_TABLES, build_tables
 from sentinel.models import registry
 from sentinel.models.train import CALIBRATION, MODEL_SPECS, TEST, TRAIN, base_scores, labelled_rows, predict, \
     train_all, train_model
@@ -54,7 +54,7 @@ def _ids(frame: pd.DataFrame, split: str) -> set[str]:
 # ── policy inputs table ──────────────────────────────────────────────────────
 def test_policy_inputs_table(world, tables):
     features, policy = tables
-    assert list(policy.columns) == ["order_id", "split", "t0", *POLICY_INPUT_COLUMNS]
+    assert list(policy.columns) == ["order_id", "split", "t0", *POLICY_INPUT_COLUMNS, *EVIDENCE_COLUMNS]
     assert (policy["order_id"] == features["order_id"]).all() and (policy["graph_state_as_of"] == policy["t0"]).all()
     assert (policy["order_value_inr"] == features["order_value_inr"]).all()
     rate = policy["matured_return_rate"]

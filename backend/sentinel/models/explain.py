@@ -40,10 +40,11 @@ class OrderExplanation:
     p_abuse: float
     p_abuse_without_graph_evidence: float
     prediction_explanation: str
-    reasons: list[rc.FiredCode]
+    reasons: list[rc.FiredCode]                 # evidence order: strength, then |attribution|, then catalog
     mitigating_reasons: list[rc.FiredCode]
     group_attribution_pp: dict[str, float]
     reason_code_version: str
+    attributions_by_magnitude: list[rc.FiredCode]   # the same codes as `reasons`, by |attribution_pp| only
 
 
 def dominant_group(group_delta_pp: dict[str, float]) -> str | None:
@@ -67,8 +68,24 @@ def explanation_group(group_delta_pp: dict[str, float]) -> str:
     return dominant_group(group_delta_pp) or NO_EVIDENCE_GROUP
 
 
+# Reasons are evidence statements (#27), so they are ordered as evidence: strongest evidence first.
+EVIDENCE_STRENGTH_ORDER: tuple[str, ...] = ("STRONG", "MODERATE", "WEAK")
+
+
 def sort_reasons(reasons: list[rc.FiredCode], catalog_order: list[str]) -> list[rc.FiredCode]:
-    """Strongest attribution first; codes with no attribution, or ties, keep catalog order."""
+    """Evidence strength (STRONG, MODERATE, WEAK), then |attribution_pp| descending, then catalog order.
+
+    Codes with no attribution sort as 0 within their strength band. Attribution is never hidden: every code
+    still carries its attribution_pp, and sort_by_attribution gives the model-attribution view.
+    """
+    position = {code: i for i, code in enumerate(catalog_order)}
+    strength = {s: i for i, s in enumerate(EVIDENCE_STRENGTH_ORDER)}
+    return sorted(reasons, key=lambda r: (strength[r.evidence_strength], -abs(r.attribution_pp or 0.0),
+                                          position.get(r.code, len(position))))
+
+
+def sort_by_attribution(reasons: list[rc.FiredCode], catalog_order: list[str]) -> list[rc.FiredCode]:
+    """|attribution_pp| descending only (ties and missing attributions keep catalog order): what moved the score."""
     position = {code: i for i, code in enumerate(catalog_order)}
     return sorted(reasons, key=lambda r: (-abs(r.attribution_pp or 0.0), position.get(r.code, len(position))))
 
@@ -76,6 +93,7 @@ def sort_reasons(reasons: list[rc.FiredCode], catalog_order: list[str]) -> list[
 def explain_order(bundles: dict[str, dict], reference: dict, features: dict, discounted_links=(),
                   device_confirmed_accounts: int | None = None,
                   device_last_confirmed_days: float | None = None,
+                  matured_returns: int | None = None, matured_orders: int | None = None,
                   catalog: dict[str, rc.CodeSpec] | None = None) -> OrderExplanation:
     """One order, both models, one batched ablation each. Probabilities and evidence only."""
     catalog = catalog or rc.load_catalog()
@@ -84,7 +102,8 @@ def explain_order(bundles: dict[str, dict], reference: dict, features: dict, dis
 
     evidence = rc.Evidence(features=features, discounted_links=tuple(discounted_links),
                            device_confirmed_accounts=device_confirmed_accounts,
-                           device_last_confirmed_days=device_last_confirmed_days)
+                           device_last_confirmed_days=device_last_confirmed_days,
+                           matured_returns=matured_returns, matured_orders=matured_orders)
     increases, mitigating = rc.fired_codes(
         evidence, {"ABUSE": abuse.deltas, "RETURN": returns.deltas}, catalog)
 
@@ -98,4 +117,5 @@ def explain_order(bundles: dict[str, dict], reference: dict, features: dict, dis
         mitigating_reasons=sort_reasons(mitigating, order),
         group_attribution_pp=dict(abuse.group_delta_pp),
         reason_code_version=rc.CATALOG_VERSION,
+        attributions_by_magnitude=sort_by_attribution(increases, order),
     )

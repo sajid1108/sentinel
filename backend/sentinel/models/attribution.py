@@ -9,7 +9,10 @@ deliberately exposes no function that adds them together, and the group counterf
 ablation rather than a sum of the group's individual deltas.
 
 Cost: exactly one predict_proba per model per order. The baseline row, one row per ablated feature and
-one row per ablated group are built as a single batch and scored together.
+one row per ablated group are built as a single batch and scored together. The batch is ~20 rows, so it is
+scored on one OpenMP thread: fanning 20 rows out over every core costs more than the trees themselves
+(measured median 18.6 -> 13.1 ms, p95 24.7 -> 15.9 ms per order on 8 cores). Predictions are unchanged:
+each row's trees are summed the same way whatever the thread count.
 """
 from __future__ import annotations
 
@@ -17,10 +20,21 @@ from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
+from threadpoolctl import ThreadpoolController
 
 from sentinel.models.calibrate import apply_calibrator
 
 PP = 100.0  # probabilities are reported in probability points
+
+# Built once: constructing a controller scans the loaded native libraries, which costs more than a predict.
+_threadpools: ThreadpoolController | None = None
+
+
+def _one_openmp_thread():
+    global _threadpools
+    if _threadpools is None:
+        _threadpools = ThreadpoolController()
+    return _threadpools.limit(limits=1, user_api="openmp")
 
 
 @dataclass(frozen=True)
@@ -42,7 +56,8 @@ def _calibrated(bundle: dict, design: pd.DataFrame) -> np.ndarray:
     This is train.predict() without its design_matrix pass: _batch produces exactly the dtypes
     design_matrix would, and re-deriving them per request costs more than the model call itself.
     """
-    scores = bundle["base_model"].predict_proba(design)[:, 1]
+    with _one_openmp_thread():
+        scores = bundle["base_model"].predict_proba(design)[:, 1]
     return apply_calibrator(bundle["calibration_method"], bundle["calibrator"], scores)
 
 

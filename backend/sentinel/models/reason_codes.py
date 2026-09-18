@@ -11,6 +11,8 @@ contains a raw feature name, a threshold, a model version or a probability; coun
 from __future__ import annotations
 
 import ast
+import math
+import re
 import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -47,6 +49,7 @@ class CodeSpec:
     evidence_strength: str
     min_attribution_pp: float
     template_unconfirmed_counts: str | None = None
+    template_without_counts: str | None = None
 
 
 @dataclass(frozen=True)
@@ -66,9 +69,14 @@ class Evidence:
     """Everything the catalog may read about one order. Features plus link facts; never a label."""
     features: dict
     discounted_links: tuple = ()
-    # Supplied by a later phase (#28); when absent the device code renders its counts-free wording.
+    # Evidence-only values from the FeatureBuilder (#28); when absent the device code renders its
+    # counts-free wording.
     device_confirmed_accounts: int | None = None
     device_last_confirmed_days: float | None = None
+    # Raw matured return history (policy-inputs row), for RETURN_HIGH_HISTORY's text only. Firing still uses
+    # the smoothed-rate feature; when absent the code renders its counts-free wording.
+    matured_returns: int | None = None
+    matured_orders: int | None = None
     extra: dict = field(default_factory=dict)
 
     def predicate_scope(self) -> dict:
@@ -87,7 +95,8 @@ def load_catalog(path: Path = CATALOG_FILE) -> dict[str, CodeSpec]:
                 code=code, model=body["model"], direction=body["direction"], predicate=body["predicate"],
                 template=body["template"], evidence_strength=body["evidence_strength"],
                 min_attribution_pp=float(body["min_attribution_pp"]),
-                template_unconfirmed_counts=body.get("template_unconfirmed_counts"))
+                template_unconfirmed_counts=body.get("template_unconfirmed_counts"),
+                template_without_counts=body.get("template_without_counts"))
         except KeyError as exc:
             raise CatalogError(f"reason code {code!r} is missing {exc.args[0]!r}") from exc
     if not out:
@@ -145,7 +154,8 @@ def code_evidence(spec: CodeSpec, evidence: Evidence) -> dict:
         if evidence.device_confirmed_accounts is not None:
             out["confirmed_accounts"] = int(evidence.device_confirmed_accounts)
         if evidence.device_last_confirmed_days is not None:
-            out["days_since_confirmation"] = round(float(evidence.device_last_confirmed_days), 1)
+            # whole days elapsed: 3.7 days reads "3 days ago", never rounded up to a day not yet reached
+            out["days_since_confirmation"] = int(math.floor(float(evidence.device_last_confirmed_days)))
         return out
     if spec.code == "GRAPH_DEVICE_SHARED":
         return {"other_accounts_30d": int(f["device_other_accounts_30d"])}
@@ -173,32 +183,57 @@ def code_evidence(spec: CodeSpec, evidence: Evidence) -> dict:
     if spec.code == "RETURN_SIZE_BRACKETING":
         return {"variants": int(f["n_variants_same_product"])}
     if spec.code == "RETURN_HIGH_HISTORY":
-        return {"return_rate_pct": round(float(f["matured_return_rate_smoothed"]) * 100)}
+        if evidence.matured_returns is None or evidence.matured_orders is None:
+            return {}
+        return {"returns": int(evidence.matured_returns), "matured_orders": int(evidence.matured_orders)}
     raise CatalogError(f"no evidence mapping for reason code {spec.code!r}")
 
 
-def render(spec: CodeSpec, evidence: Evidence, values: dict) -> str:
-    if spec.code == "GRAPH_DEVICE_CONFIRMED_LINK":
+# {name:singular|plural}: the singular form when the value named `name` is exactly 1, else the plural.
+_PLURAL = re.compile(r"\{(\w+):([^{}|]*)\|([^{}|]*)\}")
+
+
+def fill(template: str, values: dict) -> str:
+    """Count-aware template filling: `{n} {n:claim|claims}` renders "1 claim" or "3 claims"."""
+    def choose(match: re.Match) -> str:
+        name, singular, plural = match.groups()
+        if name not in values:
+            raise CatalogError(f"template refers to {name!r}, which the evidence does not carry")
+        return singular if values[name] == 1 else plural
+    return _PLURAL.sub(choose, template).format_map(values)
+
+
+def template_values(spec: CodeSpec, values: dict) -> dict | None:
+    """Placeholder values for one code's template; None means render its counts-free wording."""
+    code = spec.code
+    if code == "GRAPH_DEVICE_CONFIRMED_LINK":
         if "confirmed_accounts" not in values or "days_since_confirmation" not in values:
-            return spec.template_unconfirmed_counts
-        return spec.template.format(n=values["confirmed_accounts"], days=values["days_since_confirmation"])
-    if spec.code == "GRAPH_DEVICE_SHARED":
-        return spec.template.format(n=values["other_accounts_30d"])
-    if spec.code == "GRAPH_TOKEN_REUSE":
-        return spec.template.format(n=values["other_accounts"])
-    if spec.code == "GRAPH_COMMUNITY_RISK":
-        return spec.template.format(size=values["group_size"], k=values["confirmed_accounts"])
-    if spec.code == "TEMPORAL_BURST":
-        return spec.template.format(n=values["linked_orders_24h"])
-    if spec.code == "SAME_SKU_COORDINATION":
-        return spec.template.format(n=values["same_item_orders_7d"])
-    if spec.code == "ACCOUNT_PRIOR_SUSPICIOUS_CLAIM":
-        return spec.template.format(n=values["flagged_claims_180d"])
-    if spec.code == "MITIGATING_DISCOUNTED_LINKS":
-        return spec.template.format(kind=values["kind"], reason=values["reason"])
-    if spec.code == "RETURN_HIGH_HISTORY":
-        return spec.template.format(rate=values["return_rate_pct"])
-    return spec.template
+            return None
+        return {"n": values["confirmed_accounts"], "days": values["days_since_confirmation"]}
+    if code == "RETURN_HIGH_HISTORY":
+        if "returns" not in values or "matured_orders" not in values:
+            return None
+        return {"returns": values["returns"], "matured": values["matured_orders"]}
+    single = {"GRAPH_DEVICE_SHARED": "other_accounts_30d", "GRAPH_TOKEN_REUSE": "other_accounts",
+              "TEMPORAL_BURST": "linked_orders_24h", "SAME_SKU_COORDINATION": "same_item_orders_7d",
+              "ACCOUNT_PRIOR_SUSPICIOUS_CLAIM": "flagged_claims_180d"}
+    if code in single:
+        return {"n": values[single[code]]}
+    if code == "GRAPH_COMMUNITY_RISK":
+        return {"size": values["group_size"], "k": values["confirmed_accounts"]}
+    if code == "MITIGATING_DISCOUNTED_LINKS":
+        return {"kind": values["kind"], "reason": values["reason"]}
+    return {}
+
+
+def render(spec: CodeSpec, evidence: Evidence, values: dict) -> str:
+    filled = template_values(spec, values)
+    if filled is None:
+        fallback = spec.template_unconfirmed_counts or spec.template_without_counts
+        if fallback is None:
+            raise CatalogError(f"reason code {spec.code!r} lacks its counts and has no counts-free template")
+        return fallback
+    return fill(spec.template, filled)
 
 
 # Which feature's ablation delta a code reports. A code about several features reports the strongest.
