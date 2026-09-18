@@ -208,8 +208,26 @@ def cmd_score_demos(args):
 
 
 def cmd_seed_db(args):
+    from sentinel.db.seed import seed_database
+
     print("Seeding demo database...")
-    print("[Phase 6] Not yet implemented")
+    try:
+        report = seed_database()
+    except FileNotFoundError as exc:
+        sys.exit(f"{exc}; run generate, build-features and train first")
+    _print_seed_report(report)
+
+
+def _print_seed_report(report):
+    print("  world as of DEMO_CLOCK: " + ", ".join(f"{t} {n}" for t, n in report.world_rows.items()))
+    print(f"  TEST orders {report.test_orders}; SENTINEL non-ALLOW {report.non_allow_test_orders}; "
+          f"ALLOW drawn to fill {report.allow_filled}")
+    print("  decisions by action: " + ", ".join(f"{a} {n}" for a, n in report.by_action.items()))
+    print("  decisions by source: " + ", ".join(f"{s} {n}" for s, n in report.by_source.items()))
+    for note in report.notes:
+        print(f"  note: {note}")
+    print(f"  wrote {report.path}")
+    print(f"  elapsed {report.elapsed_s:.1f} s")
 
 
 def cmd_serve(args):
@@ -223,8 +241,14 @@ def cmd_serve(args):
 
 
 def cmd_reset_demo(args):
-    print("Resetting demo state...")
-    print("[Phase 6] Not yet implemented")
+    from sentinel.db.seed import DemoModeOff, reset_demo
+
+    print("Resetting demo state (delete the database file, then seed)...")
+    try:
+        report = reset_demo()
+    except DemoModeOff as exc:
+        sys.exit(str(exc))
+    _print_seed_report(report)
 
 
 def main():
@@ -247,14 +271,14 @@ def main():
     sub.add_parser("build-reference", help="Build the attribution reference vector into artifacts/models/")
     sub.add_parser("evaluate", help="Evaluate models and backtest strategies into artifacts/reports/evaluation.json")
     sub.add_parser("score-demos", help="Score the three demo orders through the committed models and policy")
-    sub.add_parser("seed-db", help="[Phase 6] Seed the demo database")
+    sub.add_parser("seed-db", help="Recreate data/sentinel.db: as-of-DEMO_CLOCK world plus 250 backtest-replay decisions")
 
     serve_p = sub.add_parser("serve", help="Start the API server")
     serve_p.add_argument("--host", default="127.0.0.1")
     serve_p.add_argument("--port", type=int, default=8000)
     serve_p.add_argument("--reload", action="store_true")
 
-    sub.add_parser("reset-demo", help="[Phase 6] Reset demo state")
+    sub.add_parser("reset-demo", help="Delete the demo database and seed it again (DEMO_MODE only)")
 
     args = parser.parse_args()
     cmd_map = {

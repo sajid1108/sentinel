@@ -184,3 +184,50 @@ def test_orm_models_declare_action_checks():
     audit_checks = checks(AuditEvent.__table__)
     assert "previous_action IS NULL OR previous_action IN" in audit_checks
     assert "new_action IN" in audit_checks
+
+
+# ── Phase 6: a fresh database has every table and trigger ───────────────────
+EXPECTED_TABLES = {"accounts", "identifiers", "orders", "order_lines", "order_events", "order_labels",
+                   "sim_ground_truth", "policy_versions", "model_registry", "decisions", "audit_events",
+                   "probe_events"}
+EXPECTED_TRIGGERS = {"decisions_core_immutable", "audit_no_update", "audit_no_delete"}
+
+
+def test_fresh_database_has_all_tables_and_triggers(tmp_path):
+    path = tmp_path / "fresh.db"
+    create_database(path)
+    conn = sqlite3.connect(path)
+    try:
+        objects = conn.execute("SELECT type, name FROM sqlite_master").fetchall()
+        journal = conn.execute("PRAGMA journal_mode").fetchone()[0]
+    finally:
+        conn.close()
+    assert EXPECTED_TABLES <= {n for t, n in objects if t == "table"}
+    assert {n for t, n in objects if t == "trigger"} == EXPECTED_TRIGGERS
+    assert journal == "wal"
+    delete_database(path)
+
+
+def test_immediate_transaction_rolls_back_every_write_on_error(tmp_path):
+    from sentinel.db.models import immediate_transaction, read_connection
+    path = tmp_path / "tx.db"
+    create_database(path)
+    engine = get_engine(path)
+    with pytest.raises(RuntimeError, match="boom"):
+        with immediate_transaction(engine) as conn:
+            conn.execute("INSERT INTO accounts VALUES ('ACC-T-9', '2026-01-01T00:00:00Z', 'DEMO')")
+            raise RuntimeError("boom")
+    with read_connection(engine) as conn:
+        assert conn.execute("SELECT COUNT(*) FROM accounts").fetchone()[0] == 0
+    delete_database(path, engine)
+
+
+def test_append_event_refuses_to_run_outside_a_transaction(tmp_path):
+    from sentinel.audit.service import append_event
+    from sentinel.db.models import read_connection
+    path = tmp_path / "noTx.db"
+    create_database(path)
+    engine = get_engine(path)
+    with read_connection(engine) as conn, pytest.raises(RuntimeError, match="BEGIN IMMEDIATE"):
+        append_event(conn, None)
+    delete_database(path, engine)

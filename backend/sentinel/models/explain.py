@@ -45,6 +45,7 @@ class OrderExplanation:
     group_attribution_pp: dict[str, float]
     reason_code_version: str
     attributions_by_magnitude: list[rc.FiredCode]   # the same codes as `reasons`, by |attribution_pp| only
+    feature_attributions_pp: dict[str, float]       # every abuse feature's ablation delta (audit record, §10.1)
 
 
 def dominant_group(group_delta_pp: dict[str, float]) -> str | None:
@@ -118,4 +119,5 @@ def explain_order(bundles: dict[str, dict], reference: dict, features: dict, dis
         group_attribution_pp=dict(abuse.group_delta_pp),
         reason_code_version=rc.CATALOG_VERSION,
         attributions_by_magnitude=sort_by_attribution(increases, order),
+        feature_attributions_pp={f: round(d, 4) for f, d in abuse.deltas.items()},
     )

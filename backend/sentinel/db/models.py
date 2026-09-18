@@ -7,7 +7,9 @@ CHECK constraints defined in schema.sql.
 
 import pathlib
 import sqlite3
-from typing import Optional
+from contextlib import contextmanager
+from datetime import datetime, timezone
+from typing import Iterator, Optional
 
 from sqlalchemy import (
     CheckConstraint,
@@ -303,6 +305,7 @@ def get_engine(db_path: str | pathlib.Path):
     def _sqlite_pragmas(dbapi_conn, _):
         cur = dbapi_conn.cursor()
         cur.execute("PRAGMA foreign_keys=ON")
+        cur.execute("PRAGMA busy_timeout=5000")     # wait for a writer rather than fail at once
         cur.close()
 
     return engine
@@ -310,3 +313,50 @@ def get_engine(db_path: str | pathlib.Path):
 
 def get_session_factory(engine):
     return sessionmaker(bind=engine)
+
+
+# ── Raw-connection helpers (Phase 6) ─────────────────────────────────────────
+# The audit chain needs `BEGIN IMMEDIATE` (§10.2): read the last hash and insert under one write lock. The
+# pysqlite driver opens transactions itself (deferred), so these helpers switch the pooled DB-API connection
+# to manual transaction control and issue BEGIN / COMMIT / ROLLBACK explicitly.
+def utc_iso(ts: datetime) -> str:
+    """The one timestamp format stored in the database: ISO-8601, UTC, microseconds."""
+    if ts.tzinfo is None:
+        raise ValueError("timestamps must be timezone-aware")
+    return ts.astimezone(timezone.utc).isoformat(timespec="microseconds")
+
+
+def parse_utc(text: str) -> datetime:
+    return datetime.fromisoformat(text).astimezone(timezone.utc)
+
+
+@contextmanager
+def _raw(engine) -> Iterator[sqlite3.Connection]:
+    pooled = engine.raw_connection()
+    try:
+        conn = pooled.driver_connection
+        conn.isolation_level = None                 # manual transactions only
+        conn.row_factory = sqlite3.Row
+        yield conn
+    finally:
+        pooled.close()                              # back to the pool; engine.dispose() closes it
+
+
+@contextmanager
+def read_connection(engine) -> Iterator[sqlite3.Connection]:
+    """Autocommit connection for reads."""
+    with _raw(engine) as conn:
+        yield conn
+
+
+@contextmanager
+def immediate_transaction(engine) -> Iterator[sqlite3.Connection]:
+    """BEGIN IMMEDIATE ... COMMIT, or ROLLBACK on any exception: all of the block's writes or none."""
+    with _raw(engine) as conn:
+        conn.execute("BEGIN IMMEDIATE")
+        try:
+            yield conn
+        except BaseException:
+            conn.execute("ROLLBACK")
+            raise
+        conn.execute("COMMIT")
