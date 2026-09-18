@@ -1,1 +1,39 @@
 @import "tailwindcss";
+
+/*
+ * §11b palette, defined once. Nothing outside this block names a colour: components use the utilities
+ * Tailwind generates from these tokens (bg-return, text-block, …) or the CSS variables directly where a
+ * chart or graph needs a paint value. The values are the Tailwind v4 scale entries §11b names.
+ *
+ * Contrast is WCAG AA against slate-950 and slate-900. Two tokens exist for BLOCK: red-500 for fills,
+ * bars, rings and confirmed-abuse graph nodes, and red-400 for small red text, because red-500 on
+ * slate-950 measures 4.46:1 and on slate-900 4.08:1, under the 4.5:1 AA threshold for body text.
+ * Both are BLOCK-only; nothing else on the page is red.
+ */
+@theme {
+  --color-return: oklch(74.6% 0.16 232.661);      /* sky-400  — return probability only, never red */
+  --color-allow: oklch(77.7% 0.152 181.912);      /* teal-400 — ALLOW and verified states */
+  --color-verified: oklch(77.7% 0.152 181.912);   /* teal-400 */
+  --color-prepaid: oklch(87.9% 0.169 91.605);     /* amber-300 — PREPAID_ONLY */
+  --color-review: oklch(76.9% 0.188 70.08);       /* amber-500 — MANUAL_REVIEW */
+  --color-block: oklch(63.7% 0.237 25.331);       /* red-500  — BLOCK and confirmed-abuse nodes only */
+  --color-block-text: oklch(70.4% 0.191 22.216);  /* red-400  — the AA text tint of the BLOCK colour */
+  --color-infeasible: oklch(44.6% 0.043 257.281); /* slate-600 — hatched infeasible actions */
+  --color-neutral-meter: oklch(70.4% 0.04 256.788); /* slate-400 — a meter below any friction band */
+}
+
+/* §A.7: no animation beyond a short hover/focus transition. */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0ms !important;
+  }
+}
+
+/* The hatch for an action a guardrail removed. One definition, used by the chart and the legend. */
+.hatched {
+  background-image: repeating-linear-gradient(
+    45deg,
+    var(--color-infeasible) 0 4px,
+    transparent 4px 8px
+  );
+}

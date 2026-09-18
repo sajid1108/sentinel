@@ -1,0 +1,202 @@
+{
+  "order": {
+    "order_id": "ORD-DEMO-002",
+    "placed_at": "2026-09-01T04:55:00Z",
+    "order_value": {
+      "inr": 24000.0,
+      "display": "₹24,000"
+    },
+    "discount_pct": 0.0,
+    "lines": [
+      {
+        "sku_id": "SKU-ELECTRONICS-R01-128GB",
+        "product_id": "PRD-ELECTRONICS-R01",
+        "variant": "128GB",
+        "category": "ELECTRONICS",
+        "unit_price_inr": 24000.0,
+        "quantity": 1
+      }
+    ],
+    "payment_method": "PREPAID_CARD",
+    "delivery_speed": "EXPRESS"
+  },
+  "customer": {
+    "account_id": "ACC-DEMO-002",
+    "account_age_days": 5,
+    "prior_orders": 0,
+    "matured_return_rate": null,
+    "prior_suspicious_claims_180d": 0,
+    "clv_used_by_policy": {
+      "inr": 2000.0,
+      "display": "₹2,000"
+    },
+    "clv_basis": "NEW_CUSTOMER_FLOOR"
+  },
+  "decision": {
+    "decision_id": "12e44893-2e95-42b9-8ccd-ae09c416b4c5",
+    "order_id": "ORD-DEMO-002",
+    "scored_at": "2026-09-01T05:00:00Z",
+    "features_as_of": "2026-09-01T04:55:00Z",
+    "scores": {
+      "p_return": null,
+      "p_abuse": null,
+      "p_abuse_without_graph_evidence": null,
+      "return_model_version": "return-hgb-fs1.0-e3c877bc",
+      "abuse_model_version": "abuse-hgb-fs1.0-446c817f",
+      "feature_set_version": "fs-1.0-0ad43d7f",
+      "p_return_used_for_action": false
+    },
+    "prediction_explanation": "No model score is available: this decision was made in degraded mode, without a prediction.",
+    "reasons": [],
+    "graph_summary": {
+      "component_size_reliable_90d": 0,
+      "confirmed_abusive_accounts_in_component": 0,
+      "min_hops_to_confirmed_abuse": null,
+      "linked_orders_24h": 0,
+      "corroborating_signal_count": 0,
+      "signals": [],
+      "discounted_links": [],
+      "weak_evidence_only": false
+    },
+    "policy": {
+      "policy_version": "v1.0",
+      "policy_config_sha256": "e1744f126c99d32123f31768538768841b188f7ed7ac7509c406760f313915f0",
+      "cost_optimal_action": null,
+      "selected_action": "MANUAL_REVIEW",
+      "selected_rule": "DEGRADED_MODE_FALLBACK",
+      "costs": [],
+      "guardrails": [
+        {
+          "guardrail_id": "G1",
+          "name": "Return probability excluded",
+          "triggered": false,
+          "effect": "NONE",
+          "removed_actions": [],
+          "detail": "p_return is not an input to expected cost or any guardrail; shown for context only."
+        },
+        {
+          "guardrail_id": "G6",
+          "name": "Degraded mode",
+          "triggered": true,
+          "effect": "FALLBACK",
+          "removed_actions": [
+            "BLOCK"
+          ],
+          "detail": "Degraded mode (feature building failed (RuntimeError)): no model score is available. MANUAL_REVIEW because the order value is at least ₹5,000. BLOCK is never selected in degraded mode."
+        }
+      ],
+      "policy_explanation": "Degraded mode (feature building failed (RuntimeError)): no model score is available. MANUAL_REVIEW because the order value is at least ₹5,000. BLOCK is never selected in degraded mode.",
+      "assumptions_notice": "Monetary values are demonstration assumptions (policy v1.0)."
+    },
+    "status": "PENDING_REVIEW",
+    "audit_event_id": "3b30b435-b6f1-4e0c-8e9c-80ad1a602c90",
+    "degraded_mode": true,
+    "idempotent_replay": false
+  },
+  "graph": {
+    "nodes": [],
+    "edges": [],
+    "truncated": false,
+    "hidden_node_count": 0,
+    "as_of": "2026-09-01T04:55:00Z",
+    "linked_orders_24h_shown": 0,
+    "confirmed_peers_shown": 0
+  },
+  "baselines": [
+    {
+      "strategy": "RULE_BASED",
+      "action": "MANUAL_REVIEW",
+      "rule_fired": "new account (< 30 d) and value >= ₹15,000"
+    }
+  ],
+  "audit_events": [
+    {
+      "seq": 251,
+      "event_id": "3b30b435-b6f1-4e0c-8e9c-80ad1a602c90",
+      "event_type": "DECISION_CREATED",
+      "occurred_at": "2026-09-01T05:00:00Z",
+      "order_id": "ORD-DEMO-002",
+      "actor_type": "SYSTEM",
+      "actor_id": "sentinel-scoring",
+      "previous_action": null,
+      "new_action": "MANUAL_REVIEW",
+      "policy_version": "v1.0",
+      "return_model_version": "return-hgb-fs1.0-e3c877bc",
+      "abuse_model_version": "abuse-hgb-fs1.0-446c817f",
+      "payload": {
+        "actor": {
+          "id": "sentinel-scoring",
+          "type": "SYSTEM"
+        },
+        "appeal": null,
+        "audit_event_id": "3b30b435-b6f1-4e0c-8e9c-80ad1a602c90",
+        "candidate_actions": [],
+        "cost_optimal_action": null,
+        "decision_id": "12e44893-2e95-42b9-8ccd-ae09c416b4c5",
+        "degraded_mode": true,
+        "event_type": "DECISION_CREATED",
+        "feature_attributions_pp": {},
+        "features_as_of": "2026-09-01T10:25:00+05:30",
+        "graph_summary": {
+          "component_size_reliable_90d": 0,
+          "confirmed_abusive_accounts_in_component": 0,
+          "corroborating_signal_count": 0,
+          "discounted_links": [],
+          "linked_orders_24h": 0,
+          "min_hops_to_confirmed_abuse": null,
+          "signals": [],
+          "weak_evidence_only": false
+        },
+        "guardrails": [
+          {
+            "detail": "p_return is not an input to expected cost or any guardrail; shown for context only.",
+            "effect": "NONE",
+            "guardrail_id": "G1",
+            "name": "Return probability excluded",
+            "removed_actions": [],
+            "triggered": false
+          },
+          {
+            "detail": "Degraded mode (feature building failed (RuntimeError)): no model score is available. MANUAL_REVIEW because the order value is at least ₹5,000. BLOCK is never selected in degraded mode.",
+            "effect": "FALLBACK",
+            "guardrail_id": "G6",
+            "name": "Degraded mode",
+            "removed_actions": [
+              "BLOCK"
+            ],
+            "triggered": true
+          }
+        ],
+        "model_versions": {
+          "abuse_artifact_sha256": "446c817f97bd67b61706d7ada5e727bf4732d474ecb24161e8862dac6bd20f20",
+          "abuse_model": "abuse-hgb-fs1.0-446c817f",
+          "feature_set": "fs-1.0-0ad43d7f",
+          "label_definition": "ld-1.0",
+          "return_artifact_sha256": "e3c877bc2a16d2991246c1e6b22271e214e517bcfe886b9c011b5221dcf074f8",
+          "return_model": "return-hgb-fs1.0-e3c877bc"
+        },
+        "new_action": "MANUAL_REVIEW",
+        "occurred_at": "2026-09-01T10:30:00+05:30",
+        "order_id": "ORD-DEMO-002",
+        "original_recommendation": "MANUAL_REVIEW",
+        "override": null,
+        "p_abuse": null,
+        "p_abuse_without_graph_evidence": null,
+        "p_return": null,
+        "policy_config_sha256": "e1744f126c99d32123f31768538768841b188f7ed7ac7509c406760f313915f0",
+        "policy_explanation": "Degraded mode (feature building failed (RuntimeError)): no model score is available. MANUAL_REVIEW because the order value is at least ₹5,000. BLOCK is never selected in degraded mode.",
+        "policy_rule": "DEGRADED_MODE_FALLBACK",
+        "policy_version": "v1.0",
+        "prediction_explanation": "No model score is available: this decision was made in degraded mode, without a prediction.",
+        "previous_action": null,
+        "reason_codes": [],
+        "schema_version": "audit-1.0",
+        "selected_action": "MANUAL_REVIEW"
+      },
+      "prev_hash": "1434eeb4b4d2f9fbd207be3af09e24472f9a774b10a4705b55395b5fe7ebdcb7",
+      "event_hash": "01412b37b1f6625dab90e7f574589f8594b9feb6ed5d4c0c0b8f4cfa56310b52"
+    }
+  ],
+  "current_action": "MANUAL_REVIEW",
+  "appeal_reference": null
+}

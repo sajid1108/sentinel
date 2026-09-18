@@ -1,0 +1,199 @@
+{
+  "policy_version": "v1.0",
+  "policy_config_sha256": "e1744f126c99d32123f31768538768841b188f7ed7ac7509c406760f313915f0",
+  "notice": "Monetary values are demonstration assumptions (policy v1.0).",
+  "sections": [
+    {
+      "section": "policy",
+      "values": [
+        {
+          "key": "version",
+          "value": "v1.0",
+          "money": null
+        },
+        {
+          "key": "currency",
+          "value": "INR",
+          "money": null
+        },
+        {
+          "key": "notice",
+          "value": "Monetary values are demonstration assumptions (policy v1.0).",
+          "money": null
+        },
+        {
+          "key": "tie_tolerance_inr",
+          "value": 1.0,
+          "money": {
+            "inr": 1.0,
+            "display": "₹1"
+          }
+        }
+      ]
+    },
+    {
+      "section": "economics",
+      "values": [
+        {
+          "key": "gross_margin_rate",
+          "value": 0.3,
+          "money": null
+        },
+        {
+          "key": "reverse_logistics_cost_inr",
+          "value": 150.0,
+          "money": {
+            "inr": 150.0,
+            "display": "₹150"
+          }
+        }
+      ]
+    },
+    {
+      "section": "clv",
+      "values": [
+        {
+          "key": "new_customer_floor_inr",
+          "value": 2000.0,
+          "money": {
+            "inr": 2000.0,
+            "display": "₹2,000"
+          }
+        },
+        {
+          "key": "cap_inr",
+          "value": 100000.0,
+          "money": {
+            "inr": 100000.0,
+            "display": "₹1,00,000"
+          }
+        }
+      ]
+    },
+    {
+      "section": "allow",
+      "values": [
+        {
+          "key": "abuse_recovery_rate",
+          "value": 0.15,
+          "money": null
+        }
+      ]
+    },
+    {
+      "section": "prepaid_only",
+      "values": [
+        {
+          "key": "abuser_deterrence_rate",
+          "value": 0.3,
+          "money": null
+        },
+        {
+          "key": "abuse_recovery_rate",
+          "value": 0.5,
+          "money": null
+        },
+        {
+          "key": "genuine_abandonment_rate",
+          "value": 0.08,
+          "money": null
+        },
+        {
+          "key": "genuine_clv_churn_rate",
+          "value": 0.02,
+          "money": null
+        },
+        {
+          "key": "genuine_friction_cost_inr",
+          "value": 30.0,
+          "money": {
+            "inr": 30.0,
+            "display": "₹30"
+          }
+        }
+      ]
+    },
+    {
+      "section": "manual_review",
+      "values": [
+        {
+          "key": "review_cost_inr",
+          "value": 250.0,
+          "money": {
+            "inr": 250.0,
+            "display": "₹250"
+          }
+        },
+        {
+          "key": "reviewer_detection_rate",
+          "value": 0.8,
+          "money": null
+        },
+        {
+          "key": "genuine_delay_abandonment_rate",
+          "value": 0.05,
+          "money": null
+        },
+        {
+          "key": "genuine_false_cancel_rate",
+          "value": 0.03,
+          "money": null
+        }
+      ]
+    },
+    {
+      "section": "block",
+      "values": [
+        {
+          "key": "genuine_clv_churn_rate",
+          "value": 0.6,
+          "money": null
+        },
+        {
+          "key": "genuine_support_cost_inr",
+          "value": 100.0,
+          "money": {
+            "inr": 100.0,
+            "display": "₹100"
+          }
+        }
+      ]
+    },
+    {
+      "section": "guardrails",
+      "values": [
+        {
+          "key": "block_min_p_abuse",
+          "value": 0.7,
+          "money": null
+        },
+        {
+          "key": "block_min_corroborating_signals",
+          "value": 2.0,
+          "money": null
+        },
+        {
+          "key": "high_exposure_value_inr",
+          "value": 10000.0,
+          "money": {
+            "inr": 10000.0,
+            "display": "₹10,000"
+          }
+        },
+        {
+          "key": "high_exposure_min_p_abuse",
+          "value": 0.4,
+          "money": null
+        },
+        {
+          "key": "degraded_review_min_value_inr",
+          "value": 5000.0,
+          "money": {
+            "inr": 5000.0,
+            "display": "₹5,000"
+          }
+        }
+      ]
+    }
+  ]
+}

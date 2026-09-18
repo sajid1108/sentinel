@@ -35,7 +35,7 @@ from sentinel.features.tabular_features import OrderQuery
 MAX_NODES = 40
 RING_1 = 200.0                 # the order's own identifiers
 RING_2 = 440.0                 # accounts one hop out
-HOP_RADIUS = 280.0             # each further account hop; its connecting identifier sits half way
+HOP_RADIUS = 200.0             # each further account hop; its connecting identifier sits half way
 CURRENT_ORDER_RADIUS = 100.0
 SATELLITE_OFFSET = 90.0        # a linked order sits this far outside its account
 SATELLITE_SPREAD_DEG = 9.0
