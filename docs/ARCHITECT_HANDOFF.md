@@ -3,7 +3,7 @@
 You are taking over as the **main architect** of Sentinel. The previous architect session designed the system, wrote `docs/ARCHITECTURE.md`, and reviewed every phase from 0 to 7. This file is everything you need to continue without that conversation.
 
 **Repo:** `C:\Users\Sajid\.gemini\antigravity\scratch\sentinel` · GitHub `sajid1108/sentinel` · branch `main`.
-**Written:** 2026-09-18, while Phase 8 was being built.
+**Written:** 2026-09-18; updated 2026-09-19 after Phase 9.
 
 ---
 
@@ -21,34 +21,35 @@ You are taking over as the **main architect** of Sentinel. The previous architec
 - **Commits: no Claude co-author trailer**, ever (the operator's standing preference). New commits only; never amend, rebase or force-push. Branch `phase-4-wip` is a checkpoint: never merge or delete it.
 - The operator is sometimes on a phone. Keep instructions short, put long content in files, and avoid asking them to copy large blocks.
 
-## 2. Where things stand
+## 2. Where things stand (updated 2026-09-19)
 
 | Spec phase | What | State |
 |---|---|---|
-| 0–7 | skeleton, policy engine, synthetic world, features, models and evaluation, explanations, DB and audit and scoring service, API | **done on `main`**, reviewed, ~820 tests green |
-| 8 | order detail page (+ Phase 7 follow-ups) | **in progress** in a cloud session on branch `claude/phase-8-order-detail-jj8aik`. Part 1 pushed as `fa43f4b`. Brief: `docs/briefs/phase-8-order-detail.md` |
-| 9–10 | queue + simulate checkout; overview | not started |
-| 11–12 | backtest depth; hardening | not started |
-| — | demo script, rehearsals, video, pitch | not started |
+| 0–7 | skeleton → API | **done on `main`** |
+| 8 | order detail page | **done**, merged `c6d3925` |
+| 9 + 10 | Phase 8 follow-ups, queue, simulate checkout, reset, overview | **done**, merged `6cd8350`. **Definition of Done met**: 858 backend + 164 frontend tests |
+| — | `docs/MODEL_CARD.md` (states the new-account disparity: closes that carried TODO), `docs/DEMO_SCRIPT.md` (live script, judge Q&A, video script) | **done**, written by the architect |
+| — | landing page (Mercury style, three demos replayed from recorded values) | published artifact: https://claude.ai/artifact/ExADGdxmKt3EWVkQfHuQ4q (not in the repo) |
+| — | design pass on the app | **not started**, optional |
+| 11 | backtest depth (cohort friction table TODO still open) | not started; cut first |
+| — | rehearsals, backup video, pitch | operator, no Claude needed |
 
-`main` has three docs-only commits the Phase 8 branch lacks (`59daa4b` brief, `74a4b7f` DESIGN.md, `13c5e04` advisory rule). Merging the branch should not conflict, but check.
+## 3. What to do next
 
-## 3. Operator's current direction: MVP first, design later
+The operator is budget-constrained (weekly limit nearly used). Default: **no builder sessions** unless the operator asks.
 
-Finish a working end-to-end demo, then do a frontend design pass. The MVP is:
+1. If asked for the **design pass**: write `docs/briefs/phase-10-design.md`.
+   - **Part 1:** the demo presets are recorded as `source = LIVE` because `POST /score-order` always passes "LIVE". Add a demo scoring route that records `DEMO`.
+   - **Part 2:** apply a **Mercury-inspired** look (https://styles.refero.design/style/3172cd4d-118a-4a16-a259-6b634d32322e; the operator chose it):
+     - the onyx `#171721` / graphite `#1e1e2a` neutrals and ivory text
+     - IBM Plex fonts via `@fontsource`
+     - the synthetic notice as a neutral line at the bottom (currently amber)
+     - React Flow handle warnings fixed
+     - Playwright journeys for the three demos
+   - **Keep** DESIGN.md's semantic colours and rules: no glass, no glow, flat surfaces, red only for BLOCK, confirmed abuse or a broken chain.
+2. Otherwise, help with the pitch using the honest numbers in §5 and `docs/MODEL_CARD.md`.
 
-1. Order detail page (Phase 8, in progress).
-2. Queue page with three "Simulate checkout" buttons (the demo presets from `GET /internal/demo/presets`, scored via `POST /internal/score-order`) → navigate to the new order's detail page.
-3. Minimal Overview: the synthetic backtest table from `/metrics`, plus the synthetic-data notice.
-4. A "Reset demo" control (`POST /internal/demo/reset`, `DEMO_MODE` only).
-
-**Your next two actions:**
-1. When the operator says "phase 8 done": review `docs/reports/phase-8.md`, the branch diff, the tests and any screenshots under `docs/reports/phase-8/`. Merge into `main` if it passes.
-2. Write `docs/briefs/phase-9-mvp.md` covering MVP items 2–4 as Part 2, with the Phase 8 follow-ups as Part 1. Combining phases 9 and 10 saves a review round.
-
-**Known Phase 8 follow-ups to include in Part 1 regardless of the review:**
-- **Abuse meter colour bands.** The Phase 8 brief asked for the meter to turn amber at 50 % and red at 70 %. That hard-codes the G3 policy threshold into the frontend, and breaks a mandatory rule. Make the meter neutral; the action badge carries the verdict. This was the previous architect's own mistake.
-- Anything that violates the four mandatory correctness rules in `BUILDER_HEADER.md`.
+Standing process changes (2026-09-19): builders read **only** the sections the brief lists (`BUILDER_HEADER.md`); new deviation rows are capped at ~150 words; `scripts/setup_env.sh` bootstraps a fresh environment.
 
 ## 4. Design system status
 
