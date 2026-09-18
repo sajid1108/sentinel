@@ -9,7 +9,8 @@ from sentinel.policy.engine import decide
 from sentinel.policy.guardrails import SignalInputs, corroborating_signals
 from sentinel.settings import DEMO_CLOCK
 
-from .policy_helpers import DEMO_2, DEMO_3, DEVICE, VIA_DEVICE_AND_TOKEN, by_action, ctx, degraded_ctx
+from .policy_helpers import (DEMO_2, DEMO_2_SIGNALS, DEMO_3, DEVICE, VIA_DEVICE_AND_TOKEN,
+                             by_action, ctx, degraded_ctx)
 
 CFG = load_policy_config()
 
@@ -166,3 +167,55 @@ def test_prepaid_and_review_never_removed_by_any_guardrail():
     signals = SignalInputs(address_confirmed_abuse_weight=0.9, address_weight=0.1)
     d = decide(ctx(0.5, **DEMO_3, signals=signals, graph_state_as_of=DEMO_CLOCK - timedelta(days=3)), CFG)
     assert by_action(d)[Action.PREPAID_ONLY].feasible and by_action(d)[Action.MANUAL_REVIEW].feasible
+
+
+# ── reviewer-facing wording (Phase 9 brief 1.3, 1.4) ────────────────────────
+def _detail(decision, guardrail_id: str) -> str:
+    return next(g.detail for g in decision.guardrails if g.guardrail_id == guardrail_id)
+
+
+def test_g3_states_the_threshold_and_the_score_as_percentages():
+    """1.3: the sentence uses the same format as the card above it, and says what p_abuse means."""
+    d = decide(ctx(0.6913, **DEMO_3, signals=DEVICE), CFG)
+    assert _detail(d, "G3") == ("G3 requires an abuse probability of at least 70.0%; "
+                                "this order scored 69.1%.")
+
+
+def test_g3_pass_wording_is_also_a_percentage():
+    d = decide(ctx(0.9511, **DEMO_2, signals=DEMO_2_SIGNALS), CFG)
+    assert _detail(d, "G3") == "An abuse probability of 95.1% meets the 70.0% minimum for BLOCK."
+
+
+def test_g5_states_its_threshold_as_a_percentage():
+    d = decide(ctx(0.45, **DEMO_3, signals=DEVICE), CFG)
+    assert _detail(d, "G5") == ("G5 removes ALLOW when the abuse probability is at least 40.0% and the "
+                                "order value is at least ₹10,000.")
+
+
+def test_no_guardrail_detail_names_a_raw_variable():
+    """1.3: reviewer text says "abuse probability", never the feature name."""
+    for p in (0.03, 0.45, 0.6913, 0.9511):
+        d = decide(ctx(p, **DEMO_3, signals=DEVICE), CFG)
+        for g in d.guardrails:
+            assert "p_abuse" not in g.detail, (p, g.guardrail_id)
+
+
+@pytest.mark.parametrize("claims, expected", [
+    (0, "0 suspicious claims on this account in 180 d."),
+    (1, "1 suspicious claim on this account in 180 d."),
+    (2, "2 suspicious claims on this account in 180 d."),
+])
+def test_account_claims_detail_is_count_aware(claims, expected):
+    """1.4: no "(s)" in text a reviewer reads."""
+    signals = corroborating_signals(SignalInputs(prior_suspicious_claims_180d=claims))
+    detail = next(s.detail for s in signals if s.signal == "ACCOUNT_CLAIMS")
+    assert detail == expected
+    assert "(s)" not in detail
+
+
+def test_no_signal_detail_contains_a_bare_plural_suffix():
+    inputs = SignalInputs(device_confirmed_abuse_weight=0.5, device_other_accounts_30d=3,
+                          token_other_accounts_30d=1, linked_orders_24h=1, linked_same_sku_7d=1,
+                          prior_suspicious_claims_180d=1)
+    for signal in corroborating_signals(inputs):
+        assert "(s)" not in signal.detail, signal.signal

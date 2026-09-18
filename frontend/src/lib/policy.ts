@@ -1,30 +1,16 @@
 /**
- * Reading values out of GET /internal/policy.
+ * Loading GET /internal/policy.
  *
- * §A.5: no threshold, cost, guardrail number or version is written into the frontend. Where the page has to
- * know one - the abuse meter turns red at the confidence BLOCK needs - it reads it from here.
+ * §A.5: no threshold, cost, guardrail number or version is written into the frontend. The assumptions
+ * panel renders the whole payload as the server produced it.
+ *
+ * Nothing reads an individual value out of it any more: the abuse meter used to take guardrail G3's
+ * `block_min_p_abuse` to decide where to turn red, and the meter is now one neutral fill at every value
+ * (Phase 9 brief 1.1), so `policyValue` and `blockConfidencePercent` are gone with the band they served.
  */
 import { useEffect, useState } from 'react'
 
 import { getPolicyAssumptions, type PolicyAssumptionsResponse } from '../api/client'
-
-export function policyValue(
-  policy: PolicyAssumptionsResponse | null,
-  section: string,
-  key: string,
-): number | null {
-  if (policy === null) return null
-  const value = policy.sections.find((s) => s.section === section)?.values.find((v) => v.key === key)?.value
-  return typeof value === 'number' ? value : null
-}
-
-/** The p_abuse at or above which BLOCK is permitted (G3), as a percentage, or null until it is known. */
-export function blockConfidencePercent(policy: PolicyAssumptionsResponse | null): number | null {
-  const value = policyValue(policy, 'guardrails', 'block_min_p_abuse')
-  return value === null ? null : value * PERCENT
-}
-
-const PERCENT = 100
 
 /** Loads the policy configuration once per mount. Null while loading, and null if it cannot be read. */
 export function usePolicyAssumptions(): PolicyAssumptionsResponse | null {

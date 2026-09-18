@@ -33,7 +33,7 @@
     "clv_basis": "NEW_CUSTOMER_FLOOR"
   },
   "decision": {
-    "decision_id": "5108590d-e953-49c7-bb50-d006ff5b39aa",
+    "decision_id": "632a1c36-e3b1-410a-a19d-64029bab803f",
     "order_id": "ORD-DEMO-002",
     "scored_at": "2026-09-01T05:00:00Z",
     "features_as_of": "2026-09-01T04:55:00Z",
@@ -164,7 +164,7 @@
           "present": false,
           "weight": 0.0,
           "counts_for_corroboration": false,
-          "detail": "0 suspicious claim(s) on this account in 180 d."
+          "detail": "0 suspicious claims on this account in 180 d."
         }
       ],
       "discounted_links": [],
@@ -291,7 +291,7 @@
           "triggered": false,
           "effect": "NONE",
           "removed_actions": [],
-          "detail": "p_abuse 0.950 meets the 0.70 minimum for BLOCK."
+          "detail": "An abuse probability of 95.1% meets the 70.0% minimum for BLOCK."
         },
         {
           "guardrail_id": "G4",
@@ -309,14 +309,14 @@
           "removed_actions": [
             "ALLOW"
           ],
-          "detail": "G5 removes ALLOW when p_abuse is at least 0.40 and the order value is at least ₹10,000."
+          "detail": "G5 removes ALLOW when the abuse probability is at least 40.0% and the order value is at least ₹10,000."
         }
       ],
-      "policy_explanation": "BLOCK was selected because its expected cost (₹419) is lower than MANUAL_REVIEW (₹4,188), PREPAID_ONLY (₹8,118) and ALLOW (₹19,537) under policy v1.0. ALLOW was also not permitted: G5 removes ALLOW when p_abuse is at least 0.40 and the order value is at least ₹10,000.",
+      "policy_explanation": "BLOCK was selected because its expected cost (₹419) is lower than MANUAL_REVIEW (₹4,188), PREPAID_ONLY (₹8,118) and ALLOW (₹19,537) under policy v1.0. ALLOW was also not permitted: G5 removes ALLOW when the abuse probability is at least 40.0% and the order value is at least ₹10,000.",
       "assumptions_notice": "Monetary values are demonstration assumptions (policy v1.0)."
     },
     "status": "AUTO_APPLIED",
-    "audit_event_id": "690d3e54-09e5-48f1-992f-3ec5b0f57f4c",
+    "audit_event_id": "0f6d6b25-ef9f-4c1f-9a65-b793d17ad7cc",
     "degraded_mode": false,
     "idempotent_replay": false
   },
@@ -373,8 +373,8 @@
         "label": "Device ••8880",
         "state": "LINKED",
         "flags": [],
-        "x": -290.0,
-        "y": -502.29
+        "x": -270.0,
+        "y": -467.65
       },
       {
         "id": "ACC:ACC-20F052A30F",
@@ -444,8 +444,8 @@
         "flags": [
           "RECENT_24H"
         ],
-        "x": -360.0,
-        "y": -623.54
+        "x": -320.0,
+        "y": -554.26
       },
       {
         "id": "ORD:ORD-343BDE231D25",
@@ -488,8 +488,8 @@
         "flags": [
           "RECENT_24H"
         ],
-        "x": -405.0,
-        "y": -701.48
+        "x": -365.0,
+        "y": -632.2
       }
     ],
     "edges": [
@@ -702,7 +702,7 @@
     {
       "strategy": "FIXED_THRESHOLD",
       "action": "BLOCK",
-      "rule_fired": "p_abuse >= 0.75"
+      "rule_fired": "abuse probability >= 75.0%"
     },
     {
       "strategy": "RULE_BASED",
@@ -713,7 +713,7 @@
   "audit_events": [
     {
       "seq": 252,
-      "event_id": "690d3e54-09e5-48f1-992f-3ec5b0f57f4c",
+      "event_id": "0f6d6b25-ef9f-4c1f-9a65-b793d17ad7cc",
       "event_type": "DECISION_CREATED",
       "occurred_at": "2026-09-01T05:00:00Z",
       "order_id": "ORD-DEMO-002",
@@ -730,7 +730,7 @@
           "type": "SYSTEM"
         },
         "appeal": null,
-        "audit_event_id": "690d3e54-09e5-48f1-992f-3ec5b0f57f4c",
+        "audit_event_id": "0f6d6b25-ef9f-4c1f-9a65-b793d17ad7cc",
         "candidate_actions": [
           {
             "abusive_branch": {
@@ -824,7 +824,7 @@
           }
         ],
         "cost_optimal_action": "BLOCK",
-        "decision_id": "5108590d-e953-49c7-bb50-d006ff5b39aa",
+        "decision_id": "632a1c36-e3b1-410a-a19d-64029bab803f",
         "degraded_mode": false,
         "event_type": "DECISION_CREATED",
         "feature_attributions_pp": {
@@ -885,7 +885,7 @@
             },
             {
               "counts_for_corroboration": false,
-              "detail": "0 suspicious claim(s) on this account in 180 d.",
+              "detail": "0 suspicious claims on this account in 180 d.",
               "present": false,
               "signal": "ACCOUNT_CLAIMS",
               "weight": 0.0
@@ -911,7 +911,7 @@
             "triggered": false
           },
           {
-            "detail": "p_abuse 0.950 meets the 0.70 minimum for BLOCK.",
+            "detail": "An abuse probability of 95.1% meets the 70.0% minimum for BLOCK.",
             "effect": "NONE",
             "guardrail_id": "G3",
             "name": "BLOCK needs confidence",
@@ -927,7 +927,7 @@
             "triggered": false
           },
           {
-            "detail": "G5 removes ALLOW when p_abuse is at least 0.40 and the order value is at least ₹10,000.",
+            "detail": "G5 removes ALLOW when the abuse probability is at least 40.0% and the order value is at least ₹10,000.",
             "effect": "REMOVED_ACTIONS",
             "guardrail_id": "G5",
             "name": "No silent ALLOW at high exposure",
@@ -954,7 +954,7 @@
         "p_abuse_without_graph_evidence": 0.099334,
         "p_return": 0.378378,
         "policy_config_sha256": "e1744f126c99d32123f31768538768841b188f7ed7ac7509c406760f313915f0",
-        "policy_explanation": "BLOCK was selected because its expected cost (₹419) is lower than MANUAL_REVIEW (₹4,188), PREPAID_ONLY (₹8,118) and ALLOW (₹19,537) under policy v1.0. ALLOW was also not permitted: G5 removes ALLOW when p_abuse is at least 0.40 and the order value is at least ₹10,000.",
+        "policy_explanation": "BLOCK was selected because its expected cost (₹419) is lower than MANUAL_REVIEW (₹4,188), PREPAID_ONLY (₹8,118) and ALLOW (₹19,537) under policy v1.0. ALLOW was also not permitted: G5 removes ALLOW when the abuse probability is at least 40.0% and the order value is at least ₹10,000.",
         "policy_rule": "MIN_EXPECTED_COST",
         "policy_version": "v1.0",
         "prediction_explanation": "The abuse score is driven mainly by links to other accounts sharing this order's device, payment method or delivery pattern.",
@@ -970,8 +970,8 @@
         "schema_version": "audit-1.0",
         "selected_action": "BLOCK"
       },
-      "prev_hash": "21f1ea0d65b4638f05c4baeda0240bb68b684423be011b2aacbdeff195461d0e",
-      "event_hash": "9c36114f3b420c09113ef5b4b4c494c95b6878f4c9d225621a15a5de5f7fbac6"
+      "prev_hash": "34ff0e7546efcb0961cc971b7545ec508009f57fe0be16905c9c18c6ef738efd",
+      "event_hash": "329517abdb4aba419d3f84ce6b31922042b1d1ceadcd608b224a8e07ce59fa4a"
     }
   ],
   "current_action": "BLOCK",

@@ -30,7 +30,7 @@ import { GraphLegend, RelationshipGraph } from '../components/RelationshipGraph'
 import { ReviewerPicker, useReviewerId } from '../components/ReviewerPicker'
 import { AbuseScoreCard, ReturnScoreCard } from '../components/ScorePair'
 import { formatTimestamp } from '../lib/format'
-import { blockConfidencePercent, usePolicyAssumptions } from '../lib/policy'
+import { usePolicyAssumptions } from '../lib/policy'
 
 type DiscountReason = components['schemas']['DiscountedLink']['reason']
 
@@ -236,7 +236,6 @@ function OrderDetail({
         <AbuseScoreCard
           pAbuse={decision.scores.p_abuse}
           withoutGraph={decision.scores.p_abuse_without_graph_evidence}
-          blockFromPercent={blockConfidencePercent(policy)}
         />
       </div>
 

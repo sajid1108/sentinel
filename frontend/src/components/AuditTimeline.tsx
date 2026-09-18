@@ -5,8 +5,14 @@
  */
 import type { components } from '../api/types'
 import type { AuditVerifyResponse } from '../api/client'
+import { ACTION_LABEL, REASON_LABEL, type Action } from '../lib/actions'
 import { formatTimestamp, hashPrefix } from '../lib/format'
 import { Panel } from './Panel'
+
+/** Actions and override reasons read as labels, not as enum values (Phase 9 brief 1.6). */
+function actionLabel(action: Action): string {
+  return ACTION_LABEL[action] ?? action
+}
 
 type AuditEventOut = components['schemas']['AuditEventOut']
 
@@ -82,11 +88,17 @@ export function AuditTimeline({
                 <span className="text-xs text-slate-500">{formatTimestamp(event.occurred_at)}</span>
               </div>
               <p className="mt-0.5 text-xs text-slate-300">
-                {event.previous_action ? `${event.previous_action} → ${event.new_action}` : event.new_action}
+                {event.previous_action
+                  ? `${actionLabel(event.previous_action)} → ${actionLabel(event.new_action)}`
+                  : actionLabel(event.new_action)}
               </p>
               {override && (
                 <p className="mt-0.5 text-xs text-slate-400">
-                  <span className="text-slate-300">{override.reason_category}</span>
+                  <span className="text-slate-300">
+                    {override.reason_category
+                      ? (REASON_LABEL[override.reason_category] ?? override.reason_category)
+                      : ''}
+                  </span>
                   {override.reason_text ? ` — ${override.reason_text}` : ''}
                 </p>
               )}

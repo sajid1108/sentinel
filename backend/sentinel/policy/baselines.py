@@ -1,6 +1,6 @@
 """Comparison strategies (§9.5). They exist to be compared against Sentinel, not to make decisions."""
 from sentinel.api.schemas import Action, BaselineOutcome, PaymentMethod
-from sentinel.money import format_inr
+from sentinel.money import format_inr, format_probability
 
 # RULE_BASED: the "conflated" merchant status quo, fixed rules (not policy config).
 RULE_RETURN_RATE_MIN = 0.5
@@ -19,12 +19,12 @@ def fixed_threshold(p_abuse: float, tau_block: float, tau_review: float) -> Base
         raise ValueError("thresholds must satisfy 0 <= tau_review <= tau_block <= 1")
     if tau_block < NEVER and p_abuse >= tau_block:
         return BaselineOutcome(strategy="FIXED_THRESHOLD", action=Action.BLOCK,
-                               rule_fired=f"p_abuse >= {tau_block:.2f}")
+                               rule_fired=f"abuse probability >= {format_probability(tau_block)}")
     if tau_review < NEVER and p_abuse >= tau_review:
         return BaselineOutcome(strategy="FIXED_THRESHOLD", action=Action.MANUAL_REVIEW,
-                               rule_fired=f"p_abuse >= {tau_review:.2f}")
+                               rule_fired=f"abuse probability >= {format_probability(tau_review)}")
     return BaselineOutcome(strategy="FIXED_THRESHOLD", action=Action.ALLOW,
-                           rule_fired=f"p_abuse < {tau_review:.2f}")
+                           rule_fired=f"abuse probability < {format_probability(tau_review)}")
 
 
 def rule_based(matured_return_rate: float | None, matured_returns: int, account_age_days: int,

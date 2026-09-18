@@ -49,3 +49,16 @@ def test_rule_based_cod_prepaid():
 
 def test_allow_all():
     assert allow_all() is Action.ALLOW
+
+
+# ── reviewer-facing wording (Phase 9 brief 1.3) ─────────────────────────────
+def test_fixed_threshold_rule_text_uses_the_pages_probability_format():
+    """The rule a reviewer reads beside the baseline's action, in the page's own format."""
+    assert fixed_threshold(0.95, tau_block=0.75, tau_review=0.35).rule_fired == "abuse probability >= 75.0%"
+    assert fixed_threshold(0.50, tau_block=0.75, tau_review=0.35).rule_fired == "abuse probability >= 35.0%"
+    assert fixed_threshold(0.10, tau_block=0.75, tau_review=0.35).rule_fired == "abuse probability < 35.0%"
+
+
+def test_no_baseline_rule_text_names_a_raw_variable():
+    for p in (0.0, 0.1, 0.5, 0.9, 1.0):
+        assert "p_abuse" not in fixed_threshold(p, tau_block=0.75, tau_review=0.35).rule_fired

@@ -5,12 +5,11 @@ PREPAID_ONLY and MANUAL_REVIEW are never removed.
 
 Pure: every time comparison uses the context's own decided_at, never a global clock.
 """
-import math
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 
 from sentinel.api.schemas import Action, EvidenceSignal, GuardrailResult
-from sentinel.money import format_inr
+from sentinel.money import format_inr, format_probability
 from sentinel.policy.config import PolicyConfig
 
 # §9.2 thresholds. They define the signals themselves, so they are not policy config keys.
@@ -38,11 +37,6 @@ _WORDS = ("none", "one", "two", "three", "four", "five", "six", "seven", "eight"
 
 def _count_word(n: int) -> str:
     return _WORDS[n] if 0 <= n < len(_WORDS) else str(n)
-
-
-def _truncate_3dp(p: float) -> float:
-    """Display value that can never round up to a threshold it has not reached."""
-    return math.floor(p * 1000) / 1000
 
 
 @dataclass(frozen=True)
@@ -108,7 +102,8 @@ def corroborating_signals(inputs: SignalInputs) -> list[EvidenceSignal]:
         ("ADDRESS", address, address_counts, s.address_weight, address_detail),
         ("TEMPORAL_BURST", burst, burst_counts, s.burst_weight, burst_detail),
         ("ACCOUNT_CLAIMS", claims, claims, ACCOUNT_CLAIMS_WEIGHT,
-         f"{s.prior_suspicious_claims_180d} suspicious claim(s) on this account in 180 d."),
+         f"{s.prior_suspicious_claims_180d} suspicious "
+         f"{'claim' if s.prior_suspicious_claims_180d == 1 else 'claims'} on this account in 180 d."),
     ]
     return [
         EvidenceSignal(signal=name, present=present, weight=weight if present else 0.0,
@@ -194,12 +189,18 @@ def g2_block_needs_corroboration(ctx: DecisionContext, cfg: PolicyConfig) -> Gua
 
 def g3_block_needs_confidence(ctx: DecisionContext, cfg: PolicyConfig) -> GuardrailResult:
     need = cfg.guardrails.block_min_p_abuse
-    shown = _truncate_3dp(ctx.p_abuse)
+    need_shown = format_probability(need)
+    shown = format_probability(ctx.p_abuse)
     if ctx.p_abuse < need:
+        # At one decimal a score just below the threshold can render as the threshold itself, which
+        # would read as a contradiction. Say what is true instead of printing the same figure twice.
+        if shown == need_shown:
+            shown = f"just under {need_shown}"
         return _result("G3", "BLOCK needs confidence", [Action.BLOCK],
-                       f"G3 requires p_abuse of at least {need:.2f}; this order scored {shown:.3f}.")
+                       f"G3 requires an abuse probability of at least {need_shown}; "
+                       f"this order scored {shown}.")
     return _result("G3", "BLOCK needs confidence", [],
-                   f"p_abuse {shown:.3f} meets the {need:.2f} minimum for BLOCK.")
+                   f"An abuse probability of {shown} meets the {need_shown} minimum for BLOCK.")
 
 
 def g4_no_block_on_weak_or_stale_evidence(ctx: DecisionContext, cfg: PolicyConfig) -> GuardrailResult:
@@ -217,8 +218,9 @@ def g4_no_block_on_weak_or_stale_evidence(ctx: DecisionContext, cfg: PolicyConfi
 
 def g5_no_silent_allow_at_high_exposure(ctx: DecisionContext, cfg: PolicyConfig) -> GuardrailResult:
     g = cfg.guardrails
-    detail = (f"G5 removes ALLOW when p_abuse is at least {g.high_exposure_min_p_abuse:.2f} "
-              f"and the order value is at least {format_inr(g.high_exposure_value_inr)}.")
+    detail = (f"G5 removes ALLOW when the abuse probability is at least "
+              f"{format_probability(g.high_exposure_min_p_abuse)} and the order value is at least "
+              f"{format_inr(g.high_exposure_value_inr)}.")
     removed = ([Action.ALLOW]
                if ctx.p_abuse >= g.high_exposure_min_p_abuse and ctx.order_value_inr >= g.high_exposure_value_inr
                else [])

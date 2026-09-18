@@ -33,7 +33,7 @@
     "clv_basis": "HISTORY"
   },
   "decision": {
-    "decision_id": "426df0cf-52e9-4196-af53-44e553e7c5a1",
+    "decision_id": "506e3d61-d065-409a-a7bb-6a196b3d9677",
     "order_id": "ORD-DEMO-003",
     "scored_at": "2026-09-01T05:00:00Z",
     "features_as_of": "2026-09-01T04:55:00Z",
@@ -70,7 +70,7 @@
         },
         "attribution_pp": 0.0,
         "evidence_strength": "MODERATE",
-        "attribution_note": "Redundant with other relationship evidence; the score is already explained by correlated features."
+        "attribution_note": "Redundant with other evidence; the score is already explained by correlated features."
       },
       {
         "code": "MITIGATING_DISCOUNTED_LINKS",
@@ -126,7 +126,7 @@
           "present": true,
           "weight": 1.0,
           "counts_for_corroboration": true,
-          "detail": "1 suspicious claim(s) on this account in 180 d."
+          "detail": "1 suspicious claim on this account in 180 d."
         }
       ],
       "discounted_links": [
@@ -264,7 +264,7 @@
           "removed_actions": [
             "BLOCK"
           ],
-          "detail": "G3 requires p_abuse of at least 0.70; this order scored 0.691."
+          "detail": "G3 requires an abuse probability of at least 70.0%; this order scored 69.1%."
         },
         {
           "guardrail_id": "G4",
@@ -282,14 +282,14 @@
           "removed_actions": [
             "ALLOW"
           ],
-          "detail": "G5 removes ALLOW when p_abuse is at least 0.40 and the order value is at least ₹10,000."
+          "detail": "G5 removes ALLOW when the abuse probability is at least 40.0% and the order value is at least ₹10,000."
         }
       ],
-      "policy_explanation": "MANUAL_REVIEW was selected because its expected cost (₹1,858) is lower than PREPAID_ONLY (₹3,171), BLOCK (₹4,052) and ALLOW (₹7,155) under policy v1.0. BLOCK was also not permitted: G3 requires p_abuse of at least 0.70; this order scored 0.691. ALLOW was also not permitted: G5 removes ALLOW when p_abuse is at least 0.40 and the order value is at least ₹10,000.",
+      "policy_explanation": "MANUAL_REVIEW was selected because its expected cost (₹1,858) is lower than PREPAID_ONLY (₹3,171), BLOCK (₹4,052) and ALLOW (₹7,155) under policy v1.0. BLOCK was also not permitted: G3 requires an abuse probability of at least 70.0%; this order scored 69.1%. ALLOW was also not permitted: G5 removes ALLOW when the abuse probability is at least 40.0% and the order value is at least ₹10,000.",
       "assumptions_notice": "Monetary values are demonstration assumptions (policy v1.0)."
     },
     "status": "PENDING_REVIEW",
-    "audit_event_id": "6dc8714d-4bd9-4f33-a68f-b875648aa7f4",
+    "audit_event_id": "b383fb46-c580-4be4-90c8-70cfde8c8f44",
     "degraded_mode": false,
     "idempotent_replay": false
   },
@@ -481,7 +481,7 @@
     {
       "strategy": "FIXED_THRESHOLD",
       "action": "MANUAL_REVIEW",
-      "rule_fired": "p_abuse >= 0.05"
+      "rule_fired": "abuse probability >= 5.0%"
     },
     {
       "strategy": "RULE_BASED",
@@ -492,7 +492,7 @@
   "audit_events": [
     {
       "seq": 253,
-      "event_id": "6dc8714d-4bd9-4f33-a68f-b875648aa7f4",
+      "event_id": "b383fb46-c580-4be4-90c8-70cfde8c8f44",
       "event_type": "DECISION_CREATED",
       "occurred_at": "2026-09-01T05:00:00Z",
       "order_id": "ORD-DEMO-003",
@@ -509,7 +509,7 @@
           "type": "SYSTEM"
         },
         "appeal": null,
-        "audit_event_id": "6dc8714d-4bd9-4f33-a68f-b875648aa7f4",
+        "audit_event_id": "b383fb46-c580-4be4-90c8-70cfde8c8f44",
         "candidate_actions": [
           {
             "abusive_branch": {
@@ -605,7 +605,7 @@
           }
         ],
         "cost_optimal_action": "MANUAL_REVIEW",
-        "decision_id": "426df0cf-52e9-4196-af53-44e553e7c5a1",
+        "decision_id": "506e3d61-d065-409a-a7bb-6a196b3d9677",
         "degraded_mode": false,
         "event_type": "DECISION_CREATED",
         "feature_attributions_pp": {
@@ -673,7 +673,7 @@
             },
             {
               "counts_for_corroboration": true,
-              "detail": "1 suspicious claim(s) on this account in 180 d.",
+              "detail": "1 suspicious claim on this account in 180 d.",
               "present": true,
               "signal": "ACCOUNT_CLAIMS",
               "weight": 1.0
@@ -699,7 +699,7 @@
             "triggered": false
           },
           {
-            "detail": "G3 requires p_abuse of at least 0.70; this order scored 0.691.",
+            "detail": "G3 requires an abuse probability of at least 70.0%; this order scored 69.1%.",
             "effect": "REMOVED_ACTIONS",
             "guardrail_id": "G3",
             "name": "BLOCK needs confidence",
@@ -717,7 +717,7 @@
             "triggered": false
           },
           {
-            "detail": "G5 removes ALLOW when p_abuse is at least 0.40 and the order value is at least ₹10,000.",
+            "detail": "G5 removes ALLOW when the abuse probability is at least 40.0% and the order value is at least ₹10,000.",
             "effect": "REMOVED_ACTIONS",
             "guardrail_id": "G5",
             "name": "No silent ALLOW at high exposure",
@@ -744,7 +744,7 @@
         "p_abuse_without_graph_evidence": 0.000756,
         "p_return": 0.245763,
         "policy_config_sha256": "e1744f126c99d32123f31768538768841b188f7ed7ac7509c406760f313915f0",
-        "policy_explanation": "MANUAL_REVIEW was selected because its expected cost (₹1,858) is lower than PREPAID_ONLY (₹3,171), BLOCK (₹4,052) and ALLOW (₹7,155) under policy v1.0. BLOCK was also not permitted: G3 requires p_abuse of at least 0.70; this order scored 0.691. ALLOW was also not permitted: G5 removes ALLOW when p_abuse is at least 0.40 and the order value is at least ₹10,000.",
+        "policy_explanation": "MANUAL_REVIEW was selected because its expected cost (₹1,858) is lower than PREPAID_ONLY (₹3,171), BLOCK (₹4,052) and ALLOW (₹7,155) under policy v1.0. BLOCK was also not permitted: G3 requires an abuse probability of at least 70.0%; this order scored 69.1%. ALLOW was also not permitted: G5 removes ALLOW when the abuse probability is at least 40.0% and the order value is at least ₹10,000.",
         "policy_rule": "MIN_EXPECTED_COST",
         "policy_version": "v1.0",
         "prediction_explanation": "The abuse score is driven mainly by links to other accounts sharing this order's device, payment method or delivery pattern.",
@@ -757,8 +757,8 @@
         "schema_version": "audit-1.0",
         "selected_action": "MANUAL_REVIEW"
       },
-      "prev_hash": "9c36114f3b420c09113ef5b4b4c494c95b6878f4c9d225621a15a5de5f7fbac6",
-      "event_hash": "a7defcc501887ce28160572e2945850339940cb0c694f899abf4b10ecf34eeb5"
+      "prev_hash": "329517abdb4aba419d3f84ce6b31922042b1d1ceadcd608b224a8e07ce59fa4a",
+      "event_hash": "719f7568577761003d90192f44db231e1eab7343b53a869be72b68665360d6a2"
     }
   ],
   "current_action": "MANUAL_REVIEW",

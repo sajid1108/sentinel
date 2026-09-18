@@ -4,7 +4,6 @@
  * is `sky-400` and never red, whatever the value, because a high return rate is not risk (§C2/G1).
  */
 import type { components } from '../api/types'
-import { ACTION_FILL } from '../lib/actions'
 import { NO_SCORE, formatProbability, meterPercent } from '../lib/format'
 import { Panel } from './Panel'
 import { ReasonRow } from './ReasonList'
@@ -62,18 +61,13 @@ function Meter({
 }
 
 /**
- * Neutral below the halfway mark, MANUAL_REVIEW amber above it, BLOCK red from the confidence BLOCK
- * actually needs (B2). That last figure is guardrail G3's `block_min_p_abuse`, so it is read from the
- * policy configuration, never written here; until it is known the meter makes no colour claim beyond amber.
+ * One neutral fill at every value (DESIGN.md §2, §7; #37 as amended by the Phase 9 brief 1.1). Colour
+ * bands on this meter would write a policy threshold into the frontend and would duplicate the action
+ * badge's job: the badge carries the verdict, the meter carries the measurement.
+ *
+ * The ghost marker for the without-relationship-evidence counterfactual is unchanged.
  */
-const AMBER_FROM_PERCENT = 50
-
-function abuseFill(p: number, blockFromPercent: number | null): string {
-  const pct = meterPercent(p)
-  if (blockFromPercent !== null && pct >= blockFromPercent) return ACTION_FILL.BLOCK
-  if (pct >= AMBER_FROM_PERCENT) return ACTION_FILL.MANUAL_REVIEW
-  return 'var(--color-neutral-meter)'
-}
+const ABUSE_FILL = 'var(--color-neutral-meter)'
 
 export function ReturnScoreCard({
   pReturn,
@@ -105,11 +99,9 @@ export function ReturnScoreCard({
 export function AbuseScoreCard({
   pAbuse,
   withoutGraph,
-  blockFromPercent,
 }: {
   pAbuse: number | null
   withoutGraph: number | null
-  blockFromPercent: number | null
 }) {
   const counterfactual =
     withoutGraph === null
@@ -122,7 +114,7 @@ export function AbuseScoreCard({
         {pAbuse !== null && (
           <Meter
             value={pAbuse}
-            fill={abuseFill(pAbuse, blockFromPercent)}
+            fill={ABUSE_FILL}
             label="Abuse probability"
             testId="abuse-meter"
             ghost={
