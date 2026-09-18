@@ -5,10 +5,10 @@
 
 ```
 PROGRESS  phase 8 of 12  [########--]  9/11 stages to Definition of Done (82%)
-          this phase: gate — 8 of 8 sections done  |  elapsed 4h35m
+          this phase: gate — 8 of 8 sections done  |  elapsed 4h27m
 ```
 
-Elapsed is wall clock from the session's first command (`date -u`, 05:51:25Z) to the gate. Active build time
+Elapsed is wall clock from the session's first command (`date -u`, 05:51:25Z) to the Part 2 commit (`556ae6a`, 10:18:26Z). Active build time
 is roughly 2h15m; the rest is the four full backend suite runs (3m40s each), three `seed-db` runs, the fixture
 capture, the browser pass, and gaps between turns.
 
@@ -25,8 +25,8 @@ Progress lines printed during the session:
 |---|---|---|
 | start | 0 of 8 | 0h01m |
 | Part 1 committed (`fa43f4b`) | 1 of 8 | 0h23m |
-| A–F (ground rules, layout, dialogs, states, tests, browser pass) | 7 of 8 | ~4h00m |
-| gate | 8 of 8 | 4h35m |
+| A–F (ground rules, layout, dialogs, states, tests, browser pass) | 7 of 8 | 4h02m |
+| gate | 8 of 8 | **4h27m** |
 
 A–E were built as one pass over the page (the components only make sense together) and checkpointed at F,
 when the real browser confirmed them.
