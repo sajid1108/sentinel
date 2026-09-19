@@ -3,19 +3,19 @@
 </p>
 
 <p align="center">
-  <a href="https://sajid1108.github.io/aegisshift/"><img src="https://img.shields.io/badge/LIVE_SITE-enter_the_lair-e8c547?style=for-the-badge&labelColor=0b0b0b" alt="Live site"></a>
-  <img src="https://img.shields.io/badge/tests-1%2C060-9a9a9a?style=for-the-badge&labelColor=0b0b0b" alt="1,060 tests">
-  <img src="https://img.shields.io/badge/data-synthetic-9a9a9a?style=for-the-badge&labelColor=0b0b0b" alt="Synthetic data">
+  <a href="https://sajid1108.github.io/aegisshift/"><img src="https://img.shields.io/badge/LIVE_SITE-enter_the_lair-e0957a?style=for-the-badge&labelColor=240c45" alt="Live site"></a>
+  <img src="https://img.shields.io/badge/tests-1%2C060-9a9a9a?style=for-the-badge&labelColor=240c45" alt="1,060 tests">
+  <img src="https://img.shields.io/badge/data-synthetic-9a9a9a?style=for-the-badge&labelColor=240c45" alt="Synthetic data">
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Python_3.12-0b0b0b?style=flat-square&logo=python&logoColor=e8c547" alt="Python 3.12">
-  <img src="https://img.shields.io/badge/FastAPI-0b0b0b?style=flat-square&logo=fastapi&logoColor=e8c547" alt="FastAPI">
-  <img src="https://img.shields.io/badge/scikit--learn-0b0b0b?style=flat-square&logo=scikitlearn&logoColor=e8c547" alt="scikit-learn">
-  <img src="https://img.shields.io/badge/NetworkX-0b0b0b?style=flat-square" alt="NetworkX">
-  <img src="https://img.shields.io/badge/React_19-0b0b0b?style=flat-square&logo=react&logoColor=e8c547" alt="React 19">
-  <img src="https://img.shields.io/badge/TypeScript-0b0b0b?style=flat-square&logo=typescript&logoColor=e8c547" alt="TypeScript">
-  <img src="https://img.shields.io/badge/SQLite-0b0b0b?style=flat-square&logo=sqlite&logoColor=e8c547" alt="SQLite">
+  <img src="https://img.shields.io/badge/Python_3.12-240c45?style=flat-square&logo=python&logoColor=e0957a" alt="Python 3.12">
+  <img src="https://img.shields.io/badge/FastAPI-240c45?style=flat-square&logo=fastapi&logoColor=e0957a" alt="FastAPI">
+  <img src="https://img.shields.io/badge/scikit--learn-240c45?style=flat-square&logo=scikitlearn&logoColor=e0957a" alt="scikit-learn">
+  <img src="https://img.shields.io/badge/NetworkX-240c45?style=flat-square" alt="NetworkX">
+  <img src="https://img.shields.io/badge/React_19-240c45?style=flat-square&logo=react&logoColor=e0957a" alt="React 19">
+  <img src="https://img.shields.io/badge/TypeScript-240c45?style=flat-square&logo=typescript&logoColor=e0957a" alt="TypeScript">
+  <img src="https://img.shields.io/badge/SQLite-240c45?style=flat-square&logo=sqlite&logoColor=e0957a" alt="SQLite">
 </p>
 
 ---
