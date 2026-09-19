@@ -227,15 +227,19 @@ describe('simulate checkout', () => {
     expect(rendered).toEqual(PRESETS.map((p) => `preset-${p.order_id}`))
   })
 
-  it('sends the preset body unmodified and opens the order the server returned', async () => {
+  it('asks the server to score its own preset as DEMO and opens the order it returned', async () => {
     const { calls } = await openQueue()
     const preset = PRESETS[0]
+    const route = `/internal/demo/presets/${preset.order_id}/score`
     fireEvent.click(screen.getByTestId(`preset-${preset.order_id}`))
     await waitFor(() => {
-      expect(calls.some((c) => c.url.includes('/internal/score-order'))).toBe(true)
+      expect(calls.some((c) => c.url.endsWith(route))).toBe(true)
     })
-    const posted = calls.find((c) => c.url.includes('/internal/score-order'))
-    expect(JSON.parse(String(posted?.init?.body))).toEqual(preset)
+    const posted = calls.find((c) => c.url.endsWith(route))
+    expect(posted?.init?.method).toBe('POST')
+    expect(posted?.init?.body).toBeUndefined()
+    // Nothing goes through the LIVE scoring route any more.
+    expect(calls.some((c) => c.url.includes('/internal/score-order'))).toBe(false)
     // It navigates to the id the response carried, not to the id that was clicked.
     await waitFor(() => {
       expect(screen.queryByTestId('queue-table')).toBeNull()
@@ -245,7 +249,7 @@ describe('simulate checkout', () => {
 
   it('shows the server message beside the button and leaves the page usable', async () => {
     await openQueue((url) =>
-      url.includes('/internal/score-order')
+      url.endsWith('/score')
         ? { status: 422, body: { detail: 'placed_at is after the demo clock.' } }
         : null,
     )

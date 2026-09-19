@@ -123,11 +123,13 @@ export function getPresets(): Promise<ScoreOrderRequest[]> {
   return apiFetch<ScoreOrderRequest[]>('/internal/demo/presets')
 }
 
-/** POST /internal/score-order with the preset exactly as the server gave it. Idempotent per order. */
-export function postScoreOrder(preset: ScoreOrderRequest): Promise<ScoreOrderResponse> {
-  return apiFetch<ScoreOrderResponse>('/internal/score-order', {
+/**
+ * POST /internal/demo/presets/{order_id}/score: the server scores its own preset and records it as DEMO
+ * (Phase 10 Part 1). No body is sent, so what is scored is exactly what the server offered. Idempotent.
+ */
+export function postScorePreset(orderId: string): Promise<ScoreOrderResponse> {
+  return apiFetch<ScoreOrderResponse>(`/internal/demo/presets/${encodeURIComponent(orderId)}/score`, {
     method: 'POST',
-    body: JSON.stringify(preset),
   })
 }
 

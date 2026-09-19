@@ -131,7 +131,9 @@ export function stubApi(
     const handled = overrides?.(url, init)
     const response =
       handled ??
-      (url.includes('/demo/presets')
+      (/\/demo\/presets\/[^/]+\/score$/.test(url)
+        ? ok(SCORE_RESPONSE)
+        : url.includes('/demo/presets')
         ? ok(PRESETS)
         : url.includes('/internal/metrics')
           ? ok(METRICS)

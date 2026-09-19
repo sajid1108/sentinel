@@ -82,11 +82,11 @@ def client(seeded_db, data_dir, tmp_path):
 
 @pytest.fixture(scope="module")
 def shared(seeded_db, data_dir, tmp_path_factory):
-    """One app for read-mostly tests; the three demos are scored once."""
+    """One app for read-mostly tests; the three demos are scored once, as DEMO, the way the Queue does."""
     db = _copy_db(seeded_db, tmp_path_factory.mktemp("api-shared"))
     with _client(db, data_dir) as c:
         for p in c.get(f"{I}/demo/presets", headers=KEY).json():
-            assert c.post(f"{I}/score-order", json=p, headers=KEY).status_code == 200
+            assert c.post(f"{I}/demo/presets/{p['order_id']}/score", headers=KEY).status_code == 200
         yield c, db
 
 
@@ -122,7 +122,7 @@ INTERNAL_ROUTES = [
     ("POST", "/score-order"), ("GET", "/orders"), ("GET", "/orders/ORD-DEMO-001"),
     ("POST", "/orders/ORD-DEMO-001/override"), ("POST", "/orders/ORD-DEMO-001/appeal"),
     ("GET", "/audit-events"), ("GET", "/audit-events/verify"), ("GET", "/metrics"), ("GET", "/policy"),
-    ("GET", "/demo/presets"), ("POST", "/demo/reset"),
+    ("GET", "/demo/presets"), ("POST", "/demo/presets/ORD-DEMO-001/score"), ("POST", "/demo/reset"),
 ]
 
 
@@ -153,7 +153,13 @@ def test_openapi_has_no_model_endpoint(shared):
     c, _ = shared
     paths = list(c.app.openapi()["paths"])
     assert not [p for p in paths if "predict" in p.lower() or "model" in p.lower()]
-    assert [p for p in paths if "score" in p.lower()] == [f"{I}/score-order"]
+    # The only scoring routes record a decision and return it whole (Phase 10 Part 1 adds the DEMO preset route).
+    scoring = [p for p in paths if "score" in p.lower()]
+    assert scoring == [f"{I}/score-order", f"{I}/demo/presets/{{order_id}}/score"]
+    spec = c.app.openapi()["paths"]
+    for p in scoring:
+        assert spec[p]["post"]["responses"]["200"]["content"]["application/json"]["schema"] == {
+            "$ref": "#/components/schemas/ScoreOrderResponse"}
 
 
 # ── public safety ────────────────────────────────────────────────────────────
@@ -518,7 +524,8 @@ def test_metrics(shared):
 # ── demo endpoints ───────────────────────────────────────────────────────────
 def test_demo_endpoints_are_404_when_demo_mode_is_off(seeded_db, data_dir, tmp_path):
     with _client(_copy_db(seeded_db, tmp_path), data_dir, demo_mode=False) as c:
-        for method, path in (("GET", "/demo/presets"), ("POST", "/demo/reset")):
+        for method, path in (("GET", "/demo/presets"), ("POST", "/demo/presets/ORD-DEMO-001/score"),
+                             ("POST", "/demo/reset")):
             res = c.request(method, f"{I}{path}", headers=KEY)
             assert res.status_code == 404 and res.json() == {"detail": "Not found."}
 
@@ -528,6 +535,40 @@ def test_presets_score_to_their_actions(shared):
     for oid, p in _presets(c).items():
         res = c.post(f"{I}/score-order", json=p, headers=KEY).json()
         assert res["policy"]["selected_action"] == DEMO_ACTIONS[oid]
+
+
+def _source(db, order_id):
+    return _db_rows(db, "SELECT source FROM decisions WHERE order_id = ?", order_id)[0]["source"]
+
+
+def test_the_three_presets_record_demo(shared):
+    c, db = shared
+    for oid in DEMO_ACTIONS:
+        assert _source(db, oid) == "DEMO"
+    assert {i["order_id"] for i in _queue(c, source="DEMO")["items"]} == set(DEMO_ACTIONS)
+
+
+def test_preset_route_scores_the_preset_and_replays(client):
+    oid = "ORD-DEMO-002"
+    first = client.post(f"{I}/demo/presets/{oid}/score", headers=KEY)
+    second = client.post(f"{I}/demo/presets/{oid}/score", headers=KEY)
+    assert first.status_code == second.status_code == 200
+    first, second = first.json(), second.json()
+    assert first["order_id"] == oid and first["policy"]["selected_action"] == DEMO_ACTIONS[oid]
+    assert first["decision_id"] == second["decision_id"]
+    assert (first["idempotent_replay"], second["idempotent_replay"]) == (False, True)
+
+
+def test_score_order_still_records_live(client):
+    db = client.app.state.services.db_path
+    assert client.post(f"{I}/score-order", json=_presets(client)["ORD-DEMO-001"], headers=KEY).status_code == 200
+    assert _source(db, "ORD-DEMO-001") == "LIVE"
+
+
+def test_unknown_preset_is_404_with_a_neutral_message(shared):
+    c, _ = shared
+    res = c.post(f"{I}/demo/presets/ORD-NOT-A-PRESET/score", headers=KEY)
+    assert res.status_code == 404 and res.json() == {"detail": "Not found."}
 
 
 def test_reset_twice_in_a_row(client):

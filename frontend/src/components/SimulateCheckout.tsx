@@ -3,8 +3,8 @@
  *
  * The panel exists only when `GET /internal/demo/presets` answers, which is only when DEMO_MODE is on;
  * a 404 renders nothing at all, reset button included. Every button is labelled from its own preset's
- * data — no demo id is special-cased and no label is written here — and a click posts the preset back
- * to the server byte for byte, so what is scored is exactly what the server offered.
+ * data — no demo id is special-cased and no label is written here — and a click asks the server to score
+ * its own preset by order id (recorded as DEMO), so what is scored is exactly what the server offered.
  */
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -13,7 +13,7 @@ import {
   ApiError,
   getPresets,
   postDemoReset,
-  postScoreOrder,
+  postScorePreset,
   type ScoreOrderRequest,
 } from '../api/client'
 import { Panel } from './Panel'
@@ -139,9 +139,9 @@ export function SimulateCheckout({ onReset }: { onReset: () => void }) {
       const { [preset.order_id]: _removed, ...rest } = previous
       return rest
     })
-    // The preset goes back unmodified. Scoring is idempotent per order, so a second click on the same
-    // button is a replay and simply navigates again.
-    postScoreOrder(preset)
+    // Scoring is idempotent per order, so a second click on the same button is a replay and simply
+    // navigates again.
+    postScorePreset(preset.order_id)
       .then((response) => {
         setScoring(null)
         navigate(`/orders/${encodeURIComponent(response.order_id)}`)

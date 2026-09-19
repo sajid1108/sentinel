@@ -184,13 +184,30 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * Presets
-         * @description The three §11 demo requests, as seed-db wrote them beside the database.
-         */
+        /** Presets */
         get: operations["presets_api_v1_internal_demo_presets_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/internal/demo/presets/{order_id}/score": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Score Preset
+         * @description Score the preset with this order id as a DEMO decision. A preset already scored replays its record.
+         */
+        post: operations["score_preset_api_v1_internal_demo_presets__order_id__score_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1372,6 +1389,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ScoreOrderRequest"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    score_preset_api_v1_internal_demo_presets__order_id__score_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-internal-key"?: string | null;
+            };
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScoreOrderResponse"];
                 };
             };
             /** @description Validation Error */

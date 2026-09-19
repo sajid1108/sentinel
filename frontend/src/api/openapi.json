@@ -739,7 +739,6 @@
           "demo"
         ],
         "summary": "Presets",
-        "description": "The three §11 demo requests, as seed-db wrote them beside the database.",
         "operationId": "presets_api_v1_internal_demo_presets_get",
         "parameters": [
           {
@@ -770,6 +769,65 @@
                     "$ref": "#/components/schemas/ScoreOrderRequest"
                   },
                   "title": "Response Presets Api V1 Internal Demo Presets Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/internal/demo/presets/{order_id}/score": {
+      "post": {
+        "tags": [
+          "demo"
+        ],
+        "summary": "Score Preset",
+        "description": "Score the preset with this order id as a DEMO decision. A preset already scored replays its record.",
+        "operationId": "score_preset_api_v1_internal_demo_presets__order_id__score_post",
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Order Id"
+            }
+          },
+          {
+            "name": "x-internal-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Internal-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScoreOrderResponse"
                 }
               }
             }
