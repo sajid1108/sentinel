@@ -1,0 +1,705 @@
+<title>AegisShift</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@112,400;112,480;112,530&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  color-scheme: dark;
+  --canvas:#171721; --card:#1e1e2a; --obsidian:#272735;
+  --slate:#70707d; --mist:#e2e3ed; --ash:#c3c3cc; --ivory:#ededf3; --white:#ffffff;
+  --cobalt:#5266eb; --hair:rgba(237,237,243,.12);
+  /* product semantics, used only inside product illustrations */
+  --allow:#2dd4bf; --prepaid:#fcd34d; --review:#f59e0b; --block:#ef4444; --return:#38bdf8;
+  --display:"Archivo", "Helvetica Neue", Arial, sans-serif;
+  --body:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+*{box-sizing:border-box}
+html{background:var(--canvas)}
+body{margin:0;background:var(--canvas);color:var(--ivory);font:400 16px/1.5 var(--body);-webkit-font-smoothing:antialiased}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--mist);outline-offset:3px;border-radius:4px}
+.wrap{max-width:1200px;margin:0 auto;padding-inline:24px}
+.num{font-variant-numeric:tabular-nums}
+.mono{font-family:var(--mono)}
+h1,h2,h3{font-family:var(--display);font-weight:480;margin:0;text-wrap:balance;letter-spacing:.01em}
+h2{font-size:clamp(30px,4vw,42px);line-height:1.15}
+h3{font-size:21px;line-height:1.3;letter-spacing:.015em}
+p{margin:0}
+.lede{color:var(--ash);font-size:18px;line-height:1.55;max-width:60ch}
+.eyebrow{font:500 12px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ash)}
+section{padding-block:72px}
+.card{background:var(--card);border-radius:12px;padding:32px}
+
+/* nav */
+.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:rgba(23,23,33,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--hair)}
+.nav .wrap{display:flex;align-items:center;gap:24px;height:64px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font:480 18px/1 var(--display);letter-spacing:.04em}
+.links{display:flex;gap:4px;margin-left:auto}
+.links a{text-decoration:none;color:var(--ash);font-size:14px;padding:8px 14px;border-radius:40px;transition:color .15s,background-color .15s}
+.links a:hover{color:var(--ivory);background:var(--obsidian)}
+.btn{display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 22px;border-radius:32px;font:400 15px/1 var(--body);text-decoration:none;white-space:nowrap;transition:background-color .15s,color .15s}
+.btn-primary{background:var(--cobalt);color:var(--white)}
+.btn-primary:hover{background:#6273f0}
+.btn-ghost{border:1px solid var(--ivory);color:var(--ivory)}
+.btn-ghost:hover{background:var(--obsidian)}
+
+/* hero */
+.hero{position:relative;overflow:hidden;padding:0;border-bottom:1px solid var(--hair)}
+.hero svg.sky{position:absolute;inset:0;width:100%;height:100%}
+.hero .inner{position:relative;text-align:center;padding-block:112px 176px;display:flex;flex-direction:column;align-items:center;gap:24px}
+.hero h1{font-size:clamp(40px,6.4vw,72px);line-height:1.06;font-weight:480;color:var(--white);max-width:14ch}
+.hero .lede{text-align:center;color:var(--ivory);opacity:.86;max-width:52ch}
+.hero .ctas{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+.ticker{position:relative;font:400 12px/1 var(--mono);color:var(--ash);opacity:.7;letter-spacing:.04em}
+
+/* split */
+.split{display:grid;grid-template-columns:1fr 1.1fr;gap:56px;align-items:center}
+.stack{display:flex;flex-direction:column;gap:20px}
+.bullets{list-style:none;padding:0;margin:8px 0 0;display:flex;flex-direction:column;gap:14px;color:var(--ash)}
+.bullets li{display:grid;grid-template-columns:18px 1fr;gap:10px}
+.bullets li::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--slate);margin-top:9px}
+.bullets b{color:var(--ivory);font-weight:500}
+
+/* product mock */
+.mock{background:var(--card);border-radius:12px;padding:24px;display:flex;flex-direction:column;gap:18px;border:1px solid var(--hair)}
+.mock-top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.mock-id{font:500 14px/1 var(--mono);color:var(--ivory)}
+.badge{font:500 13px/1 var(--body);padding:6px 10px;border-radius:4px;border:1px solid currentColor}
+.b-allow{color:var(--allow);background:rgba(45,212,191,.1)}
+.b-block{color:var(--block);background:rgba(239,68,68,.1)}
+.b-review{color:var(--review);background:rgba(245,158,11,.1)}
+.b-prepaid{color:var(--prepaid);background:rgba(252,211,77,.1)}
+.scores{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.score{background:var(--canvas);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.score .lbl{font-size:12px;color:var(--ash)}
+.score .fig{font:530 30px/1 var(--display)}
+.meter{height:4px;background:var(--obsidian);border-radius:2px;position:relative}
+.meter i{position:absolute;left:0;top:0;bottom:0;border-radius:2px}
+.meter .ghost{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--mist)}
+.cap{font-size:12px;color:var(--ash);line-height:1.45}
+.mock-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-top:14px;border-top:1px solid var(--hair);font-size:13px;color:var(--ash);flex-wrap:wrap}
+
+/* pipeline */
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:40px}
+.step{background:var(--card);border-radius:12px;padding:28px;display:flex;flex-direction:column;gap:12px}
+.step .n{font:500 12px/1 var(--mono);color:var(--slate)}
+.step p{color:var(--ash);font-size:15px}
+.formula{margin-top:12px;font:400 15px/1.6 var(--mono);color:var(--ivory);background:var(--canvas);border-radius:8px;padding:14px 16px;overflow-x:auto;white-space:nowrap}
+
+/* cost chart */
+.costs{display:flex;flex-direction:column;gap:14px}
+.crow{display:grid;grid-template-columns:110px 1fr;gap:14px;align-items:center;font-size:13px}
+.crow .name{color:var(--ash)}
+.cbar{display:flex;align-items:center;gap:10px;min-width:0}
+.cbar i{display:block;height:22px;border-radius:3px;background:var(--obsidian);flex:none}
+.cbar i.sel{background:var(--review)}
+.cbar i.off{background:repeating-linear-gradient(135deg,#4a4a58 0 4px,#2c2c3a 4px 8px)}
+.cbar .v{color:var(--ivory)}
+.chip{font:500 11px/1 var(--mono);padding:4px 6px;border:1px solid var(--slate);border-radius:3px;color:var(--ash)}
+.tag{font:500 11px/1 var(--body);padding:4px 7px;border-radius:3px;background:var(--ivory);color:var(--canvas)}
+.explain{font-size:13px;color:var(--ash);line-height:1.55;padding-top:14px;border-top:1px solid var(--hair)}
+
+/* graph */
+.graphcard{background:var(--card);border-radius:12px;padding:20px;border:1px solid var(--hair)}
+.graphcard svg{width:100%;height:auto;display:block}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:12px;color:var(--ash);margin-top:12px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.dotk{width:10px;height:10px;border-radius:50%;display:inline-block}
+.bigstats{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.bigstats .card{padding:24px;display:flex;flex-direction:column;gap:6px}
+.bigstats .fig{font:480 42px/1 var(--display)}
+.quote{border-left:1px solid var(--slate);padding-left:16px;color:var(--ivory);font-size:17px;line-height:1.55}
+
+/* guardrails */
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:40px}
+.grid3 .card{display:flex;flex-direction:column;gap:10px}
+.gid{font:500 13px/1 var(--mono);color:var(--ash);border:1px solid var(--slate);border-radius:40px;padding:6px 10px;align-self:flex-start}
+.grid3 p{color:var(--ash);font-size:15px}
+
+/* results */
+.statrow{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:40px}
+.stat{background:var(--card);border-radius:12px;padding:24px;display:flex;flex-direction:column;gap:8px}
+.stat .fig{font:480 36px/1 var(--display)}
+.stat .sub{font-size:13px;color:var(--ash)}
+.tablewrap{margin-top:12px;background:var(--card);border-radius:12px;overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:760px;font-size:14px}
+th,td{padding:14px 18px;text-align:right;border-bottom:1px solid var(--hair);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font:500 11px/1.3 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ash)}
+tbody tr:last-child td{border-bottom:0}
+td{color:var(--ivory)}
+.trade{margin-top:24px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* audit */
+.chain{display:flex;flex-direction:column;gap:0;margin-top:8px}
+.link{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:stretch}
+.rail{display:flex;flex-direction:column;align-items:center;width:14px}
+.rail b{width:10px;height:10px;border-radius:50%;border:1px solid var(--mist);margin-top:22px;flex:none}
+.rail i{width:1px;flex:1;background:var(--slate)}
+.ev{background:var(--card);border-radius:12px;padding:18px 20px;margin-bottom:10px;display:flex;flex-direction:column;gap:6px}
+.ev .t{font-weight:500}
+.ev .m{font-size:13px;color:var(--ash)}
+.ev .h{font:400 12px/1.4 var(--mono);color:var(--slate);word-break:break-all}
+.verified{display:inline-flex;align-items:center;gap:8px;font:500 13px/1 var(--mono);color:var(--allow);border:1px solid rgba(45,212,191,.5);border-radius:40px;padding:8px 12px;align-self:flex-start}
+
+/* honesty */
+.honest{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:40px}
+.honest .card p{color:var(--ash);font-size:15px}
+.honest .card{display:flex;flex-direction:column;gap:12px}
+
+/* cta + footer */
+.closing{text-align:center;display:flex;flex-direction:column;align-items:center;gap:20px}
+footer{border-top:1px solid var(--hair);padding-block:32px 40px}
+footer .wrap{display:flex;flex-direction:column;gap:14px}
+.notice{font:480 12px/1.6 var(--body);letter-spacing:.01em;color:var(--ash);max-width:95ch}
+.foot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--slate)}
+
+/* demo explorer */
+.tabs{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+.tabs button{font:400 15px/1 var(--body);color:var(--ivory);background:transparent;border:1px solid var(--slate);border-radius:32px;padding:12px 18px;cursor:pointer;transition:background-color .15s,color .15s}
+.tabs button:hover{background:var(--obsidian)}
+.tabs button[aria-selected="true"]{background:var(--ivory);color:var(--canvas);border-color:var(--ivory)}
+.dpanel{margin-top:40px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.dpanel .card{padding:24px;display:flex;flex-direction:column;gap:14px}
+.dhead{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.dmeta{display:flex;gap:24px;flex-wrap:wrap;font-size:13px;color:var(--ash)}
+.dmeta b{display:block;color:var(--ivory);font-weight:500;font-size:15px;margin-top:4px}
+.bigbadge{font:530 22px/1 var(--display);padding:10px 16px;border-radius:4px;border:1px solid currentColor}
+.rlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.rlist li{display:grid;grid-template-columns:84px 1fr auto;gap:12px;padding:10px 0;border-top:1px solid var(--hair);font-size:14px;align-items:start}
+.rlist li:first-child{border-top:0}
+.str{font:500 10.5px/1 var(--mono);letter-spacing:.06em;color:var(--ash);border:1px solid var(--slate);border-radius:3px;padding:4px 5px;justify-self:start}
+.pp{color:var(--ash);font-size:13px}
+.note{grid-column:2/-1;font-size:12px;color:var(--slate);font-style:italic;margin-top:-4px}
+.subh{font:500 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ash)}
+.bl{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:14px;padding:10px 0;border-top:1px solid var(--hair)}
+.bl:first-of-type{border-top:0}
+.bl small{display:block;color:var(--ash);font-size:12px;margin-top:3px}
+@media (max-width:960px){.dpanel{grid-template-columns:1fr}}
+@media (max-width:960px){
+  .split,.trade{grid-template-columns:1fr}
+  .steps,.statrow{grid-template-columns:1fr 1fr}
+  .grid3,.honest{grid-template-columns:1fr 1fr}
+  .links{display:none}
+  .nav .btn{margin-left:auto}
+}
+@media (max-width:560px){
+  .steps,.statrow,.grid3,.honest,.scores,.bigstats{grid-template-columns:1fr}
+  .crow{grid-template-columns:86px 1fr}
+  .hero .inner{padding-block:72px 140px}
+  section{padding-block:56px}
+  .wrap{padding-inline:16px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/* ---- v4: world tree, stance change, atmosphere ---- */
+.world .inner{padding-block:88px 8px}
+.world h1{font-size:clamp(38px,5.6vw,64px)}
+.treewrap{position:relative;padding-bottom:56px}
+.tree{width:100%;height:auto;display:block;max-width:1100px;margin:0 auto;overflow:visible}
+.tree .lbl{font:400 12.5px var(--mono);fill:#c3c3cc}
+.tree .lbl.dim{fill:#8a8fa8;font-size:11.5px}
+.tree .lbl.red{fill:#f87171}
+.tree .lbl.strong{fill:#ededf3;font-weight:500;font-size:14px}
+.tree .flows path{fill:none;stroke:none}
+.halo circle{opacity:.35;animation:halo 3.2s ease-in-out infinite alternate}
+.halo circle:nth-child(2){animation-delay:-1.1s}.halo circle:nth-child(3){animation-delay:-2.2s}
+@keyframes halo{from{opacity:.18}to{opacity:.55}}
+.sway{transform-box:view-box;transform-origin:600px 400px;animation:sway 7s ease-in-out infinite alternate}
+.sway-l{animation-delay:-3.5s}
+@keyframes sway{from{transform:rotate(-.7deg)}to{transform:rotate(.7deg)}}
+.stars circle{animation:tw 5s ease-in-out infinite alternate;opacity:.5}
+.stars circle:nth-child(3n){animation-delay:-2s}.stars circle:nth-child(4n){animation-delay:-3.3s}
+@keyframes tw{from{opacity:.2}to{opacity:.8}}
+.ring path{animation:dash 14s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-180}}
+.treestats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:1000px;margin:8px auto 0;position:relative}
+.treestats>div{background:rgba(30,30,42,.72);border-radius:12px;padding:20px 22px;display:flex;flex-direction:column;gap:6px}
+.treestats .big{font:480 34px/1 var(--display)}
+.treestats .muted{color:var(--ash)}
+.treeleg{justify-content:center;margin-top:16px;position:relative}
+
+.atmos{position:relative;background:radial-gradient(ellipse 70% 55% at 50% 110%, rgba(58,66,112,.32), transparent 70%),var(--canvas);border-top:1px solid var(--hair)}
+#demo,#results,#honesty{background:radial-gradient(ellipse 70% 50% at 50% 115%, rgba(58,66,112,.26), transparent 70%),var(--canvas)}
+
+.stancebox{margin-top:40px;background:rgba(30,30,42,.8);border:1px solid var(--hair);border-radius:12px;padding:32px;display:flex;flex-direction:column;gap:18px}
+.stance-top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.orders{display:flex;gap:8px;flex-wrap:wrap}
+.orders button{font:400 14px/1 var(--body);color:var(--ivory);background:transparent;border:1px solid var(--slate);border-radius:32px;padding:10px 16px;cursor:pointer;transition:background-color .15s,color .15s}
+.orders button[aria-checked="true"]{background:var(--ivory);color:var(--canvas);border-color:var(--ivory)}
+.pread{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.pread .big{font:530 44px/1 var(--display)}
+.track{display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--obsidian)}
+.track i{display:block;height:100%}
+#pslider{width:100%;margin:-4px 0 0;accent-color:var(--ivory);height:24px;cursor:pointer}
+.ticks{display:flex;justify-content:space-between;font-size:11px;color:var(--slate);margin-top:-8px}
+.stances{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.st{border:1px solid var(--hair);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:10px;transition:background-color .15s,border-color .15s;min-width:0}
+.st .nm{font:480 18px/1.2 var(--display)}
+.st .cost{font:500 22px/1 var(--display);font-variant-numeric:tabular-nums}
+.st .bar{height:6px;border-radius:3px;background:var(--obsidian);overflow:hidden}
+.st .bar i{display:block;height:100%;background:var(--slate)}
+.st .note2{font-size:12px;color:var(--ash);min-height:16px}
+.st.off{opacity:.55}
+.st.off .bar i{background:repeating-linear-gradient(135deg,#4a4a58 0 4px,#2c2c3a 4px 8px)}
+.st.on{background:rgba(237,237,243,.05)}
+@media (max-width:960px){.treestats,.stances{grid-template-columns:1fr 1fr}.tree .lbl{font-size:15px}}
+@media (max-width:560px){.treestats,.stances{grid-template-columns:1fr}.stancebox{padding:20px}}
+@media (prefers-reduced-motion:reduce){.sway,.halo circle,.stars circle,.ring path{animation:none!important}}
+
+/* ---- v5: video world tree + linked pages ---- */
+body{min-height:100vh}
+.bg{position:fixed;inset:0;z-index:0;overflow:hidden;background:#171721}
+.stage{position:absolute;left:50%;top:50%;width:max(100vw,177.78vh);height:max(56.25vw,100vh);transform:translate(-50%,-50%)}
+.stage video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.veil{position:absolute;inset:0;background:linear-gradient(90deg,rgba(23,23,33,.72) 0%,rgba(23,23,33,.1) 45%,rgba(23,23,33,0) 60%),linear-gradient(0deg,rgba(23,23,33,.85) 0%,rgba(23,23,33,0) 38%)}
+.marks{position:absolute;inset:0;transition:opacity .3s}
+.ping{position:absolute;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;border:1.5px solid #ef4444;animation:ping 2.6s ease-out infinite}
+.ping:nth-child(2){animation-delay:-.7s}.ping:nth-child(3){animation-delay:-1.4s}.ping:nth-child(4){animation-delay:-2s}
+@keyframes ping{0%{transform:scale(.5);opacity:.9}100%{transform:scale(2.2);opacity:0}}
+.call{position:absolute;display:flex;flex-direction:column;gap:3px;font:400 12px/1.35 var(--mono);color:#dfe1ec;max-width:230px;padding:8px 10px;background:rgba(23,23,33,.62);border:1px solid rgba(237,237,243,.2);border-radius:6px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.call b{font:500 13px/1.2 var(--body);color:#fff}
+.call::before{content:"";position:absolute;width:7px;height:7px;border-radius:50%;background:#ededf3}
+.c-trunk{transform:translate(18px,-50%)}
+.c-trunk::before{left:-22px;top:50%;margin-top:-3.5px;background:#2dd4bf;box-shadow:0 0 0 4px rgba(45,212,191,.25)}
+.c-right{transform:translate(16px,-110%)}
+.c-right::before{left:-20px;bottom:-4px}
+.c-left{transform:translate(calc(-100% - 16px),-110%)}
+.c-left::before{right:-20px;bottom:-4px}
+.c-red{transform:translate(-50%,calc(-100% - 22px));border-color:rgba(239,68,68,.55)}
+.c-red::before{left:50%;bottom:-18px;margin-left:-3.5px;background:#ef4444}
+.nav,.view,footer{position:relative;z-index:2}
+.view[hidden]{display:none!important}
+.view section{background:rgba(23,23,33,.78)!important;border-top:0!important}
+body:not([data-view="home"]) .marks{opacity:0}
+body:not([data-view="home"]) .veil{background:rgba(23,23,33,.8)}
+.home{min-height:calc(100vh - 64px - 110px);display:flex;flex-direction:column;justify-content:space-between;padding:56px 24px 32px;max-width:1440px;margin:0 auto}
+.home-copy{max-width:520px;display:flex;flex-direction:column;gap:18px}
+.home-copy h1{font-size:clamp(36px,4.6vw,60px);line-height:1.06;color:#fff}
+.home-copy .lede{color:var(--ivory);opacity:.88}
+.ctas{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.home-stats{align-self:flex-end;display:grid;grid-template-columns:repeat(3,minmax(0,190px));gap:10px;margin-top:40px}
+.home-stats>div{background:rgba(23,23,33,.72);border:1px solid rgba(237,237,243,.12);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:6px}
+.home-stats .big{font:480 28px/1 var(--display)}
+.home-stats .muted{color:var(--ash)}
+.links a.active{color:var(--ivory);background:var(--obsidian)}
+footer{background:rgba(23,23,33,.85)}
+@media (max-width:900px){.call{display:none}.home-stats{align-self:stretch;grid-template-columns:1fr 1fr 1fr}}
+@media (max-width:560px){.home-stats{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.ping{animation:none;opacity:.8}}
+
+body[data-view="stance"] .veil,body[data-view="demo"] .veil{background:linear-gradient(0deg,rgba(23,23,33,.7) 0%,rgba(23,23,33,.35) 100%)}
+body[data-view="stance"] .view section,body[data-view="demo"] .view section{background:transparent!important}
+.stage video.layer{opacity:0;transition:opacity .9s ease}
+@media (prefers-reduced-motion:reduce){.stage video.layer{transition:none}}
+</style>
+
+<nav class="nav" aria-label="Primary">
+  <div class="wrap">
+    <a class="brand" href="#home" aria-label="AegisShift home">
+      <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="10" fill="none" stroke="#ededf3" stroke-width="1.2"/><circle cx="11" cy="11" r="5.5" fill="none" stroke="#ededf3" stroke-width="1.2"/><circle cx="11" cy="11" r="1.6" fill="#ededf3"/></svg>
+      AEGISSHIFT
+    </a>
+    <div class="links">
+      <a href="#home">Home</a>
+      <a href="#stance">Stance change</a>
+      <a href="#demo">Demos</a>
+      <a href="#results">Results</a>
+      <a href="#honesty">Disclosures</a>
+    </div>
+    <a class="btn btn-primary" href="#demo">See the three demos</a>
+  </div>
+</nav>
+
+<div class="bg" aria-hidden="true">
+  <div class="stage">
+    <video id="treevid" src="tree.mp4" poster="tree-poster.jpg" autoplay muted loop playsinline preload="auto"></video>
+    <video class="layer" id="vid-dying" src="tree-dying.mp4" autoplay muted loop playsinline preload="auto"></video>
+    <video class="layer" id="vid-healthy" src="tree-healthy.mp4" autoplay muted loop playsinline preload="auto"></video>
+    <div class="marks">
+      <span class="ping" style="left:40.1%;top:23.7%"></span>
+      <span class="ping" style="left:63.3%;top:29.3%"></span>
+      <span class="ping" style="left:76%;top:44.4%"></span>
+      <span class="ping" style="left:21.9%;top:40.7%"></span>
+      <span class="call c-trunk" style="left:51%;top:66%"><b>ACC-DEMO-002</b>The trunk: a 5-day-old account ordering a ₹24,000 phone</span>
+      <span class="call c-right" style="left:69%;top:51%"><b>Device</b>5 other accounts · 3 confirmed abusive</span>
+      <span class="call c-left" style="left:33%;top:53%"><b>Payment token</b>3 other accounts, 2 of them also on the device</span>
+      <span class="call c-red" style="left:40.1%;top:23.7%"><b>Confirmed abuse</b>red lights in the crown</span>
+    </div>
+  </div>
+  <div class="veil"></div>
+</div>
+<div class="view" id="v-home">
+  <div class="home">
+    <div class="home-copy">
+      <span class="eyebrow">Return-abuse risk manager · a stance change for every order</span>
+      <h1>A prediction is not a decision.</h1>
+      <p class="lede">On its own, this account looks clean. Its roots and branches show that it belongs to a ring.</p>
+      <div class="ctas"><a class="btn btn-primary" href="#stance">See the stance change</a><a class="btn btn-ghost" href="#demo">Open the demos</a></div>
+    </div>
+    <div class="home-stats num">
+      <div><span class="big">95.1%</span><span class="cap">abuse probability with the relationship evidence</span></div>
+      <div><span class="big muted">9.9%</span><span class="cap">without it: this order would have passed</span></div>
+      <div><span class="big" style="color:var(--block)">Block</span><span class="cap">two independent signals agree</span></div>
+    </div>
+  </div>
+</div>
+
+
+<main>
+  <div class="view" id="v-stance"><section id="stance" class="atmos">
+    <div class="wrap">
+      <div class="stack" style="max-width:720px">
+        <span class="eyebrow">The stance change</span>
+        <h2>Four stances. Cost picks one. Guardrails can only soften it.</h2>
+        <p class="lede">Drag the abuse probability and watch AegisShift change stance. Every action is priced for this exact order, the cheapest permitted one wins, and the return probability is never an input.</p>
+      </div>
+
+      <div class="stancebox">
+        <div class="stance-top">
+          <div class="orders" role="radiogroup" aria-label="Order">
+            <button role="radio" aria-checked="true" data-o="0">₹12,000 sneakers · Demo 3</button>
+            <button role="radio" aria-checked="false" data-o="1">₹1,500 t-shirt</button>
+          </div>
+          <div class="pread"><span class="cap">Abuse probability</span><span id="pval" class="big num">69.1%</span></div>
+        </div>
+
+        <div class="track" id="zones" aria-hidden="true"></div>
+        <input id="pslider" type="range" min="0" max="1000" value="691" aria-label="Abuse probability">
+        <div class="ticks num"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>
+
+        <div class="stances" id="stances"></div>
+        <p class="explain" id="why"></p>
+        <p class="cap">Illustration built from the policy v1.0 cost formula (the engine agrees to within ₹1). Monetary values are demonstration assumptions. The ₹1,500 order is hypothetical, with the same evidence as Demo 3.</p>
+      </div>
+    </div>
+  </section></div>
+
+  <div class="view" id="v-demo"><section id="demo" style="border-top:1px solid var(--hair)">
+    <div class="wrap closing">
+      <span class="eyebrow">Live demo</span>
+      <h2>Three orders. Three proportionate answers.</h2>
+      <p class="lede" style="text-align:center">A loyal frequent returner is allowed. A ring member is blocked on corroborated evidence. An uncertain order goes to a person, who can override it with a recorded reason.</p>
+      <div class="tabs" role="tablist" aria-label="Demo orders">
+        <button role="tab" id="tab-0" aria-selected="true" data-i="0">Demo 1 · Frequent returner</button>
+        <button role="tab" id="tab-1" aria-selected="false" data-i="1">Demo 2 · Ring member</button>
+        <button role="tab" id="tab-2" aria-selected="false" data-i="2">Demo 3 · Uncertain middle</button>
+      </div>
+    </div>
+    <div class="wrap">
+      <div id="demo-panel" class="dpanel" role="tabpanel" aria-live="polite"></div>
+      <p class="cap" style="text-align:center;margin-top:16px">Replayed from the real decisions the prototype recorded. To run it live: <span class="mono">python -m sentinel.cli serve</span> and <span class="mono">npm run dev</span>, then open the Queue and use Simulate checkout.</p>
+    </div>
+  </section></div>
+  <div class="view" id="v-results"><section id="results" style="border-top:1px solid var(--hair)">
+    <div class="wrap">
+      <div class="stack">
+        <span class="eyebrow">Results · synthetic backtest</span>
+        <h2>Realized cost against true labels on 1,833 held-out orders.</h2>
+        <p class="lede">Each strategy was run against the same unseen test period. The baseline thresholds were tuned on a separate slice. Every number here is synthetic.</p>
+      </div>
+      <div class="statrow num">
+        <div class="stat"><span class="fig">0.814</span><span class="sub">Abuse PR-AUC with the graph, against 0.527 without it</span></div>
+        <div class="stat"><span class="fig">72.7%</span><span class="sub">Recall on a ring never seen in training, against 14.3% without the graph</span></div>
+        <div class="stat"><span class="fig">87.5%</span><span class="sub">Of blocks were real abuse</span></div>
+        <div class="stat"><span class="fig">0.12%</span><span class="sub">Of genuine customers blocked, against 2.42% under the rules</span></div>
+      </div>
+      <div class="tablewrap">
+        <table class="num">
+          <thead><tr><th>Strategy</th><th>Realized cost / 1,000</th><th>Abuse prevented</th><th>Genuine blocked</th><th>Friction</th><th>Reviews / 1,000</th><th>Cost per catch</th><th>Block precision</th><th>Recall</th></tr></thead>
+          <tbody>
+            <tr><td>AegisShift</td><td>₹1,95,313</td><td>₹8,50,800</td><td>0.1%</td><td>3.5%</td><td>64.9</td><td>₹1,197</td><td>87.5%</td><td>71.5%</td></tr>
+            <tr><td>Fixed threshold (tuned)</td><td>₹1,60,112</td><td>₹9,37,969</td><td>0.4%</td><td>3.4%</td><td>56.7</td><td>₹1,253</td><td>86.3%</td><td>82.5%</td></tr>
+            <tr><td>Rule-based (status quo)</td><td>₹7,42,313</td><td>₹2,68,730</td><td>2.4%</td><td>7.5%</td><td>8.7</td><td>₹45,668</td><td>0%</td><td>11.0%</td></tr>
+            <tr><td>Allow all</td><td>₹6,23,291</td><td>₹0</td><td>0%</td><td>0%</td><td>0.0</td><td>—</td><td>—</td><td>0%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="trade">
+        <div class="card stack" style="gap:10px"><h3>What it wins</h3><p style="color:var(--ash)">Realized cost is 68.7% below allowing everything and 73.7% below the rules. It wrongly blocks 20 times fewer genuine customers than the rules and 3.3 times fewer than the tuned threshold.</p></div>
+        <div class="card stack" style="gap:10px"><h3>What it pays for that</h3><p style="color:var(--ash)">The tuned threshold is cheaper by ₹35,201 per 1,000 orders. Without guardrails AegisShift would cost ₹1,55,110, cheaper still. The guardrails avoid 8 wrongful blocks at about ₹9,211 each: a deliberate trade, not a win on cost.</p></div>
+      </div>
+    </div>
+  </section></div>
+
+  <div class="view" id="v-honesty"><section id="honesty" style="border-top:1px solid var(--hair)">
+    <div class="wrap">
+      <div class="stack">
+        <span class="eyebrow">What we disclose</span>
+        <h2>The limits are part of the result.</h2>
+      </div>
+      <div class="honest">
+        <div class="card"><h3>New accounts carry more friction</h3><p>Accounts under 30 days old see 36.1% friction, against 4.8–5.9% for older cohorts. Account age stays in the model because it is genuinely predictive. Newness alone can never trigger a block.</p></div>
+        <div class="card"><h3>Synthetic, by design</h3><p>A seeded world with hard negatives (households, hostels, refurbished phones) and label noise. It validates the architecture and the policy's behaviour, not real-world effectiveness.</p></div>
+        <div class="card"><h3>Privacy at the boundary</h3><p>Identifiers arrive already HMAC-hashed, and anything else is rejected. No names, IP addresses or pincodes are used as features, and the graph shows masked labels only.</p></div>
+      </div>
+    </div>
+  </section></div>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p class="notice">Synthetic data is used to validate the architecture, policy behaviour, auditability, and coordinated-pattern detection. Real deployment would require merchant-specific historical data and prospective validation.</p>
+    <div class="foot"><span>AegisShift · Return abuse detection with cost-weighted decisioning</span><span class="mono">policy v1.0 · e1744f12</span></div>
+  </div>
+</footer>
+
+<script>
+/* ---- risk level of the world tree: 0 healthy, 1 middle (base video), 2 dying ---- */
+window.setRisk = function(x){
+  x = Math.max(0, Math.min(2, x));
+  const dying = document.getElementById('vid-dying'), healthy = document.getElementById('vid-healthy');
+  if (dying) dying.style.opacity = Math.max(0, x - 1).toFixed(3);
+  if (healthy) healthy.style.opacity = Math.max(0, 1 - x).toFixed(3);
+};
+window.pToRisk = function(p){
+  if (p <= 0.2) return 0;
+  if (p <= 0.45) return (p - 0.2) / 0.25;
+  if (p <= 0.7) return 1 + (p - 0.45) / 0.25;
+  return 2;
+};
+
+const B = {ALLOW:["Allow","b-allow"],PREPAID_ONLY:["Prepaid only","b-prepaid"],MANUAL_REVIEW:["Manual review","b-review"],BLOCK:["Block","b-block"]};
+const SEL = {ALLOW:"var(--allow)",PREPAID_ONLY:"var(--prepaid)",MANUAL_REVIEW:"var(--review)",BLOCK:"var(--block)"};
+const DEMOS = [
+ {id:"ORD-DEMO-001",value:"₹4,500",age:"1,279 days",prior:"52",pay:"Prepaid UPI",action:"ALLOW",status:"Auto applied",
+  ret:61.5,retS:"61.5%",ab:0.05,abS:"<0.1%",wo:0.05,woS:"<0.1%",
+  retReasons:[["MODERATE","Multiple sizes of the same item in the cart.","+31.5 pp"],["MODERATE","The customer returned 28 of 48 delivered orders. This affects return likelihood, not abuse risk.","+18.7 pp"]],
+  costs:[["ALLOW",0,"₹0"],["PREPAID_ONLY",750,"₹750"],["MANUAL_REVIEW",912,"₹912"],["BLOCK",19819,"₹19,819",["G2","G3"]]],
+  explain:"ALLOW was selected because its expected cost (₹0) is lower than PREPAID_ONLY (₹750), MANUAL_REVIEW (₹912) and BLOCK (₹19,819) under policy v1.0. BLOCK was also not permitted: G2 requires two corroborating signals; none was found. G3 requires an abuse probability of at least 70.0%; this order scored <0.1%.",
+  summary:"No material abuse evidence was found; the score reflects this account's own history rather than links to other accounts.",
+  evidence:[], mitigating:[["MODERATE","Long-standing account with no flagged claims.","+0.0 pp","Redundant with other evidence; the score is already explained by correlated features."],["WEAK","Shared address discounted: household pattern.",""]],
+  baselines:[["Fixed threshold","ALLOW","abuse probability < 5.0%"],["Rule based","BLOCK","matured return rate ≥ 0.5 and ≥ 5 returns"]]},
+ {id:"ORD-DEMO-002",value:"₹24,000",age:"5 days",prior:"0",pay:"Prepaid card",action:"BLOCK",status:"Auto applied",
+  ret:37.8,retS:"37.8%",ab:95.1,abS:"95.1%",wo:9.9,woS:"9.9%",retReasons:[],
+  costs:[["ALLOW",19537,"₹19,537",["G5"]],["PREPAID_ONLY",8118,"₹8,118"],["MANUAL_REVIEW",4188,"₹4,188"],["BLOCK",419,"₹419"]],
+  explain:"BLOCK was selected because its expected cost (₹419) is lower than MANUAL_REVIEW (₹4,188), PREPAID_ONLY (₹8,118) and ALLOW (₹19,537) under policy v1.0. ALLOW was also not permitted: G5 removes ALLOW when the abuse probability is at least 40.0% and the order value is at least ₹10,000.",
+  summary:"The abuse score is driven mainly by links to other accounts sharing this order's device, payment method or delivery pattern.",
+  evidence:[["STRONG","The payment method was used by 3 other accounts in the last 30 days.","+0.2 pp","Redundant with other relationship evidence; the score is already explained by correlated features."],["STRONG","This device was used by 3 accounts later confirmed for return abuse, most recently 3 days ago.","+0.0 pp","Redundant with other relationship evidence; the score is already explained by correlated features."],["MODERATE","Linked accounts placed 4 orders in the last 24 hours.","+4.5 pp"],["MODERATE","Linked accounts ordered the same item 3 times this week.","+3.8 pp"],["MODERATE","This device was used by 5 other accounts in the last 30 days.","+3.6 pp"],["WEAK","New account placing a high-value order.","+94.3 pp"]],
+  mitigating:[], baselines:[["Fixed threshold","BLOCK","abuse probability ≥ 75.0%"],["Rule based","MANUAL_REVIEW","new account (< 30 d) and value ≥ ₹15,000"]]},
+ {id:"ORD-DEMO-003",value:"₹12,000",age:"239 days",prior:"7",pay:"Cash on delivery",action:"MANUAL_REVIEW",status:"Pending review",
+  ret:24.6,retS:"24.6%",ab:69.1,abS:"69.1%",wo:0.05,woS:"<0.1%",retReasons:[],
+  costs:[["ALLOW",7155,"₹7,155",["G5"]],["PREPAID_ONLY",3171,"₹3,171"],["MANUAL_REVIEW",1858,"₹1,858"],["BLOCK",4052,"₹4,052",["G3"]]],
+  explain:"MANUAL_REVIEW was selected because its expected cost (₹1,858) is lower than PREPAID_ONLY (₹3,171), BLOCK (₹4,052) and ALLOW (₹7,155) under policy v1.0. BLOCK was also not permitted: G3 requires an abuse probability of at least 70.0%; this order scored 69.1%. ALLOW was also not permitted: G5 removes ALLOW when the abuse probability is at least 40.0% and the order value is at least ₹10,000.",
+  summary:"The abuse score is driven mainly by links to other accounts sharing this order's device, payment method or delivery pattern.",
+  evidence:[["MODERATE","This device was used by 3 other accounts in the last 30 days.","+39.0 pp"],["MODERATE","The account had 1 flagged return or delivery claim in the last 6 months.","+0.0 pp","Redundant with other evidence; the score is already explained by correlated features."]],
+  mitigating:[["WEAK","Shared address discounted: stale relationship.",""]],
+  baselines:[["Fixed threshold","MANUAL_REVIEW","abuse probability ≥ 5.0%"],["Rule based","PREPAID_ONLY","COD and value ≥ ₹5,000"]],
+  after:"Live step: a reviewer overrides to Prepaid only (Customer verified). A new audit event is chained, the original recommendation is kept, and the checkout now asks for prepayment, without showing the customer any score."}
+];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const rows = list => list.map(([s,t,p,n]) => `<li><span class="str">${s}</span><span>${esc(t)}</span><span class="pp num">${p||""}</span>${n?`<span class="note">${esc(n)}</span>`:""}</li>`).join("");
+function render(i){
+  const d = DEMOS[i], max = Math.max(...d.costs.map(c=>c[1]));
+  const [lbl, cls] = B[d.action];
+  const costs = d.costs.map(([a,v,s,g]) => {
+    const w = Math.max(0.6, v/max*70), off = !!g, sel = a===d.action;
+    return `<div class="crow"><span class="name">${B[a][0]}</span><span class="cbar"><i class="${off?"off":""}" style="width:${w}%;${sel?`background:${SEL[a]}`:""}"></i><span class="v">${s}</span>${sel?'<span class="tag">Selected</span>':""}${(g||[]).map(x=>`<span class="chip">${x}</span>`).join("")}</span></div>`;
+  }).join("");
+  document.getElementById("demo-panel").innerHTML = `
+   <div class="card dhead">
+     <div class="dmeta"><span>Order<b class="mono">${d.id}</b></span><span>Value<b class="num">${d.value}</b></span><span>Account age<b class="num">${d.age}</b></span><span>Prior orders<b class="num">${d.prior}</b></span><span>Payment<b>${d.pay}</b></span></div>
+     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="bigbadge ${cls}">${lbl}</span><span class="cap">${d.status}</span></div>
+   </div>
+   <div class="card">
+     <span class="subh">Return probability</span>
+     <span class="fig num" style="font:530 34px/1 var(--display);color:var(--return)">${d.retS}</span>
+     <div class="meter"><i style="width:${d.ret}%;background:var(--return)"></i></div>
+     <span class="cap">Operational context — not used for action selection.</span>
+     ${d.retReasons.length?`<ul class="rlist">${rows(d.retReasons)}</ul>`:""}
+   </div>
+   <div class="card">
+     <span class="subh">Abuse probability</span>
+     <span class="fig num" style="font:530 34px/1 var(--display)">${d.abS}</span>
+     <div class="meter"><i style="width:${d.ab}%;background:var(--ash)"></i><span class="ghost" style="left:${d.wo}%"></span></div>
+     <span class="cap">Without relationship evidence: ${d.woS} (counterfactual: relationship features set to typical values).</span>
+   </div>
+   <div class="card" style="grid-column:1/-1">
+     <span class="subh">Expected cost by action · policy v1.0 demonstration assumptions</span>
+     <div class="costs num">${costs}</div>
+     <p class="explain">${esc(d.explain)}</p>
+   </div>
+   <div class="card">
+     <span class="subh">Evidence</span>
+     <p style="font-size:15px">${esc(d.summary)}</p>
+     ${d.evidence.length?`<ul class="rlist">${rows(d.evidence)}</ul>`:""}
+     ${d.mitigating.length?`<span class="subh" style="margin-top:6px">Mitigating factors</span><ul class="rlist">${rows(d.mitigating)}</ul>`:""}
+   </div>
+   <div class="card">
+     <span class="subh">How the baselines would decide</span>
+     <div>${d.baselines.map(([n,a,r])=>`<div class="bl"><span>${n}<small>${esc(r)}</small></span><span class="badge ${B[a][1]}">${B[a][0]}</span></div>`).join("")}</div>
+     <span class="cap">For comparison only. AegisShift's action is the one above.</span>
+     ${d.after?`<p class="quote" style="font-size:15px;margin-top:6px">${esc(d.after)}</p>`:""}
+   </div>`;
+}
+const tabs = [...document.querySelectorAll('[role="tab"]')];
+function select(i){ tabs.forEach((t,j)=>{t.setAttribute("aria-selected", j===i); t.tabIndex = j===i?0:-1;}); render(i); setRisk([0,2,1][i]); }
+tabs.forEach((t,i)=>{
+  t.addEventListener("click",()=>select(i));
+  t.addEventListener("keydown",e=>{ if(e.key==="ArrowRight"||e.key==="ArrowLeft"){ const n=(i+(e.key==="ArrowRight"?1:tabs.length-1))%tabs.length; select(n); tabs[n].focus(); }});
+});
+select(0);
+
+/* ---- world tree: evidence pulses flowing to the trunk ---- */
+(function(){
+  const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const NS = 'http://www.w3.org/2000/svg';
+  const flows = [];
+  document.querySelectorAll('.tree .flows').forEach(g => {
+    const color = g.dataset.color;
+    [...g.querySelectorAll('path')].forEach((p, k) => {
+      const len = p.getTotalLength();
+      for (let n = 0; n < 2; n++) {
+        const c = document.createElementNS(NS, 'circle');
+        c.setAttribute('r', color === '#ef4444' ? 3.2 : 2.4);
+        c.setAttribute('fill', color);
+        g.appendChild(c);
+        flows.push({p, len, c, off: (k * 0.29 + n * 0.5) % 1, speed: color === '#ef4444' ? 0.00018 : 0.00012});
+      }
+    });
+  });
+  function place(t){
+    for (const f of flows) {
+      const u = reduce ? f.off : (f.off + t * f.speed) % 1;
+      const pt = f.p.getPointAtLength(u * f.len);
+      f.c.setAttribute('cx', pt.x); f.c.setAttribute('cy', pt.y);
+      f.c.setAttribute('opacity', (Math.sin(u * Math.PI) * 0.9 + 0.1).toFixed(2));
+    }
+  }
+  place(0);
+  if (!reduce) { const loop = t => { place(t); requestAnimationFrame(loop); }; requestAnimationFrame(loop); }
+})();
+
+/* ---- the stance change ---- */
+(function(){
+  const ORDERS = [
+    {V: 12000, CLV: 15710.45, label: 'Demo 3'},
+    {V: 1500, CLV: 2000, label: 'hypothetical'}
+  ];
+  const A = ['ALLOW','PREPAID_ONLY','MANUAL_REVIEW','BLOCK'];
+  const NAME = {ALLOW:'Allow',PREPAID_ONLY:'Prepaid only',MANUAL_REVIEW:'Manual review',BLOCK:'Block'};
+  const COL = {ALLOW:'var(--allow)',PREPAID_ONLY:'var(--prepaid)',MANUAL_REVIEW:'var(--review)',BLOCK:'var(--block)'};
+  const inr = v => '₹' + Math.round(v).toLocaleString('en-IN');
+  let o = 0;
+  function costs(p, {V, CLV}){
+    const q = 1 - p, m = 0.3 * V, la = 0.85 * V + 150, lp = 0.5 * V + 150, fb = m + 0.6 * CLV + 100;
+    return {ALLOW: p * la, PREPAID_ONLY: p * 0.7 * lp + q * (0.08 * m + 0.02 * CLV + 30),
+            MANUAL_REVIEW: p * 0.2 * la + q * (0.05 * m + 0.03 * fb) + 250, BLOCK: q * fb};
+  }
+  function removed(p, {V}){
+    const r = {};
+    if (p < 0.70) r.BLOCK = 'G3';
+    if (p >= 0.40 && V >= 10000) r.ALLOW = 'G5';
+    return r;
+  }
+  function decide(p, ord){
+    const c = costs(p, ord), rm = removed(p, ord);
+    const opt = A.reduce((b, a) => c[a] < c[b] ? a : b);
+    const sel = A.filter(a => !rm[a]).reduce((b, a) => c[a] < c[b] ? a : b);
+    return {c, rm, opt, sel};
+  }
+  const zones = document.getElementById('zones'), slider = document.getElementById('pslider');
+  const out = document.getElementById('stances'), why = document.getElementById('why'), pv = document.getElementById('pval');
+  function paintZones(){
+    const ord = ORDERS[o]; let html = '', cur = null, start = 0;
+    for (let i = 0; i <= 200; i++) {
+      const a = i < 200 ? decide(i / 200, ord).sel : null;
+      if (a !== cur) { if (cur) html += `<i style="width:${(i - start) / 2}%;background:${COL[cur]};opacity:.75"></i>`; cur = a; start = i; }
+    }
+    zones.innerHTML = html;
+  }
+  function render(){
+    const p = slider.value / 1000, ord = ORDERS[o], d = decide(p, ord);
+    setRisk(pToRisk(p));
+    const max = Math.max(...A.map(a => d.c[a]));
+    pv.textContent = p === 0 ? '0%' : (p * 100 < 0.1 ? '<0.1%' : (p * 100).toFixed(1) + '%');
+    out.innerHTML = A.map(a => {
+      const on = a === d.sel, off = !!d.rm[a];
+      const note = on ? 'Selected' : off ? `Not permitted · ${d.rm[a]}` : (a === d.opt ? 'Cheapest, but not permitted' : '');
+      return `<div class="st ${on ? 'on' : ''} ${off ? 'off' : ''}" style="${on ? `border-color:${COL[a]}` : ''}">
+        <span class="nm" style="${on ? `color:${COL[a]}` : ''}">${NAME[a]}</span>
+        <span class="cost">${inr(d.c[a])}</span>
+        <span class="bar"><i style="width:${Math.max(1, d.c[a] / max * 100)}%;${on ? `background:${COL[a]}` : ''}"></i></span>
+        <span class="note2">${note}</span></div>`;
+    }).join('');
+    const rest = A.filter(a => a !== d.sel && !d.rm[a]).map(a => `${NAME[a].toLowerCase()} (${inr(d.c[a])})`);
+    let t = `${NAME[d.sel]} is the stance: its expected cost (${inr(d.c[d.sel])}) is lower than ${rest.join(', ')}.`;
+    if (d.rm.BLOCK) t += ' Block is off the table below a 70% abuse probability (G3).';
+    if (d.rm.ALLOW) t += ' Allow is off the table for a high-value order at 40% or more (G5).';
+    if (d.opt !== d.sel) t += ` Without guardrails the cheapest would be ${NAME[d.opt].toLowerCase()}.`;
+    why.textContent = t;
+  }
+  slider.addEventListener('input', render);
+  document.querySelectorAll('.orders button').forEach(b => b.addEventListener('click', () => {
+    o = +b.dataset.o;
+    document.querySelectorAll('.orders button').forEach(x => x.setAttribute('aria-checked', x === b));
+    paintZones(); render();
+  }));
+  paintZones(); render();
+})();
+
+
+/* ---- linked pages ---- */
+(function(){
+  const map = {home:'v-home', stance:'v-stance', demo:'v-demo', results:'v-results', honesty:'v-honesty'};
+  const views = [...document.querySelectorAll('.view')];
+  const links = [...document.querySelectorAll('.links a')];
+  function go(){
+    const key = (location.hash || '#home').slice(1);
+    const id = map[key] || 'v-home';
+    views.forEach(v => { v.hidden = v.id !== id; });
+    links.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + key));
+    document.body.dataset.view = map[key] ? key : 'home';
+    if (key === 'stance') { const sl = document.getElementById('pslider'); setRisk(pToRisk(sl.value / 1000)); }
+    else if (key === 'demo') { const i = [...document.querySelectorAll('.tabs [role="tab"]')].findIndex(t => t.getAttribute('aria-selected') === 'true'); setRisk([0,2,1][Math.max(0, i)]); }
+    else setRisk(1);
+    window.scrollTo(0, 0);
+  }
+  window.addEventListener('hashchange', go);
+  go();
+  const v = document.getElementById('treevid');
+  if (v && window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) { document.querySelectorAll('.stage video').forEach(x => { x.removeAttribute('autoplay'); x.pause(); }); }
+})();
+
+
+/* ---- keep the three tree videos frame-locked to the middle (master) video ---- */
+(function(){
+  const master = document.getElementById('treevid');
+  const layers = ['vid-dying','vid-healthy'].map(id => document.getElementById(id)).filter(Boolean);
+  if (!master || !layers.length) return;
+  const all = [master, ...layers];
+  // start together once every clip can play
+  let ready = 0;
+  const start = () => { all.forEach(v => { try { v.currentTime = 0; } catch (e) {} }); all.forEach(v => { const p = v.play(); if (p && p.catch) p.catch(() => {}); }); };
+  all.forEach(v => {
+    if (v.readyState >= 3) { if (++ready === all.length) start(); }
+    else v.addEventListener('canplay', () => { if (++ready === all.length) start(); }, {once: true});
+  });
+  // correct drift: tolerate 1 frame (1/24 s), and follow the master through loops, pauses and plays
+  const FRAME = 1 / 24;
+  function sync(){
+    const t = master.currentTime;
+    const dur = master.duration || 10;
+    for (const v of layers) {
+      if (v.seeking) continue;
+      let d = t - v.currentTime;                       // + means the layer is behind
+      if (d > dur / 2) d -= dur; else if (d < -dur / 2) d += dur;   // across the loop point
+      if (Math.abs(d) > 0.25) { try { v.currentTime = t; } catch (e) {} v.playbackRate = 1; }
+      else if (Math.abs(d) > FRAME) v.playbackRate = 1 + Math.max(-0.1, Math.min(0.1, d * 0.8));
+      else if (v.playbackRate !== 1) v.playbackRate = 1;
+      if (master.paused !== v.paused) { if (master.paused) v.pause(); else { const p = v.play(); if (p && p.catch) p.catch(() => {}); } }
+    }
+  }
+  if (master.requestVideoFrameCallback) {
+    const tick = () => { sync(); master.requestVideoFrameCallback(tick); };
+    master.requestVideoFrameCallback(tick);
+  } else {
+    setInterval(sync, 250);
+  }
+  master.addEventListener('seeked', sync);
+  master.addEventListener('play', sync);
+  master.addEventListener('pause', sync);
+})();
+
+</script>
