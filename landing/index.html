@@ -1,3 +1,5 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AegisShift</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -292,6 +294,31 @@ body[data-view="stance"] .veil,body[data-view="demo"] .veil{background:linear-gr
 body[data-view="stance"] .view section,body[data-view="demo"] .view section{background:transparent!important}
 .stage video.layer{opacity:0;transition:opacity .9s ease}
 @media (prefers-reduced-motion:reduce){.stage video.layer{transition:none}}
+
+/* ---- try an order (recorded grid) ---- */
+body[data-view="try"] .veil{background:linear-gradient(0deg,rgba(23,23,33,.82) 0%,rgba(23,23,33,.6) 100%)}
+body[data-view="try"] .view section{background:transparent!important}
+.recorded{border:1px solid var(--hair);border-left:2px solid var(--mist);border-radius:8px;padding:14px 16px;background:rgba(23,23,33,.7);color:var(--ivory);font-size:15px;max-width:80ch}
+.tform{margin-top:24px;background:rgba(30,30,42,.88);border:1px solid var(--hair);border-radius:12px;padding:24px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.tform .full{grid-column:1/-1}
+.tform[hidden],.tfield[hidden]{display:none}
+.tfield{display:flex;flex-direction:column;gap:6px;min-width:0}
+.tfield label{font-size:12px;color:var(--ash)}
+.tfield select{width:100%;min-width:0;height:44px;padding:0 12px;border-radius:8px;border:1px solid rgba(237,237,243,.2);background:var(--canvas);color:var(--ivory);font:400 15px/1 var(--body);text-overflow:ellipsis}
+.tfield select:hover{border-color:rgba(237,237,243,.4)}
+.tfixed{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding-top:14px;border-top:1px solid var(--hair);font-size:13px;color:var(--ash)}
+.tfixed .btn{height:38px;padding:0 16px;font-size:14px;background:transparent;cursor:pointer}
+.tresult{margin-top:12px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr);gap:12px;align-items:start}
+.tresult .card{background:rgba(30,30,42,.88);border:1px solid var(--hair);padding:24px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.shopper-msg{font-size:18px;line-height:1.5;color:var(--white);background:var(--canvas);border-radius:8px;padding:18px;overflow-wrap:anywhere}
+.why1{font-size:15px;color:var(--ivory);border-left:1px solid var(--slate);padding-left:14px}
+.sigs{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--ash)}
+.tresult .rlist li{grid-template-columns:minmax(0,190px) minmax(0,1fr)}
+.tresult .rlist .code{font:500 11px/1.4 var(--mono);color:var(--ash);overflow-wrap:anywhere}
+.cbar{flex-wrap:wrap;row-gap:6px}
+@media (max-width:960px){.tresult{grid-template-columns:1fr}.tform{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.nav .wrap{gap:12px}.nav .btn{padding:0 14px;font-size:14px}}
+@media (max-width:560px){.tform{grid-template-columns:1fr;padding:18px}.tresult .card{padding:18px}.tresult .rlist li{grid-template-columns:1fr;gap:4px}}
 </style>
 
 <nav class="nav" aria-label="Primary">
@@ -304,6 +331,7 @@ body[data-view="stance"] .view section,body[data-view="demo"] .view section{back
       <a href="#home">Home</a>
       <a href="#stance">Stance change</a>
       <a href="#demo">Demos</a>
+      <a href="#try">Try an order</a>
       <a href="#results">Results</a>
       <a href="#honesty">Disclosures</a>
     </div>
@@ -391,6 +419,29 @@ body[data-view="stance"] .view section,body[data-view="demo"] .view section{back
       <p class="cap" style="text-align:center;margin-top:16px">Replayed from the real decisions the prototype recorded. To run it live: <span class="mono">python -m sentinel.cli serve</span> and <span class="mono">npm run dev</span>, then open the Queue and use Simulate checkout.</p>
     </div>
   </section></div>
+
+  <div class="view" id="v-try"><section id="try" style="border-top:1px solid var(--hair)">
+    <div class="wrap">
+      <div class="stack" style="max-width:760px">
+        <span class="eyebrow">Try an order</span>
+        <h2>Build an order. See what the shopper is told and what the reviewer sees.</h2>
+        <p class="recorded" id="try-recorded">Answers are recorded from the real model and policy, not computed live. Every combination here was scored ahead of time.</p>
+      </div>
+      <form class="tform" id="try-form" aria-describedby="try-recorded" onsubmit="return false">
+        <div class="tfield full"><label for="t-account">Account</label><select id="t-account"></select></div>
+        <div class="tfield"><label for="t-category">Category</label><select id="t-category"></select></div>
+        <div class="tfield"><label for="t-value">Order value</label><select id="t-value"></select></div>
+        <div class="tfield"><label for="t-payment">Payment method</label><select id="t-payment"></select></div>
+        <div class="tfield" style="grid-column:span 1"><label for="t-device">Device</label><select id="t-device"></select></div>
+        <div class="tfield" id="t-token-field"><label for="t-token">Payment token</label><select id="t-token"></select></div>
+        <div class="tfixed"><span id="t-cart"></span><span style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn btn-ghost" id="t-reset">Demo 1's own order</button><button type="button" class="btn btn-ghost" id="t-shared">Demo 1 with another account's device and token</button></span></div>
+      </form>
+      <div class="tresult" id="try-result" aria-live="polite"></div>
+      <p class="cap" id="try-meta" style="margin-top:16px"></p>
+      <p class="notice" style="margin-top:12px">Synthetic data is used to validate the architecture, policy behaviour, auditability, and coordinated-pattern detection. Real deployment would require merchant-specific historical data and prospective validation.</p>
+    </div>
+  </section></div>
+
   <div class="view" id="v-results"><section id="results" style="border-top:1px solid var(--hair)">
     <div class="wrap">
       <div class="stack">
@@ -640,9 +691,107 @@ select(0);
 })();
 
 
+/* ---- try an order: answers replayed from try-grid.json, recorded from the real API ---- */
+window.tryRisk = null;
+(function(){
+  const $ = id => document.getElementById(id);
+  const DEVICE = {OWN:"The account's own device", NEW:"A brand-new device", RING:"Another account's device (strongest evidence)"};
+  const TOKEN = {OWN:"The account's own token", NEW:"A brand-new token", RING:"Another account's token (strongest evidence)"};
+  const PAY = {PREPAID_UPI:"UPI", PREPAID_CARD:"Card", COD:"Cash on delivery"};
+  const DELIVERY = {STANDARD:"standard", EXPRESS:"express"};
+  const SIGNAL = {DEVICE:"Device", PAYMENT_TOKEN:"Payment token", ADDRESS:"Address", TEMPORAL_BURST:"Linked-order burst", ACCOUNT_CLAIMS:"Account claims"};
+  const WHY_SHARED = "The evidence registers, but one shared device or token doesn't outweigh years of clean history.";
+  const title = s => s.charAt(0) + s.slice(1).toLowerCase();
+  const prob = p => p === 0 ? '0%' : (p * 100 < 0.1 ? '<0.1%' : (p * 100).toFixed(1) + '%');
+  const fill = (sel, items) => { sel.innerHTML = items.map(([v, t]) => `<option value="${esc(v)}">${esc(t)}</option>`).join(''); };
+  let G = null, F = null, defaultKey = null;
+
+  function currentKey(){
+    const pay = $('t-payment').value;
+    return [$('t-account').value, $('t-category').value, $('t-value').value, pay, $('t-device').value, pay === 'COD' ? '-' : $('t-token').value].join('|');
+  }
+  function setKey(k){
+    const [acc, cat, band, pay, dev, tok] = k.split('|');
+    $('t-account').value = acc; $('t-category').value = cat; $('t-value').value = band;
+    $('t-payment').value = pay; $('t-device').value = dev; if (tok !== '-') $('t-token').value = tok;
+    show();
+  }
+  /* Only recorded combinations can be chosen: an option that has no recorded answer with the other choices
+     (an account with no device or token of its own) is disabled, and a disabled choice moves to the next one. */
+  function available(){
+    const pay = $('t-payment').value;
+    const keys = Object.keys(G.results), base = currentKey().split('|').slice(0, 4).join('|') + '|';
+    for (const [sel, pos] of [['t-device', 4], ['t-token', 5]]) {
+      if (pos === 5 && pay === 'COD') continue;
+      const opts = [...$(sel).options];
+      opts.forEach(o => { o.disabled = !keys.some(k => k.startsWith(base) && k.split('|')[pos] === o.value); });
+      if ($(sel).selectedOptions[0] && $(sel).selectedOptions[0].disabled) {
+        const first = opts.find(o => !o.disabled);
+        if (first) $(sel).value = first.value;
+      }
+    }
+  }
+  function show(){
+    const cod = $('t-payment').value === 'COD';
+    $('t-token-field').hidden = cod;
+    available();
+    const k = currentKey(), row = G.results[k], out = $('try-result');
+    if (!row) { out.innerHTML = `<div class="card" style="grid-column:1/-1"><p>This combination was not recorded, so there is no answer for it.</p></div>`; window.tryRisk = null; return; }
+    const r = {}; G.fields.forEach((f, i) => { r[f] = row[i]; });
+    const [lbl, cls] = B[r.action];
+    const def = defaultKey.split('|'), cur = k.split('|');
+    const sharedCase = cur[0] === def[0] && cur[1] === def[1] && cur[2] === def[2] && cur[3] === def[3] && cur[4] === 'RING' && cur[5] === 'RING' && r.action === 'ALLOW';
+    const max = Math.max(...r.costs.map(c => parseFloat(c[1].replace(/[^0-9.]/g, '')) || 0), 1);
+    const costs = r.costs.map(([a, disp, off]) => {
+      const v = parseFloat(disp.replace(/[^0-9.]/g, '')) || 0, sel = a === r.action;
+      return `<div class="crow"><span class="name">${B[a][0]}</span><span class="cbar"><i class="${off.length ? 'off' : ''}" style="width:${Math.max(0.6, v / max * 60)}%;${sel ? `background:${SEL[a]}` : ''}"></i><span class="v">${esc(disp)}</span>${sel ? '<span class="tag">Selected</span>' : ''}${off.map(x => `<span class="chip">${esc(x)}</span>`).join('')}</span></div>`;
+    }).join('');
+    const reasons = r.reasons.map(([code, t]) => `<li><span class="code">${esc(code)}</span><span>${esc(G.strings[t])}</span></li>`).join('');
+    out.innerHTML = `
+      <div class="card">
+        <span class="subh">What the shopper sees</span>
+        <p class="shopper-msg">${esc(G.strings[r.message])}</p>
+        <span class="cap">That message is all the shopper gets: no score, no reason, no action name.</span>
+      </div>
+      <div class="card">
+        <div class="mock-top"><span class="subh">What the reviewer sees</span><span style="display:flex;gap:12px;align-items:center"><span class="num" style="color:var(--ash);font-size:14px">${esc(G.cart.value_display[+cur[2]])}</span><span class="bigbadge ${cls}">${lbl}</span></span></div>
+        ${sharedCase ? `<p class="why1">${esc(WHY_SHARED)}</p>` : ''}
+        <div class="scores">
+          <div class="score"><span class="lbl">Return probability</span><span class="fig num" style="color:var(--return)">${prob(r.p_return)}</span><span class="cap">Context only: never an input to the action.</span></div>
+          <div class="score"><span class="lbl">Abuse probability</span><span class="fig num">${prob(r.p_abuse)}</span><span class="cap">Without relationship evidence: ${prob(r.p_abuse_without_graph)}</span></div>
+        </div>
+        <div class="sigs"><span>Counted signals: ${r.signals.length}</span>${r.signals.map(s => `<span class="chip">${esc(SIGNAL[s] || s)}</span>`).join('')}</div>
+        <div><span class="subh">Expected cost by action · policy ${esc(G.policy_version)} demonstration assumptions</span><div class="costs num" style="margin-top:12px">${costs}</div></div>
+        <p class="explain">${esc(G.strings[r.explanation])}</p>
+        <div><span class="subh">Top reasons</span><ul class="rlist" style="margin-top:6px">${reasons}</ul></div>
+      </div>`;
+    window.tryRisk = pToRisk(r.p_abuse);
+    if (document.body.dataset.view === 'try') setRisk(window.tryRisk);
+  }
+  fetch('try-grid.json').then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(g => {
+    G = g; defaultKey = g.default;
+    fill($('t-account'), g.accounts.map(a => [a.account_id, `${a.account_id} · ${a.label} · ${a.prior_orders} prior orders · ${a.account_age_days} days old`]));
+    fill($('t-category'), g.categories.map(c => [c, title(c)]));
+    fill($('t-value'), g.cart.value_display.map((d, i) => [String(i), d]));
+    fill($('t-payment'), g.payments.map(p => [p, PAY[p] || p]));
+    fill($('t-device'), g.devices.map(d => [d, DEVICE[d] || d]));
+    fill($('t-token'), g.tokens.map(t => [t, TOKEN[t] || t]));
+    const c = g.cart;
+    $('t-cart').textContent = `Fixed for every combination: ${c.sizes} sizes of one item, quantity ${c.quantity}, ${c.discount_pct}% discount, ${DELIVERY[c.delivery_speed] || c.delivery_speed} delivery.`;
+    $('try-meta').textContent = `${Object.keys(g.results).length.toLocaleString('en-IN')} combinations recorded ${g.recorded_at.slice(0, 10)} on commit ${g.git_sha.slice(0, 7)}${g.git_dirty ? ' (with the recording script not yet committed)' : ''} · models ${g.abuse_model_version}, ${g.return_model_version} · policy ${g.policy_version}.`;
+    ['t-account','t-category','t-value','t-payment','t-device','t-token'].forEach(id => $(id).addEventListener('change', show));
+    $('t-reset').addEventListener('click', () => setKey(defaultKey));
+    $('t-shared').addEventListener('click', () => { const d = defaultKey.split('|'); d[4] = 'RING'; if (d[3] !== 'COD') d[5] = 'RING'; setKey(d.join('|')); });
+    setKey(defaultKey);
+  }).catch(() => {
+    $('try-form').hidden = true;
+    $('try-result').innerHTML = `<div class="card" style="grid-column:1/-1"><p>The recorded answers (try-grid.json) could not be loaded.</p></div>`;
+  });
+})();
+
 /* ---- linked pages ---- */
 (function(){
-  const map = {home:'v-home', stance:'v-stance', demo:'v-demo', results:'v-results', honesty:'v-honesty'};
+  const map = {home:'v-home', stance:'v-stance', demo:'v-demo', try:'v-try', results:'v-results', honesty:'v-honesty'};
   const views = [...document.querySelectorAll('.view')];
   const links = [...document.querySelectorAll('.links a')];
   function go(){
@@ -653,6 +802,7 @@ select(0);
     document.body.dataset.view = map[key] ? key : 'home';
     if (key === 'stance') { const sl = document.getElementById('pslider'); setRisk(pToRisk(sl.value / 1000)); }
     else if (key === 'demo') { const i = [...document.querySelectorAll('.tabs [role="tab"]')].findIndex(t => t.getAttribute('aria-selected') === 'true'); setRisk([0,2,1][Math.max(0, i)]); }
+    else if (key === 'try' && window.tryRisk !== null) setRisk(window.tryRisk);
     else setRisk(1);
     window.scrollTo(0, 0);
   }

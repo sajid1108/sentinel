@@ -3,7 +3,7 @@
 Times are from git commit timestamps (IST). Every builder updates the row for its stage **before** committing.
 
 **Project start:** 2026-09-16 19:17 (first commit)
-**Last update:** 2026-09-19 (phase 10 gate — "Try an order")
+**Last update:** 2026-09-19 (landing page "Try an order", recorded grid)
 
 ## Completed
 
@@ -21,6 +21,7 @@ Times are from git commit timestamps (IST). Every builder updates the row for it
 | 9 (follow-ups) + 10 + 11 | 8 + 9 + 10 | Phase 8 follow-ups (neutral abuse meter, a redundancy note that is true of its own code, server-side probability formatting in reviewer text, count-aware plurals, IST timestamps, action and reason labels, strength-tag alignment, `RECENT_24H` moved into the legend); **the MVP**: review queue with URL-bound filters, pagination and the two probabilities as two columns, "Simulate checkout" presets and demo reset, and the Overview's decision activity and synthetic backtest as two separately labelled sections | `b0042e0` `20257ab` | 09-18 | ~5h session |
 | — | — | **Definition of Done met (stage 11): reset → queue → simulate checkout → order detail → override → overview runs end to end in the browser** | | | |
 | after DoD | — | Phase 10 "Try an order": presets recorded as DEMO through their own route; `GET /internal/demo/order-builder` (data-derived accounts, own / new / ring identifiers); a Queue panel that places a built order once through the public checkout and shows the shopper's outcome beside the team's decision. Part C measured: Demo 1's cart stays ALLOW with the ring's device and card (p_abuse 5.6 %, 3 counted signals) | `b588d1a` + the Part 2 commit | 09-19 11:11 | 1h00m in one session |
+| after DoD | — | Landing page "Try an order": `scripts/record_try_grid.py` records 1,380 combinations from the real API into `landing/try-grid.json` (648 KB, order independence 20 of 20); a new section on the static site replays them, and the live site is updated | the landing commit | 09-19 | ~25 min in one session |
 
 **Elapsed since project start:** ~42 hours wall clock.
 **Actual build time:** roughly 10–11 hours of agent work. The rest is review turnaround and gaps between sessions.
