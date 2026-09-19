@@ -32,13 +32,22 @@
   <rect x="0" y="352" width="1200" height="8" fill="#e0957a"/>
 
   <!-- the mask: dome, brow, gem, eye slots, nose guard, cheek bars, side spikes -->
-  <g transform="translate(40 0)" stroke="#2a0d3a" stroke-width="3" stroke-linejoin="round">
+  <g transform="translate(72 14) scale(0.86)" stroke="#2a0d3a" stroke-width="3" stroke-linejoin="round">
+    <path d="M78 390 C70 260 84 130 150 76 C188 46 242 46 280 76 C346 130 360 260 352 390 Z" fill="#150620" stroke="#3a1a5c"/>
+    <path d="M104 390 C100 290 110 170 160 112" stroke="#2c1048" stroke-width="6" fill="none"/>
+    <ellipse cx="215" cy="222" rx="94" ry="128" fill="#6b4432" stroke="#2a120c"/>
+    <path d="M134 250 C136 336 172 376 215 378 C258 376 294 336 296 250 C270 262 250 266 215 266 C180 266 160 262 134 250 Z" fill="#1c0f12" stroke="#120709"/>
+    <path d="M200 288 Q215 294 230 288" stroke="#9a5646" stroke-width="4" fill="none"/>
     <path d="M124 146 L100 154 L124 162 Z" fill="#d98a78"/>
     <path d="M306 146 L330 154 L306 162 Z" fill="#b8606a"/>
     <path d="M130 152 C130 108 178 72 215 36 C252 72 300 108 300 152 Z" fill="url(#copper)"/>
     <path d="M165 118 C175 95 192 76 206 62" stroke="#fbe7da" stroke-width="5" fill="none" opacity="0.6"/>
-    <path d="M132 170 C156 166 182 170 205 184 L201 206 C178 208 152 204 136 196 Z" fill="#0d0418"/>
-    <path d="M298 170 C274 166 248 170 225 184 L229 206 C252 208 278 204 294 196 Z" fill="#0d0418"/>
+    <path d="M132 170 C156 166 182 170 205 184 L201 206 C178 208 152 204 136 196 Z" fill="#2b1712"/>
+    <path d="M298 170 C274 166 248 170 225 184 L229 206 C252 208 278 204 294 196 Z" fill="#2b1712"/>
+    <ellipse cx="168" cy="191" rx="15" ry="7" fill="#efe3d6" stroke="#1a0a0a" stroke-width="2"/>
+    <circle cx="172" cy="191" r="5" fill="#1a0a0a" stroke="none"/>
+    <ellipse cx="262" cy="191" rx="15" ry="7" fill="#efe3d6" stroke="#1a0a0a" stroke-width="2"/>
+    <circle cx="258" cy="191" r="5" fill="#1a0a0a" stroke="none"/>
     <path d="M122 144 C150 134 186 140 215 158 C244 140 280 134 308 144 L308 160 C280 154 248 160 215 178 C182 160 150 154 122 160 Z" fill="url(#copperV)"/>
     <path d="M140 145 C165 140 185 145 202 154" stroke="#fbe7da" stroke-width="3" fill="none" opacity="0.7"/>
     <path d="M228 154 C245 145 265 140 290 145" stroke="#fbe7da" stroke-width="3" fill="none" opacity="0.7"/>
