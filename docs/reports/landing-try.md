@@ -148,3 +148,7 @@ All of them came out of the 375 px check. I found them on the page as it was alr
 
 Commits: `landing: try an order (recorded grid)` on `sentinel` `main`; `landing/index.html` and `landing/try-grid.json`
 copied to `sajid1108/aegisshift` `main` and pushed. The live check is recorded in §8.
+
+## 8. Live check
+
+`sajid1108/aegisshift` `f508ddd` (copies `index.html` and `try-grid.json` from `787da82`). Pages served the new section about 30 s after the push. At https://sajid1108.github.io/aegisshift/#try, `try-grid.json` loads (200, 648,039 bytes); "Demo 1 with another account's device and token" shows the recorded **Allow** with the one-sentence reason; the recording line reads "1,380 combinations recorded 2026-09-19 on commit 9ec72e6 (with the recording script not yet committed)"; horizontal overflow is 0 px.
