@@ -1,124 +1,156 @@
-# SENTINEL — Return Abuse Detection with Cost-Weighted Decisioning
+<p align="center">
+  <img src="docs/assets/banner.svg" alt="AegisShift: every ring wears a mask" width="100%">
+</p>
 
-**Build status:** Phases 1–10 complete and committed; the Definition of Done (§12 cut line) is met. **Phase 1** (policy engine), including the review fixes (decision-time G4, degraded mode without scores, Python 3.12, exact frontend pins). **Phase 2** (synthetic generator), including the review fixes (rings hidden at account level, investigation coverage, high-value genuine carts, `features/identifiers.py`, demo isolation): `python -m sentinel.cli generate` writes the seeded world, ground truth and ld-1.0 labels to `backend/data/`, and `world-stats` prints prevalence and ring diagnostics. **Phase 3** (feature builder): one chronological-replay `FeatureBuilder` for offline and serving; `build-features` writes `backend/data/features.parquet` (feature set `fs-1.0-0ad43d7f`) and `policy_inputs.parquet`; leakage tests P1–P7 green. **Phase 4** (models and evaluation): calibrated return and abuse models with committed artifacts under `backend/artifacts/`, the offline backtest and `evaluation.json`, and the three §11 demo orders scored end to end by the real models and the real policy (`train --force`, `evaluate`, `score-demos`). Measured on TEST: abuse PR-AUC **0.814** with graph features against **0.527** without, cold-start ring R3 recall **0.727** against 0.143, hard-negative cohorts at a **0.0** genuine block rate. **Phase 5** (explanations): ablation attributions, evidence-based reason codes ordered by evidence strength, count-aware reviewer text and the three explanation levels. **Phase 6** (database, audit, scoring service): `python -m sentinel.cli seed-db` recreates `backend/data/sentinel.db` with the as-of-`DEMO_CLOCK` world and exactly 250 backtest-replay decisions, each with a SHA-256 hash-chained audit event; `reset-demo` deletes the file and seeds again (DEMO_MODE only). `ScoringService` scores orders in-process against a frozen history, idempotently, with G6 degraded mode; `ReviewService` records overrides and appeals. **Phase 7** (API): `python -m sentinel.cli serve` serves the internal reviewer routes under `/api/v1/internal` (score-order, queue, order detail with a deterministic point-in-time relationship graph and both baselines, override, appeal, audit events and chain verification, metrics, demo presets and reset; all require `X-Internal-Key`) and the outcome-only public route `POST /api/v1/public/checkout/decision`; `export-openapi` writes `frontend/src/api/openapi.json` and `npm run gen:types` generates `types.ts`. **Phase 8** (frontend: order detail): `/orders/:orderId` is the screen the demo happens on — the two probabilities as two separate cards that are never combined, the four actions priced as horizontal bars in a fixed order with guardrail-removed actions hatched and chipped, the point-in-time relationship graph at the server's coordinates with discounted links dashed, evidence and model attribution as two separate panels, the hash-chained audit timeline with live chain verification, the baseline contrast, and override and appeal dialogs. Every number comes from the API: money is rendered from the server's `display` strings, the guardrail thresholds and the "Demonstration assumptions" panel come from `GET /api/v1/internal/policy`, and a test scans `src/` for any numeric literal equal to a policy config value. `npm test` runs the vitest suite against payloads recorded from the real backend. Screenshots of all three demo scenarios are in `docs/reports/phase-8/`. **Phase 9** (Phase 8 follow-ups and the MVP): the abuse meter is one neutral token at every value, probabilities in reviewer-facing server text are formatted exactly as the page formats them ("G3 requires an abuse probability of at least 70.0%; this order scored 69.1%"), every timestamp renders in IST, and `RECENT_24H` is stated once in the graph legend. `/queue` is the review queue — one row per decision with the return and abuse probabilities as two separate columns that are never combined and never red, filters bound to the URL query, `limit` 50 pagination, and counts labelled "current action (after review)" because the queue counts what is in effect while `/metrics` counts what the system recommended. Above it, "Simulate checkout" posts each `GET /demo/presets` entry back unmodified and opens its decision, and "Reset demo" rebuilds the database behind an inline confirmation; neither renders when `DEMO_MODE` is off. `/` is the Overview: decision activity and the synthetic backtest as two separately labelled sections, with **no row highlighted or marked best** — the tuned fixed-threshold baseline's realized cost (₹1,60,112 / 1,000) is lower than AegisShift's (₹1,95,313) and the table shows that plainly. **The whole demo now runs end to end in the browser** (reset → queue → simulate checkout → order detail → override → overview), which is the Definition of Done (§12 cut line). `npm test` runs 164 vitest tests; screenshots are in `docs/reports/phase-9/`. **Phase 10** ("Try an order"): the preset buttons now record their orders as DEMO through `POST /internal/demo/presets/{order_id}/score`, and beside them a "Try an order" panel builds an order from `GET /internal/demo/order-builder` (accounts, the account's own / a brand-new / the ring's device and payment token, all from data), places it once through the public checkout, and shows what the shopper is told next to what the team sees. Measured: Demo 1's cart on Demo 1's account stays ALLOW even with the ring's device and card (p_abuse 5.6 %, three counted signals); see `docs/reports/phase-10.md`. **Landing page:** the static site (`landing/`, published at https://sajid1108.github.io/aegisshift/) has a "Try an order" section that replays 1,380 combinations recorded ahead of time from the real API by `scripts/record_try_grid.py` (`docs/reports/landing-try.md`). The calibration chart, the sensitivity sweep and the cohort tables are Phase 11.
+<p align="center">
+  <a href="https://sajid1108.github.io/aegisshift/"><img src="https://img.shields.io/badge/LIVE_SITE-enter_the_lair-e8c547?style=for-the-badge&labelColor=0b0b0b" alt="Live site"></a>
+  <img src="https://img.shields.io/badge/tests-1%2C060-9a9a9a?style=for-the-badge&labelColor=0b0b0b" alt="1,060 tests">
+  <img src="https://img.shields.io/badge/data-synthetic-9a9a9a?style=for-the-badge&labelColor=0b0b0b" alt="Synthetic data">
+</p>
 
-> **A prediction is not a decision.**
+<p align="center">
+  <img src="https://img.shields.io/badge/Python_3.12-0b0b0b?style=flat-square&logo=python&logoColor=e8c547" alt="Python 3.12">
+  <img src="https://img.shields.io/badge/FastAPI-0b0b0b?style=flat-square&logo=fastapi&logoColor=e8c547" alt="FastAPI">
+  <img src="https://img.shields.io/badge/scikit--learn-0b0b0b?style=flat-square&logo=scikitlearn&logoColor=e8c547" alt="scikit-learn">
+  <img src="https://img.shields.io/badge/NetworkX-0b0b0b?style=flat-square" alt="NetworkX">
+  <img src="https://img.shields.io/badge/React_19-0b0b0b?style=flat-square&logo=react&logoColor=e8c547" alt="React 19">
+  <img src="https://img.shields.io/badge/TypeScript-0b0b0b?style=flat-square&logo=typescript&logoColor=e8c547" alt="TypeScript">
+  <img src="https://img.shields.io/badge/SQLite-0b0b0b?style=flat-square&logo=sqlite&logoColor=e8c547" alt="SQLite">
+</p>
 
-AegisShift is a hackathon prototype demonstrating responsible, cost-aware fraud decisioning for e-commerce return abuse. It builds two separate ML predictions (return probability and abuse probability), feeds them into a deterministic policy engine that selects the minimum-cost proportionate action, and provides a reviewer dashboard with full audit trail.
+---
 
-## Core Principle
+## 🎭 THE ORIGIN STORY
 
-Models predict. Policy decides. The system separates ML predictions from business decisions:
+Return abuse rarely comes from one customer. It comes from **rings**: a handful of accounts that look clean one by one but share the same phones, cards and addresses. Every ring wears a mask.
 
-1. **Return model** → P(return)
-2. **Abuse model** → P(abuse), enhanced by graph-based coordination detection
-3. **Policy engine** → Expected cost for each action → selects the cheapest proportionate action
-4. **Guardrails** → Structural constraints (e.g., BLOCK requires corroboration)
-5. **Audit** → Every decision is recorded with a tamper-evident hash chain
+**AegisShift** takes the mask off. At checkout it scores each order, looks at who the account is connected to, and picks the **cheapest fair response**: let it through, ask for prepayment, send it to a person, or block it. Every decision is written down, and nobody can quietly change it later.
 
-## Actions
+> **A prediction is not a decision.** The models give probabilities. A separate policy decides, by cost, under rules it can't break.
 
-| Action | Meaning |
+---
+
+## 🔩 OPERATION: CHECKOUT
+
+```
+  order ──► return model ──► P(return) ─┐
+     │                                  ├──► policy engine ──► cheapest allowed action ──► hash-chained audit
+     └────► abuse model  ──► P(abuse) ──┘         ▲
+              ▲                                   │
+     relationship graph                     guardrails remove
+  (shared devices, cards, addresses)        actions, never add them
+```
+
+| The move | What it means |
 |---|---|
-| **ALLOW** | Order proceeds normally |
-| **PREPAID_ONLY** | Prepaid payment required; refund after warehouse inspection |
-| **MANUAL_REVIEW** | Routed to a human reviewer |
-| **BLOCK** | Order cannot proceed (requires high confidence + corroboration) |
+| **ALLOW** | The order goes through. |
+| **PREPAID_ONLY** | Pay up front; the refund waits for the warehouse check. |
+| **MANUAL_REVIEW** | A human reviewer decides. |
+| **BLOCK** | Stopped. Needs p ≥ 0.70 **and** two corroborating signals, anchored on a device, a payment token or account claims. |
 
-## Quick Start
+---
 
-### Prerequisites
+## 🍲 MM.. NUMBERS
 
-- Python 3.12
-- Node.js 20+
-- pip (exact versions in `backend/requirements.lock`)
+Measured on the held-out test set of the synthetic world.
 
-### Backend
+| | With the graph | Without it |
+|---|:---:|:---:|
+| **Abuse PR-AUC** | **0.814** | 0.527 |
+| **Recall on rings never seen in training** | **72.7%** | 14.3% |
+
+**Genuine customers blocked** in the hard-negative cohorts (households, hostels, refurbished phones): **0.0%**.
+
+Three demo orders, three outcomes:
+
+| Demo | Who | Decision | Why |
+|---|---|---|---|
+| 1 | A frequent returner with years of clean history | **ALLOW** | Returning a lot is not abuse. |
+| 2 | A new account tied into a ring | **BLOCK** | Scores 95% with the graph evidence, 10% without it. The graph catches it; the new account makes it urgent. |
+| 3 | Somewhere in the middle | **MANUAL_REVIEW** | At 69% risk, a human review costs less than a wrong block. |
+
+---
+
+## 🩸 THE VILLAIN'S CONFESSION
+
+A good villain tells you the plan. These results stay in, on purpose:
+
+- **A simple tuned threshold is cheaper.** It costs ₹1,60,112 per 1,000 orders; AegisShift costs ₹1,95,313. The gap is the price of the guardrails: they change 49 decisions and refuse 8 blocks that would have hit genuine customers. That's a deliberate trade, not a win on cost.
+- **The graph doesn't work alone.** It is what catches Demo 2, but the new-account signal is what makes it urgent.
+- **New accounts get more friction.** Accounts under 30 days old see friction on 36.1% of orders against 4.8–5.9% for older ones. The [model card](docs/MODEL_CARD.md) says so plainly.
+
+---
+
+## 🖼️ THE SCREENS
+
+| The reviewer's view of the ring | The review queue |
+|---|---|
+| ![Demo 2: blocked ring order](docs/reports/phase-8/demo-2.png) | ![Review queue](docs/reports/phase-9/queue.png) |
+
+**Try it without installing anything:** the [live site](https://sajid1108.github.io/aegisshift/) lets you build an order and see what the shopper is told next to what the reviewer sees. Its answers are recorded from the real model, not computed live.
+
+---
+
+## ⚙️ RUN IT YOURSELF
+
+Needs Python 3.12 and Node.js 20+.
 
 ```bash
 cd backend
-
-# Install dependencies (Windows: .venv\Scripts\python.exe)
-py -3.12 -m venv .venv
+py -3.12 -m venv .venv                   # Windows: .venv\Scripts\python.exe
 python -m pip install -r requirements.lock
 python -m pip install --no-deps -e .
 
-# Generate synthetic data
-python -m sentinel.cli generate
-
-# Build features
+python -m sentinel.cli generate          # the seeded synthetic world
 python -m sentinel.cli build-features
-
-# Train models
 python -m sentinel.cli train
-
-# Evaluate
 python -m sentinel.cli evaluate
-
-# Seed the demo database
 python -m sentinel.cli seed-db
-
-# Start the API server
-python -m sentinel.cli serve
+python -m sentinel.cli serve             # API on http://127.0.0.1:8000
 ```
-
-### Frontend
 
 ```bash
 cd frontend
-
 npm ci
-npm run dev
+npm run dev                              # http://localhost:5173
 ```
 
-The frontend proxies API requests to `http://127.0.0.1:8000`, injecting `X-Internal-Key`, so the UI and the
-API share one origin and no key reaches the bundle. With the API running, score the three presets and open
-`http://localhost:5173/orders/ORD-DEMO-002` for the order-detail screen.
+The frontend proxies the API and adds the internal key server-side, so no key reaches the browser. Open `http://localhost:5173/queue`, press **Simulate checkout**, and follow an order.
 
-### Run Tests
+**Tests**
 
 ```bash
-cd backend
-python -m pytest tests/ -m "not slow" # while iterating: skips world generation, training and model checks
-python -m pytest tests/               # the full suite, including slow tests: run before every commit
-
-cd ../frontend
-npm test                              # vitest: the order-detail page against recorded API payloads
-npm run build                         # tsc -b && vite build
+cd backend && python -m pytest tests/ -m "not slow"   # fast loop
+cd backend && python -m pytest tests/                 # full suite, before every commit
+cd frontend && npm test && npm run build
 ```
 
-## Demo Scenarios
+---
 
-Three seeded orders demonstrate the system's key behaviors:
-
-1. **Legitimate Frequent Returner** → ALLOW
-   *"Frequent returns do not automatically imply abuse."*
-
-2. **Coordinated Abuse Ring** → BLOCK
-   *"Graph evidence reveals coordination invisible at the account level."*
-
-3. **Uncertain Middle** → MANUAL_REVIEW
-   *"Uncertainty receives proportionate friction, not automatic refusal."*
-
-## Architecture
-
-See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the complete frozen architecture.
-
-## Technology
+## 🧱 UNDER THE MASK
 
 | Layer | Stack |
 |---|---|
 | Backend | Python 3.12, FastAPI, Pydantic v2, SQLAlchemy 2, SQLite |
-| ML | scikit-learn HistGradientBoosting, pandas, NetworkX, joblib |
-| Frontend | React, TypeScript, Vite, Tailwind CSS v4, @xyflow/react, Recharts |
+| ML | scikit-learn HistGradientBoosting (calibrated), pandas, NetworkX |
+| Frontend | React 19, TypeScript, Vite, Tailwind CSS v4, @xyflow/react, Recharts |
 
-## Limitations
+- **Point-in-time features:** the model never sees the future, offline or live.
+- **Append-only audit:** every decision carries a SHA-256 hash chain, and overrides keep the original recommendation.
+- **Outcome-only checkout API:** the shopper never learns why, and ALLOW and MANUAL_REVIEW look identical from outside.
+
+Deep dives: [architecture](docs/ARCHITECTURE.md) · [accepted deviations](docs/DEVIATIONS.md) · [model card](docs/MODEL_CARD.md) · [demo script](docs/DEMO_SCRIPT.md) · [build log](docs/BUILD_LOG.md)
+
+---
+
+## ⚠️ FINE PRINT
 
 > **Synthetic data is used to validate the architecture, policy behaviour, auditability, and coordinated-pattern detection. Real deployment would require merchant-specific historical data and prospective validation.**
 
-- No authentication platform (static internal key)
-- No SHAP (ablation attributions + reason-code catalog)
-- No Neo4j or GNN (in-memory NetworkX)
-- No live retraining (offline CLI only)
-- No cloud deployment
-- Monetary values are demonstration assumptions (policy v1.0)
+- No authentication platform yet (a static internal key)
+- No SHAP: attributions come from ablation and a reason-code catalogue
+- No Neo4j or GNN: the graph is in-memory NetworkX
+- No live retraining (offline CLI only) and no cloud deployment yet
+- Money values are demonstration assumptions (policy v1.0)
+
+<p align="center"><sub>The code package and CLI keep the working name <code>sentinel</code>. Built by <a href="https://github.com/sajid1108">Sayed Sajid Ali</a>.</sub></p>
