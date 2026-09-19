@@ -33,23 +33,23 @@
 
   <!-- the mask: dome, brow, gem, eye slots, nose guard, cheek bars, side spikes -->
   <g transform="translate(40 0)" stroke="#2a0d3a" stroke-width="3" stroke-linejoin="round">
-    <path d="M120 150 L98 160 L120 172 Z" fill="#d98a78"/>
-    <path d="M310 150 L332 160 L310 172 Z" fill="#b8606a"/>
-    <path d="M122 158 C122 110 175 70 215 34 C255 70 308 110 308 158 Z" fill="url(#copper)"/>
-    <path d="M160 120 C170 95 190 75 205 60" stroke="#fbe7da" stroke-width="5" fill="none" opacity="0.6"/>
-    <path d="M114 162 C114 136 150 128 215 150 C280 128 316 136 316 162 C316 190 290 196 250 190 L215 176 L180 190 C140 196 114 190 114 162 Z" fill="url(#copperV)"/>
-    <path d="M135 150 C160 140 185 146 200 152" stroke="#fbe7da" stroke-width="4" fill="none" opacity="0.7"/>
-    <path d="M230 152 C245 146 270 140 295 150" stroke="#fbe7da" stroke-width="4" fill="none" opacity="0.7"/>
-    <path d="M215 142 L225 153 L215 164 L205 153 Z" fill="#d7263d" stroke="#5a0c1c"/>
-    <path d="M128 196 C150 204 178 204 200 194 L200 214 L140 214 Z" fill="#150620"/>
-    <path d="M302 196 C280 204 252 204 230 194 L230 214 L290 214 Z" fill="#150620"/>
-    <path d="M200 180 L230 180 L238 250 L192 250 Z" fill="url(#copperV)"/>
-    <path d="M126 196 L140 214 L142 262 L128 262 Z" fill="#b8606a"/>
-    <path d="M304 196 L290 214 L288 262 L302 262 Z" fill="#9c4b66"/>
-    <path d="M160 214 L190 214 L190 336 L166 336 Z" fill="url(#bar)"/>
-    <path d="M270 214 L240 214 L240 336 L264 336 Z" fill="url(#bar)"/>
-    <path d="M166 222 L170 330" stroke="#fff" stroke-width="3" opacity="0.6"/>
-    <path d="M246 222 L248 330" stroke="#fff" stroke-width="3" opacity="0.6"/>
+    <path d="M124 146 L100 154 L124 162 Z" fill="#d98a78"/>
+    <path d="M306 146 L330 154 L306 162 Z" fill="#b8606a"/>
+    <path d="M130 152 C130 108 178 72 215 36 C252 72 300 108 300 152 Z" fill="url(#copper)"/>
+    <path d="M165 118 C175 95 192 76 206 62" stroke="#fbe7da" stroke-width="5" fill="none" opacity="0.6"/>
+    <path d="M132 170 C156 166 182 170 205 184 L201 206 C178 208 152 204 136 196 Z" fill="#0d0418"/>
+    <path d="M298 170 C274 166 248 170 225 184 L229 206 C252 208 278 204 294 196 Z" fill="#0d0418"/>
+    <path d="M122 144 C150 134 186 140 215 158 C244 140 280 134 308 144 L308 160 C280 154 248 160 215 178 C182 160 150 154 122 160 Z" fill="url(#copperV)"/>
+    <path d="M140 145 C165 140 185 145 202 154" stroke="#fbe7da" stroke-width="3" fill="none" opacity="0.7"/>
+    <path d="M228 154 C245 145 265 140 290 145" stroke="#fbe7da" stroke-width="3" fill="none" opacity="0.7"/>
+    <path d="M215 150 L224 160 L215 170 L206 160 Z" fill="#d7263d" stroke="#5a0c1c"/>
+    <path d="M205 176 L225 176 L234 250 L196 250 Z" fill="url(#copperV)"/>
+    <path d="M122 160 L136 196 L140 262 L126 262 Z" fill="#b8606a"/>
+    <path d="M308 160 L294 196 L290 262 L304 262 Z" fill="#9c4b66"/>
+    <path d="M160 206 L190 208 L190 336 L166 336 Z" fill="url(#bar)"/>
+    <path d="M270 206 L240 208 L240 336 L264 336 Z" fill="url(#bar)"/>
+    <path d="M166 216 L170 330" stroke="#fff" stroke-width="3" opacity="0.6"/>
+    <path d="M246 216 L248 330" stroke="#fff" stroke-width="3" opacity="0.6"/>
     <path d="M190 250 L240 250 L240 262 L190 262 Z" fill="#7e3a5c"/>
   </g>
 
