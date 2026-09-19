@@ -122,7 +122,8 @@ INTERNAL_ROUTES = [
     ("POST", "/score-order"), ("GET", "/orders"), ("GET", "/orders/ORD-DEMO-001"),
     ("POST", "/orders/ORD-DEMO-001/override"), ("POST", "/orders/ORD-DEMO-001/appeal"),
     ("GET", "/audit-events"), ("GET", "/audit-events/verify"), ("GET", "/metrics"), ("GET", "/policy"),
-    ("GET", "/demo/presets"), ("POST", "/demo/presets/ORD-DEMO-001/score"), ("POST", "/demo/reset"),
+    ("GET", "/demo/presets"), ("POST", "/demo/presets/ORD-DEMO-001/score"), ("GET", "/demo/order-builder"),
+    ("POST", "/demo/reset"),
 ]
 
 
@@ -525,7 +526,7 @@ def test_metrics(shared):
 def test_demo_endpoints_are_404_when_demo_mode_is_off(seeded_db, data_dir, tmp_path):
     with _client(_copy_db(seeded_db, tmp_path), data_dir, demo_mode=False) as c:
         for method, path in (("GET", "/demo/presets"), ("POST", "/demo/presets/ORD-DEMO-001/score"),
-                             ("POST", "/demo/reset")):
+                             ("GET", "/demo/order-builder"), ("POST", "/demo/reset")):
             res = c.request(method, f"{I}{path}", headers=KEY)
             assert res.status_code == 404 and res.json() == {"detail": "Not found."}
 

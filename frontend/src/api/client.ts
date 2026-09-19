@@ -22,6 +22,8 @@ export type ScoreOrderResponse = components['schemas']['ScoreOrderResponse']
 export type DemoResetResponse = components['schemas']['DemoResetResponse']
 export type MetricsResponse = components['schemas']['MetricsResponse']
 export type HealthResponse = components['schemas']['HealthResponse']
+export type OrderBuilderResponse = components['schemas']['OrderBuilderResponse']
+export type CheckoutOutcome = components['schemas']['CheckoutOutcome']
 
 export class ApiError extends Error {
   constructor(
@@ -130,6 +132,22 @@ export function getPresets(): Promise<ScoreOrderRequest[]> {
 export function postScorePreset(orderId: string): Promise<ScoreOrderResponse> {
   return apiFetch<ScoreOrderResponse>(`/internal/demo/presets/${encodeURIComponent(orderId)}/score`, {
     method: 'POST',
+  })
+}
+
+/** GET /internal/demo/order-builder: the "Try an order" form's options. 404 when DEMO_MODE is off. */
+export function getOrderBuilder(): Promise<OrderBuilderResponse> {
+  return apiFetch<OrderBuilderResponse>('/internal/demo/order-builder')
+}
+
+/**
+ * POST /public/checkout/decision: the shopper's checkout. It scores the order (source LIVE) and answers
+ * with the outcome only. Its errors are fixed sentences that never echo a field (#34).
+ */
+export function postCheckout(request: ScoreOrderRequest): Promise<CheckoutOutcome> {
+  return apiFetch<CheckoutOutcome>('/public/checkout/decision', {
+    method: 'POST',
+    body: JSON.stringify(request),
   })
 }
 

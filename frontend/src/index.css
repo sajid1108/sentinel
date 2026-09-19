@@ -20,6 +20,7 @@
   --color-block-text: oklch(70.4% 0.191 22.216);  /* red-400  — the AA text tint of the BLOCK colour */
   --color-infeasible: oklch(44.6% 0.043 257.281); /* slate-600 — hatched infeasible actions */
   --color-neutral-meter: oklch(70.4% 0.04 256.788); /* slate-400 — a meter below any friction band */
+  --color-error: oklch(81% 0.117 11.638);         /* rose-300 — form and API errors, never an action */
 }
 
 /* §A.7: no animation beyond a short hover/focus transition. */

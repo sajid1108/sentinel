@@ -1,0 +1,731 @@
+{
+  "order": {
+    "order_id": "ORD-TRY-3D8EE088",
+    "placed_at": "2026-09-01T04:55:00Z",
+    "order_value": {
+      "inr": 4500.01,
+      "display": "₹4,500"
+    },
+    "discount_pct": 10,
+    "lines": [
+      {
+        "sku_id": "SKU-APPAREL-D01-S",
+        "product_id": "PRD-APPAREL-D01",
+        "variant": "S",
+        "category": "APPAREL",
+        "unit_price_inr": 1666.67,
+        "quantity": 1
+      },
+      {
+        "sku_id": "SKU-APPAREL-D01-M",
+        "product_id": "PRD-APPAREL-D01",
+        "variant": "M",
+        "category": "APPAREL",
+        "unit_price_inr": 1666.67,
+        "quantity": 1
+      },
+      {
+        "sku_id": "SKU-APPAREL-D01-L",
+        "product_id": "PRD-APPAREL-D01",
+        "variant": "L",
+        "category": "APPAREL",
+        "unit_price_inr": 1666.67,
+        "quantity": 1
+      }
+    ],
+    "payment_method": "PREPAID_UPI",
+    "delivery_speed": "STANDARD"
+  },
+  "customer": {
+    "account_id": "ACC-DEMO-001",
+    "account_age_days": 1279,
+    "prior_orders": 52,
+    "matured_return_rate": 0.5833333333333334,
+    "prior_suspicious_claims_180d": 0,
+    "clv_used_by_policy": {
+      "inr": 30615.84,
+      "display": "₹30,616"
+    },
+    "clv_basis": "HISTORY"
+  },
+  "decision": {
+    "decision_id": "09af2081-a95b-4057-963a-e4421d55767a",
+    "order_id": "ORD-TRY-3D8EE088",
+    "scored_at": "2026-09-01T05:00:00Z",
+    "features_as_of": "2026-09-01T04:55:00Z",
+    "scores": {
+      "p_return": 0.6153846153846154,
+      "p_abuse": 0.00004407411157210499,
+      "p_abuse_without_graph_evidence": 0.00004407411157210499,
+      "return_model_version": "return-hgb-fs1.0-e3c877bc",
+      "abuse_model_version": "abuse-hgb-fs1.0-446c817f",
+      "feature_set_version": "fs-1.0-0ad43d7f",
+      "p_return_used_for_action": false
+    },
+    "prediction_explanation": "No material abuse evidence was found; the score reflects this account's own history rather than links to other accounts.",
+    "reasons": [
+      {
+        "code": "RETURN_SIZE_BRACKETING",
+        "model": "RETURN",
+        "direction": "INCREASES",
+        "reviewer_text": "Multiple sizes of the same item in the cart.",
+        "evidence": {
+          "variants": 3
+        },
+        "attribution_pp": 31.5385,
+        "evidence_strength": "MODERATE",
+        "attribution_note": null
+      },
+      {
+        "code": "RETURN_HIGH_HISTORY",
+        "model": "RETURN",
+        "direction": "INCREASES",
+        "reviewer_text": "The customer returned 28 of 48 delivered orders. This affects return likelihood, not abuse risk.",
+        "evidence": {
+          "matured_orders": 48,
+          "returns": 28
+        },
+        "attribution_pp": 18.6813,
+        "evidence_strength": "MODERATE",
+        "attribution_note": null
+      },
+      {
+        "code": "MITIGATING_ESTABLISHED_ACCOUNT",
+        "model": "ABUSE",
+        "direction": "DECREASES",
+        "reviewer_text": "Long-standing account with no flagged claims.",
+        "evidence": {
+          "account_age_days": 1280,
+          "prior_orders": 52
+        },
+        "attribution_pp": -0.0083,
+        "evidence_strength": "MODERATE",
+        "attribution_note": "Redundant with other evidence; the score is already explained by correlated features."
+      },
+      {
+        "code": "MITIGATING_DISCOUNTED_LINKS",
+        "model": "ABUSE",
+        "direction": "DECREASES",
+        "reviewer_text": "Shared address discounted: household pattern.",
+        "evidence": {
+          "kind": "address",
+          "reason": "household pattern"
+        },
+        "attribution_pp": null,
+        "evidence_strength": "WEAK",
+        "attribution_note": null
+      }
+    ],
+    "graph_summary": {
+      "component_size_reliable_90d": 1,
+      "confirmed_abusive_accounts_in_component": 0,
+      "min_hops_to_confirmed_abuse": null,
+      "linked_orders_24h": 0,
+      "corroborating_signal_count": 0,
+      "signals": [
+        {
+          "signal": "DEVICE",
+          "present": false,
+          "weight": 0,
+          "counts_for_corroboration": false,
+          "detail": "Device: confirmed-abuse weight 0.00, 0 other concurrent accounts in 30 d."
+        },
+        {
+          "signal": "PAYMENT_TOKEN",
+          "present": false,
+          "weight": 0,
+          "counts_for_corroboration": false,
+          "detail": "Payment token used by 0 other accounts in 30 d."
+        },
+        {
+          "signal": "ADDRESS",
+          "present": false,
+          "weight": 0,
+          "counts_for_corroboration": false,
+          "detail": "Confirmed-abuse weight 0.00 on this address (needs 0.30)."
+        },
+        {
+          "signal": "TEMPORAL_BURST",
+          "present": false,
+          "weight": 0,
+          "counts_for_corroboration": false,
+          "detail": "0 linked orders in 24 h, 0 same-SKU linked orders in 7 d, via device or token links."
+        },
+        {
+          "signal": "ACCOUNT_CLAIMS",
+          "present": false,
+          "weight": 0,
+          "counts_for_corroboration": false,
+          "detail": "0 suspicious claims on this account in 180 d."
+        }
+      ],
+      "discounted_links": [
+        {
+          "identifier_label": "Address ••3486",
+          "kind": "ADDRESS",
+          "reason": "HOUSEHOLD_PATTERN",
+          "weight": 0.1299
+        }
+      ],
+      "weak_evidence_only": false
+    },
+    "policy": {
+      "policy_version": "v1.0",
+      "policy_config_sha256": "e1744f126c99d32123f31768538768841b188f7ed7ac7509c406760f313915f0",
+      "cost_optimal_action": "ALLOW",
+      "selected_action": "ALLOW",
+      "selected_rule": "MIN_EXPECTED_COST",
+      "costs": [
+        {
+          "action": "ALLOW",
+          "expected_cost": {
+            "inr": 0.18,
+            "display": "₹0"
+          },
+          "abusive_branch": {
+            "inr": 0.18,
+            "display": "₹0"
+          },
+          "genuine_branch": {
+            "inr": 0,
+            "display": "₹0"
+          },
+          "operational": {
+            "inr": 0,
+            "display": "₹0"
+          },
+          "feasible": true,
+          "excluded_by": [],
+          "rank_by_cost": 1
+        },
+        {
+          "action": "PREPAID_ONLY",
+          "expected_cost": {
+            "inr": 750.36,
+            "display": "₹750"
+          },
+          "abusive_branch": {
+            "inr": 0.07,
+            "display": "₹0"
+          },
+          "genuine_branch": {
+            "inr": 750.28,
+            "display": "₹750"
+          },
+          "operational": {
+            "inr": 0,
+            "display": "₹0"
+          },
+          "feasible": true,
+          "excluded_by": [],
+          "rank_by_cost": 2
+        },
+        {
+          "action": "MANUAL_REVIEW",
+          "expected_cost": {
+            "inr": 912.09,
+            "display": "₹912"
+          },
+          "abusive_branch": {
+            "inr": 0.04,
+            "display": "₹0"
+          },
+          "genuine_branch": {
+            "inr": 662.06,
+            "display": "₹662"
+          },
+          "operational": {
+            "inr": 250,
+            "display": "₹250"
+          },
+          "feasible": true,
+          "excluded_by": [],
+          "rank_by_cost": 3
+        },
+        {
+          "action": "BLOCK",
+          "expected_cost": {
+            "inr": 19818.63,
+            "display": "₹19,819"
+          },
+          "abusive_branch": {
+            "inr": 0,
+            "display": "₹0"
+          },
+          "genuine_branch": {
+            "inr": 19818.63,
+            "display": "₹19,819"
+          },
+          "operational": {
+            "inr": 0,
+            "display": "₹0"
+          },
+          "feasible": false,
+          "excluded_by": [
+            "G2",
+            "G3"
+          ],
+          "rank_by_cost": 4
+        }
+      ],
+      "guardrails": [
+        {
+          "guardrail_id": "G1",
+          "name": "Return probability excluded",
+          "triggered": false,
+          "effect": "NONE",
+          "removed_actions": [],
+          "detail": "p_return is not an input to expected cost or any guardrail; shown for context only."
+        },
+        {
+          "guardrail_id": "G2",
+          "name": "BLOCK needs corroboration",
+          "triggered": true,
+          "effect": "REMOVED_ACTIONS",
+          "removed_actions": [
+            "BLOCK"
+          ],
+          "detail": "G2 requires two corroborating signals; none was found."
+        },
+        {
+          "guardrail_id": "G3",
+          "name": "BLOCK needs confidence",
+          "triggered": true,
+          "effect": "REMOVED_ACTIONS",
+          "removed_actions": [
+            "BLOCK"
+          ],
+          "detail": "G3 requires an abuse probability of at least 70.0%; this order scored <0.1%."
+        },
+        {
+          "guardrail_id": "G4",
+          "name": "No BLOCK on weak or stale evidence",
+          "triggered": false,
+          "effect": "NONE",
+          "removed_actions": [],
+          "detail": "Evidence is recent and at least one counted signal is strong."
+        },
+        {
+          "guardrail_id": "G5",
+          "name": "No silent ALLOW at high exposure",
+          "triggered": false,
+          "effect": "NONE",
+          "removed_actions": [],
+          "detail": "Exposure is below the G5 backstop."
+        }
+      ],
+      "policy_explanation": "ALLOW was selected because its expected cost (₹0) is lower than PREPAID_ONLY (₹750), MANUAL_REVIEW (₹912) and BLOCK (₹19,819) under policy v1.0. BLOCK was also not permitted: G2 requires two corroborating signals; none was found. G3 requires an abuse probability of at least 70.0%; this order scored <0.1%.",
+      "assumptions_notice": "Monetary values are demonstration assumptions (policy v1.0)."
+    },
+    "status": "AUTO_APPLIED",
+    "audit_event_id": "be63c902-ec02-4df6-95fe-e7efffd6b9bf",
+    "degraded_mode": false,
+    "idempotent_replay": false
+  },
+  "graph": {
+    "nodes": [
+      {
+        "id": "ACC:ACC-DEMO-001",
+        "kind": "ACCOUNT",
+        "label": "ACC-DEMO-001",
+        "state": "CURRENT",
+        "flags": [],
+        "x": 0,
+        "y": 0
+      },
+      {
+        "id": "ORD:ORD-TRY-3D8EE088",
+        "kind": "ORDER",
+        "label": "ORD-TRY-3D8EE088",
+        "state": "CURRENT",
+        "flags": [],
+        "x": 86.6,
+        "y": -50
+      },
+      {
+        "id": "ADR:0a9906e384f3cdea",
+        "kind": "ADDRESS",
+        "label": "Address ••3486",
+        "state": "NEUTRAL",
+        "flags": [],
+        "x": 0,
+        "y": -200
+      },
+      {
+        "id": "DEV:55e71bae0821680c",
+        "kind": "DEVICE",
+        "label": "Device ••757d",
+        "state": "NEUTRAL",
+        "flags": [],
+        "x": 173.21,
+        "y": 100
+      },
+      {
+        "id": "TOK:bf2a4e64f69761bb",
+        "kind": "PAYMENT_TOKEN",
+        "label": "Payment token ••7187",
+        "state": "NEUTRAL",
+        "flags": [],
+        "x": -173.21,
+        "y": 100
+      },
+      {
+        "id": "ACC:ACC-DEMO-001-HH",
+        "kind": "ACCOUNT",
+        "label": "Account ••1-HH",
+        "state": "NEUTRAL",
+        "flags": [],
+        "x": 0,
+        "y": 440
+      }
+    ],
+    "edges": [
+      {
+        "id": "ACC:ACC-DEMO-001-HH|ADR:0a9906e384f3cdea",
+        "source": "ACC:ACC-DEMO-001-HH",
+        "target": "ADR:0a9906e384f3cdea",
+        "kind": "SHIPPED_TO",
+        "age_days": 73.0174,
+        "reliability": 0.4,
+        "decayed_weight": 0.1299,
+        "counted_as_evidence": false,
+        "discount_reason": "HOUSEHOLD_PATTERN"
+      },
+      {
+        "id": "ACC:ACC-DEMO-001|ADR:0a9906e384f3cdea",
+        "source": "ACC:ACC-DEMO-001",
+        "target": "ADR:0a9906e384f3cdea",
+        "kind": "SHIPPED_TO",
+        "age_days": 0,
+        "reliability": 0.4,
+        "decayed_weight": 0.4,
+        "counted_as_evidence": true,
+        "discount_reason": null
+      },
+      {
+        "id": "ACC:ACC-DEMO-001|DEV:55e71bae0821680c",
+        "source": "ACC:ACC-DEMO-001",
+        "target": "DEV:55e71bae0821680c",
+        "kind": "USED_DEVICE",
+        "age_days": 0,
+        "reliability": 0.8,
+        "decayed_weight": 0.8,
+        "counted_as_evidence": true,
+        "discount_reason": null
+      },
+      {
+        "id": "ACC:ACC-DEMO-001|TOK:bf2a4e64f69761bb",
+        "source": "ACC:ACC-DEMO-001",
+        "target": "TOK:bf2a4e64f69761bb",
+        "kind": "USED_TOKEN",
+        "age_days": 0,
+        "reliability": 0.9,
+        "decayed_weight": 0.9,
+        "counted_as_evidence": true,
+        "discount_reason": null
+      },
+      {
+        "id": "ORD:ORD-TRY-3D8EE088|ACC:ACC-DEMO-001",
+        "source": "ORD:ORD-TRY-3D8EE088",
+        "target": "ACC:ACC-DEMO-001",
+        "kind": "PLACED_BY",
+        "age_days": 0,
+        "reliability": 1,
+        "decayed_weight": 1,
+        "counted_as_evidence": true,
+        "discount_reason": null
+      }
+    ],
+    "truncated": false,
+    "hidden_node_count": 0,
+    "as_of": "2026-09-01T04:55:00Z",
+    "linked_orders_24h_shown": 0,
+    "confirmed_peers_shown": 0
+  },
+  "baselines": [
+    {
+      "strategy": "FIXED_THRESHOLD",
+      "action": "ALLOW",
+      "rule_fired": "abuse probability < 5.0%"
+    },
+    {
+      "strategy": "RULE_BASED",
+      "action": "BLOCK",
+      "rule_fired": "matured return rate >= 0.5 and >= 5 returns"
+    }
+  ],
+  "audit_events": [
+    {
+      "seq": 252,
+      "event_id": "be63c902-ec02-4df6-95fe-e7efffd6b9bf",
+      "event_type": "DECISION_CREATED",
+      "occurred_at": "2026-09-01T05:00:00Z",
+      "order_id": "ORD-TRY-3D8EE088",
+      "actor_type": "SYSTEM",
+      "actor_id": "sentinel-scoring",
+      "previous_action": null,
+      "new_action": "ALLOW",
+      "policy_version": "v1.0",
+      "return_model_version": "return-hgb-fs1.0-e3c877bc",
+      "abuse_model_version": "abuse-hgb-fs1.0-446c817f",
+      "payload": {
+        "actor": {
+          "id": "sentinel-scoring",
+          "type": "SYSTEM"
+        },
+        "appeal": null,
+        "audit_event_id": "be63c902-ec02-4df6-95fe-e7efffd6b9bf",
+        "candidate_actions": [
+          {
+            "abusive_branch": {
+              "display": "₹0",
+              "inr": 0.18
+            },
+            "action": "ALLOW",
+            "excluded_by": [],
+            "expected_cost": {
+              "display": "₹0",
+              "inr": 0.18
+            },
+            "feasible": true,
+            "genuine_branch": {
+              "display": "₹0",
+              "inr": 0
+            },
+            "operational": {
+              "display": "₹0",
+              "inr": 0
+            },
+            "rank_by_cost": 1
+          },
+          {
+            "abusive_branch": {
+              "display": "₹0",
+              "inr": 0.07
+            },
+            "action": "PREPAID_ONLY",
+            "excluded_by": [],
+            "expected_cost": {
+              "display": "₹750",
+              "inr": 750.36
+            },
+            "feasible": true,
+            "genuine_branch": {
+              "display": "₹750",
+              "inr": 750.28
+            },
+            "operational": {
+              "display": "₹0",
+              "inr": 0
+            },
+            "rank_by_cost": 2
+          },
+          {
+            "abusive_branch": {
+              "display": "₹0",
+              "inr": 0.04
+            },
+            "action": "MANUAL_REVIEW",
+            "excluded_by": [],
+            "expected_cost": {
+              "display": "₹912",
+              "inr": 912.09
+            },
+            "feasible": true,
+            "genuine_branch": {
+              "display": "₹662",
+              "inr": 662.06
+            },
+            "operational": {
+              "display": "₹250",
+              "inr": 250
+            },
+            "rank_by_cost": 3
+          },
+          {
+            "abusive_branch": {
+              "display": "₹0",
+              "inr": 0
+            },
+            "action": "BLOCK",
+            "excluded_by": [
+              "G2",
+              "G3"
+            ],
+            "expected_cost": {
+              "display": "₹19,819",
+              "inr": 19818.63
+            },
+            "feasible": false,
+            "genuine_branch": {
+              "display": "₹19,819",
+              "inr": 19818.63
+            },
+            "operational": {
+              "display": "₹0",
+              "inr": 0
+            },
+            "rank_by_cost": 4
+          }
+        ],
+        "cost_optimal_action": "ALLOW",
+        "decision_id": "09af2081-a95b-4057-963a-e4421d55767a",
+        "degraded_mode": false,
+        "event_type": "DECISION_CREATED",
+        "feature_attributions_pp": {
+          "account_age_days": -0.0083,
+          "address_other_accounts_weighted_30d": 0,
+          "component_abuse_ratio_smoothed": 0,
+          "component_recent_claims_30d": 0,
+          "component_size_reliable_90d": 0,
+          "confirmed_abuse_proximity": 0,
+          "device_confirmed_abuse_weight": 0,
+          "device_other_accounts_30d": 0,
+          "identifier_reuse_velocity_7d": 0,
+          "linked_orders_24h": 0,
+          "linked_same_sku_7d": 0,
+          "new_device_for_account": 0,
+          "order_value_inr": 0.0024,
+          "primary_category": 0,
+          "prior_orders": -0.003,
+          "prior_suspicious_claims_180d": 0,
+          "token_other_accounts_30d": 0
+        },
+        "features_as_of": "2026-09-01T10:25:00+05:30",
+        "graph_summary": {
+          "component_size_reliable_90d": 1,
+          "confirmed_abusive_accounts_in_component": 0,
+          "corroborating_signal_count": 0,
+          "discounted_links": [
+            {
+              "identifier_label": "Address ••3486",
+              "kind": "ADDRESS",
+              "reason": "HOUSEHOLD_PATTERN",
+              "weight": 0.1299
+            }
+          ],
+          "linked_orders_24h": 0,
+          "min_hops_to_confirmed_abuse": null,
+          "signals": [
+            {
+              "counts_for_corroboration": false,
+              "detail": "Device: confirmed-abuse weight 0.00, 0 other concurrent accounts in 30 d.",
+              "present": false,
+              "signal": "DEVICE",
+              "weight": 0
+            },
+            {
+              "counts_for_corroboration": false,
+              "detail": "Payment token used by 0 other accounts in 30 d.",
+              "present": false,
+              "signal": "PAYMENT_TOKEN",
+              "weight": 0
+            },
+            {
+              "counts_for_corroboration": false,
+              "detail": "Confirmed-abuse weight 0.00 on this address (needs 0.30).",
+              "present": false,
+              "signal": "ADDRESS",
+              "weight": 0
+            },
+            {
+              "counts_for_corroboration": false,
+              "detail": "0 linked orders in 24 h, 0 same-SKU linked orders in 7 d, via device or token links.",
+              "present": false,
+              "signal": "TEMPORAL_BURST",
+              "weight": 0
+            },
+            {
+              "counts_for_corroboration": false,
+              "detail": "0 suspicious claims on this account in 180 d.",
+              "present": false,
+              "signal": "ACCOUNT_CLAIMS",
+              "weight": 0
+            }
+          ],
+          "weak_evidence_only": false
+        },
+        "guardrails": [
+          {
+            "detail": "p_return is not an input to expected cost or any guardrail; shown for context only.",
+            "effect": "NONE",
+            "guardrail_id": "G1",
+            "name": "Return probability excluded",
+            "removed_actions": [],
+            "triggered": false
+          },
+          {
+            "detail": "G2 requires two corroborating signals; none was found.",
+            "effect": "REMOVED_ACTIONS",
+            "guardrail_id": "G2",
+            "name": "BLOCK needs corroboration",
+            "removed_actions": [
+              "BLOCK"
+            ],
+            "triggered": true
+          },
+          {
+            "detail": "G3 requires an abuse probability of at least 70.0%; this order scored <0.1%.",
+            "effect": "REMOVED_ACTIONS",
+            "guardrail_id": "G3",
+            "name": "BLOCK needs confidence",
+            "removed_actions": [
+              "BLOCK"
+            ],
+            "triggered": true
+          },
+          {
+            "detail": "Evidence is recent and at least one counted signal is strong.",
+            "effect": "NONE",
+            "guardrail_id": "G4",
+            "name": "No BLOCK on weak or stale evidence",
+            "removed_actions": [],
+            "triggered": false
+          },
+          {
+            "detail": "Exposure is below the G5 backstop.",
+            "effect": "NONE",
+            "guardrail_id": "G5",
+            "name": "No silent ALLOW at high exposure",
+            "removed_actions": [],
+            "triggered": false
+          }
+        ],
+        "model_versions": {
+          "abuse_artifact_sha256": "446c817f97bd67b61706d7ada5e727bf4732d474ecb24161e8862dac6bd20f20",
+          "abuse_model": "abuse-hgb-fs1.0-446c817f",
+          "feature_set": "fs-1.0-0ad43d7f",
+          "label_definition": "ld-1.0",
+          "return_artifact_sha256": "e3c877bc2a16d2991246c1e6b22271e214e517bcfe886b9c011b5221dcf074f8",
+          "return_model": "return-hgb-fs1.0-e3c877bc"
+        },
+        "new_action": "ALLOW",
+        "occurred_at": "2026-09-01T10:30:00+05:30",
+        "order_id": "ORD-TRY-3D8EE088",
+        "original_recommendation": "ALLOW",
+        "override": null,
+        "p_abuse": 0.000044,
+        "p_abuse_without_graph_evidence": 0.000044,
+        "p_return": 0.615385,
+        "policy_config_sha256": "e1744f126c99d32123f31768538768841b188f7ed7ac7509c406760f313915f0",
+        "policy_explanation": "ALLOW was selected because its expected cost (₹0) is lower than PREPAID_ONLY (₹750), MANUAL_REVIEW (₹912) and BLOCK (₹19,819) under policy v1.0. BLOCK was also not permitted: G2 requires two corroborating signals; none was found. G3 requires an abuse probability of at least 70.0%; this order scored <0.1%.",
+        "policy_rule": "MIN_EXPECTED_COST",
+        "policy_version": "v1.0",
+        "prediction_explanation": "No material abuse evidence was found; the score reflects this account's own history rather than links to other accounts.",
+        "previous_action": null,
+        "reason_codes": [
+          "RETURN_SIZE_BRACKETING",
+          "RETURN_HIGH_HISTORY",
+          "MITIGATING_ESTABLISHED_ACCOUNT",
+          "MITIGATING_DISCOUNTED_LINKS"
+        ],
+        "schema_version": "audit-1.0",
+        "selected_action": "ALLOW"
+      },
+      "prev_hash": "414d9b1532849e30df76213d35682339463a27ac0b986d6e73f297f2d27b7da7",
+      "event_hash": "b3b42c318d269f406bebf98071a1823e0c4873b9602294f57aaa532fd8b84530"
+    }
+  ],
+  "current_action": "ALLOW",
+  "appeal_reference": null
+}

@@ -1,0 +1,101 @@
+{
+  "placed_at": "2026-09-01T10:25:00+05:30",
+  "accounts": [
+    {
+      "account_id": "ACC-DEMO-001",
+      "label": "Account of preset ORD-DEMO-001",
+      "account_age_days": 1279,
+      "prior_orders": 52,
+      "device_id": "39dde3962bc4525fbbd57a04a74a757d",
+      "address_id": "edf0b64f48179cda3e09bbbe045a3486",
+      "payment_token_id": "1b104501d98645dffc5bad7c7fd77187"
+    },
+    {
+      "account_id": "ACC-DEMO-002",
+      "label": "Account of preset ORD-DEMO-002",
+      "account_age_days": 5,
+      "prior_orders": 0,
+      "device_id": null,
+      "address_id": "8fda2ec8f6e08921771efd2d95c67b81",
+      "payment_token_id": null
+    },
+    {
+      "account_id": "ACC-DEMO-003",
+      "label": "Account of preset ORD-DEMO-003",
+      "account_age_days": 239,
+      "prior_orders": 7,
+      "device_id": "d82549d3977f6bc1487c2f2d7230dc8a",
+      "address_id": "ff50ba2c100d04e349c71c835a96d05f",
+      "payment_token_id": "a7b0a54841fea59568a63580c38d5149"
+    },
+    {
+      "account_id": "ACC-07F65A804A",
+      "label": "Lives at a multi-tenant address",
+      "account_age_days": 1392,
+      "prior_orders": 4,
+      "device_id": "5355495c092ed747b4d77958d8124951",
+      "address_id": "5c14e924f17459d2a14fcf61d4bd1f5d",
+      "payment_token_id": "670c4dc9cbeabce98c1fa63c767d79ba"
+    },
+    {
+      "account_id": "ACC-749C383E02",
+      "label": "Shares a household address",
+      "account_age_days": 763,
+      "prior_orders": 2,
+      "device_id": "e0fd389e186875d7bf3443056576322c",
+      "address_id": "3ee54d973d509067d7e5441e24cfdbbc",
+      "payment_token_id": "f0e23e724422b3b572bdaf55f5824783"
+    },
+    {
+      "account_id": "ACC-DAACE3C9F9",
+      "label": "Shares a household address",
+      "account_age_days": 869,
+      "prior_orders": 10,
+      "device_id": "18fa4f6665b612a5a23c94fe27acde20",
+      "address_id": "c31c8ab55dae693a6a5ae92f5283e9bf",
+      "payment_token_id": "732ecdbd27f2c3b763f432c5b264db90"
+    }
+  ],
+  "devices": [
+    {
+      "option": "OWN",
+      "label": "The account's own device",
+      "identifier_id": null
+    },
+    {
+      "option": "NEW",
+      "label": "A brand-new device",
+      "identifier_id": "5b209a9ea7d9620d0b3c7faeb17ce0e4"
+    },
+    {
+      "option": "RING",
+      "label": "A device shared with the ring",
+      "identifier_id": "fc85a0f7222d2081d491323f43f5f5ae"
+    }
+  ],
+  "tokens": [
+    {
+      "option": "OWN",
+      "label": "The account's own token",
+      "identifier_id": null
+    },
+    {
+      "option": "NEW",
+      "label": "A brand-new token",
+      "identifier_id": "8b6a461e3cd9ea83cfdcf363eaa545cb"
+    },
+    {
+      "option": "RING",
+      "label": "The ring's card",
+      "identifier_id": "84e5c13706ec6202fceba4e71ab77d56"
+    }
+  ],
+  "categories": [
+    "APPAREL",
+    "FOOTWEAR",
+    "ELECTRONICS",
+    "BEAUTY",
+    "HOME",
+    "ACCESSORIES"
+  ]
+}

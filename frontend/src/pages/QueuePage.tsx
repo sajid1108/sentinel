@@ -16,6 +16,7 @@ import { ApiError, getQueue, type QueueItem, type QueueResponse } from '../api/c
 import { ActionBadge } from '../components/ActionBadge'
 import { Panel, Skeleton } from '../components/Panel'
 import { SimulateCheckout } from '../components/SimulateCheckout'
+import { TryAnOrder } from '../components/TryAnOrder'
 import { ACTION_LABEL, ACTION_ORDER, type Action } from '../lib/actions'
 import { NO_SCORE, formatProbability, formatTimestamp } from '../lib/format'
 import {
@@ -185,8 +186,11 @@ export function QueuePage() {
     <div className="min-w-0 space-y-4 p-6">
       <h1 className="text-xl font-semibold text-slate-100">Review queue</h1>
 
-      {/* §B and §C — only when DEMO_MODE is on; the component renders nothing otherwise. */}
-      <SimulateCheckout onReset={load} />
+      {/* Phase 9 §B/§C and Phase 10 §B, side by side — only when DEMO_MODE is on; both render nothing otherwise. */}
+      <div className="grid min-w-0 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+        <SimulateCheckout onReset={load} />
+        <TryAnOrder onPlaced={load} />
+      </div>
 
       <Panel title="Filters">
         <div className="flex flex-wrap items-end gap-4">

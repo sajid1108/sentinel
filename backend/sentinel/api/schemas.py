@@ -434,6 +434,33 @@ class PolicyAssumptionsResponse(Contract):
     sections: list[PolicyAssumptionSection]
 
 
+# GET /internal/demo/order-builder — the "Try an order" form's options (Phase 10 §A, DEMO_MODE only)
+class BuilderAccount(Contract):
+    """An account the form offers, with its own most recent identifiers before placed_at (null if none)."""
+    account_id: str
+    label: str
+    account_age_days: int
+    prior_orders: int
+    device_id: HashedId | None
+    address_id: HashedId                                   # a fresh id when the account has no order yet
+    payment_token_id: HashedId | None
+
+
+class BuilderIdentifierOption(Contract):
+    """One device or payment-token choice. OWN carries no id: the form resolves it from the account."""
+    option: Literal["OWN", "NEW", "RING"]
+    label: str
+    identifier_id: HashedId | None
+
+
+class OrderBuilderResponse(Contract):
+    placed_at: AwareDatetime
+    accounts: list[BuilderAccount]
+    devices: list[BuilderIdentifierOption]
+    tokens: list[BuilderIdentifierOption]
+    categories: list[Category]
+
+
 # PUBLIC: POST /checkout/decision
 class CheckoutRequest(ScoreOrderRequest):
     """Public checkout payload. Validation is identical to ScoreOrderRequest by construction."""

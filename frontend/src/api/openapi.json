@@ -845,6 +845,56 @@
         }
       }
     },
+    "/api/v1/internal/demo/order-builder": {
+      "get": {
+        "tags": [
+          "demo"
+        ],
+        "summary": "Builder",
+        "description": "Accounts, identifier options, categories and placed_at for the \"Try an order\" form, all from data.",
+        "operationId": "builder_api_v1_internal_demo_order_builder_get",
+        "parameters": [
+          {
+            "name": "x-internal-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Internal-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderBuilderResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/internal/demo/reset": {
       "post": {
         "tags": [
@@ -1199,6 +1249,106 @@
           "rule_fired"
         ],
         "title": "BaselineOutcome"
+      },
+      "BuilderAccount": {
+        "properties": {
+          "account_id": {
+            "type": "string",
+            "title": "Account Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "account_age_days": {
+            "type": "integer",
+            "title": "Account Age Days"
+          },
+          "prior_orders": {
+            "type": "integer",
+            "title": "Prior Orders"
+          },
+          "device_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Device Id"
+          },
+          "address_id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "title": "Address Id"
+          },
+          "payment_token_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Token Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "account_id",
+          "label",
+          "account_age_days",
+          "prior_orders",
+          "device_id",
+          "address_id",
+          "payment_token_id"
+        ],
+        "title": "BuilderAccount",
+        "description": "An account the form offers, with its own most recent identifiers before placed_at (null if none)."
+      },
+      "BuilderIdentifierOption": {
+        "properties": {
+          "option": {
+            "type": "string",
+            "enum": [
+              "OWN",
+              "NEW",
+              "RING"
+            ],
+            "title": "Option"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "identifier_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Identifier Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "option",
+          "label",
+          "identifier_id"
+        ],
+        "title": "BuilderIdentifierOption",
+        "description": "One device or payment-token choice. OWN carries no id: the form resolves it from the account."
       },
       "CalibrationPoint": {
         "properties": {
@@ -2080,6 +2230,61 @@
           "display"
         ],
         "title": "Money"
+      },
+      "OrderBuilderResponse": {
+        "properties": {
+          "placed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Placed At"
+          },
+          "accounts": {
+            "items": {
+              "$ref": "#/components/schemas/BuilderAccount"
+            },
+            "type": "array",
+            "title": "Accounts"
+          },
+          "devices": {
+            "items": {
+              "$ref": "#/components/schemas/BuilderIdentifierOption"
+            },
+            "type": "array",
+            "title": "Devices"
+          },
+          "tokens": {
+            "items": {
+              "$ref": "#/components/schemas/BuilderIdentifierOption"
+            },
+            "type": "array",
+            "title": "Tokens"
+          },
+          "categories": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "APPAREL",
+                "FOOTWEAR",
+                "ELECTRONICS",
+                "BEAUTY",
+                "HOME",
+                "ACCESSORIES"
+              ]
+            },
+            "type": "array",
+            "title": "Categories"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "placed_at",
+          "accounts",
+          "devices",
+          "tokens",
+          "categories"
+        ],
+        "title": "OrderBuilderResponse"
       },
       "OrderDetailResponse": {
         "properties": {

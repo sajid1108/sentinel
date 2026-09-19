@@ -214,6 +214,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/internal/demo/order-builder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Builder
+         * @description Accounts, identifier options, categories and placed_at for the "Try an order" form, all from data.
+         */
+        get: operations["builder_api_v1_internal_demo_order_builder_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/internal/demo/reset": {
         parameters: {
             query?: never;
@@ -349,6 +369,41 @@ export interface components {
             action: components["schemas"]["Action"];
             /** Rule Fired */
             rule_fired: string;
+        };
+        /**
+         * BuilderAccount
+         * @description An account the form offers, with its own most recent identifiers before placed_at (null if none).
+         */
+        BuilderAccount: {
+            /** Account Id */
+            account_id: string;
+            /** Label */
+            label: string;
+            /** Account Age Days */
+            account_age_days: number;
+            /** Prior Orders */
+            prior_orders: number;
+            /** Device Id */
+            device_id: string | null;
+            /** Address Id */
+            address_id: string;
+            /** Payment Token Id */
+            payment_token_id: string | null;
+        };
+        /**
+         * BuilderIdentifierOption
+         * @description One device or payment-token choice. OWN carries no id: the form resolves it from the account.
+         */
+        BuilderIdentifierOption: {
+            /**
+             * Option
+             * @enum {string}
+             */
+            option: "OWN" | "NEW" | "RING";
+            /** Label */
+            label: string;
+            /** Identifier Id */
+            identifier_id: string | null;
         };
         /** CalibrationPoint */
         CalibrationPoint: {
@@ -684,6 +739,22 @@ export interface components {
             inr: number;
             /** Display */
             display: string;
+        };
+        /** OrderBuilderResponse */
+        OrderBuilderResponse: {
+            /**
+             * Placed At
+             * Format: date-time
+             */
+            placed_at: string;
+            /** Accounts */
+            accounts: components["schemas"]["BuilderAccount"][];
+            /** Devices */
+            devices: components["schemas"]["BuilderIdentifierOption"][];
+            /** Tokens */
+            tokens: components["schemas"]["BuilderIdentifierOption"][];
+            /** Categories */
+            categories: ("APPAREL" | "FOOTWEAR" | "ELECTRONICS" | "BEAUTY" | "HOME" | "ACCESSORIES")[];
         };
         /** OrderDetailResponse */
         OrderDetailResponse: {
@@ -1422,6 +1493,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ScoreOrderResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    builder_api_v1_internal_demo_order_builder_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-internal-key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderBuilderResponse"];
                 };
             };
             /** @description Validation Error */

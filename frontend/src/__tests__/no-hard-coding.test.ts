@@ -49,6 +49,8 @@ describe('no policy value is hard-coded in the frontend', () => {
     expect(SOURCES.length).toBeGreaterThan(10)
     expect(POLICY_VALUES.length).toBeGreaterThan(10)
     expect(SOURCES.map(([path]) => path)).toContain('pages/OrderDetailPage.tsx')
+    // Phase 10 §D: the "Try an order" panel and its form logic are scanned like every other source.
+    expect(SOURCES.map(([path]) => path)).toEqual(expect.arrayContaining(['components/TryAnOrder.tsx', 'lib/tryOrder.ts']))
   })
 
   it.each(SOURCES)('%s contains no numeric literal equal to a policy config value', (_path, text) => {

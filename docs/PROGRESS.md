@@ -3,7 +3,7 @@
 Times are from git commit timestamps (IST). Every builder updates the row for its stage **before** committing.
 
 **Project start:** 2026-09-16 19:17 (first commit)
-**Last update:** 2026-09-18 (phase 9 gate — Definition of Done)
+**Last update:** 2026-09-19 (phase 10 gate — "Try an order")
 
 ## Completed
 
@@ -20,6 +20,7 @@ Times are from git commit timestamps (IST). Every builder updates the row for it
 | 8 (follow-ups) + 9 | 7 + 8 | Phase 7 follow-ups (the reviewer graph now draws every account whose evidence is counted beside it, at any hop; `GET /internal/policy`); order detail page: two separate score cards, expected-cost bars with hatched infeasible actions, relationship graph, evidence vs model attribution, audit timeline with chain verification, baselines, override and appeal dialogs, assumptions panel; vitest suite (105) against payloads recorded from the real backend | `fa43f4b` `556ae6a` | 09-18 | 4h27m session; ~2h15m active build |
 | 9 (follow-ups) + 10 + 11 | 8 + 9 + 10 | Phase 8 follow-ups (neutral abuse meter, a redundancy note that is true of its own code, server-side probability formatting in reviewer text, count-aware plurals, IST timestamps, action and reason labels, strength-tag alignment, `RECENT_24H` moved into the legend); **the MVP**: review queue with URL-bound filters, pagination and the two probabilities as two columns, "Simulate checkout" presets and demo reset, and the Overview's decision activity and synthetic backtest as two separately labelled sections | `b0042e0` `20257ab` | 09-18 | ~5h session |
 | — | — | **Definition of Done met (stage 11): reset → queue → simulate checkout → order detail → override → overview runs end to end in the browser** | | | |
+| after DoD | — | Phase 10 "Try an order": presets recorded as DEMO through their own route; `GET /internal/demo/order-builder` (data-derived accounts, own / new / ring identifiers); a Queue panel that places a built order once through the public checkout and shows the shopper's outcome beside the team's decision. Part C measured: Demo 1's cart stays ALLOW with the ring's device and card (p_abuse 5.6 %, 3 counted signals) | `b588d1a` + the Part 2 commit | 09-19 11:11 | 1h00m in one session |
 
 **Elapsed since project start:** ~42 hours wall clock.
 **Actual build time:** roughly 10–11 hours of agent work. The rest is review turnaround and gaps between sessions.
@@ -43,6 +44,7 @@ Estimates revised down from the original plan, since stages 1–5 ran faster tha
 
 ## Notes
 
+- Phase 10 ("Try an order", after the Definition of Done) took 1h00m in one session, most of it in two full-suite gates (~6.5 min each) and the browser pass. The one decision that needed the user was the public 422 (#34 kept, #44). The measured headline moment does not shift (report §4), which is the finding, not a defect.
 - Compute is never the bottleneck: full pipeline regenerates in under 30 s; the full test suite is the slowest step at ~4–6 min.
 - Stages 6→7→8→9 are a strict dependency chain; 9 (order detail) is done, so stage 10 (queue) is unblocked. Stage 10 against stage 12 is the first real split.
 - Stage 7's estimate (2–3 h) came in well under: ~37 min including the Phase 5 follow-ups, because Phases 3–5 had already built the pieces the scoring service composes. `seed-db` takes ~7 s; the full suite is now ~3.5 min (740 tests).
